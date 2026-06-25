@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>캡처 도구</title>
+<style>
+:root{
+  --bg:#0f1117;--side:#13151c;--card:#1a1d27;--border:#2a2d3a;
+  --blue:#3b82f6;--blue2:#2563eb;--green:#22c55e;--red:#ef4444;
+  --text:#e2e8f0;--sub:#94a3b8;--radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{display:flex;min-height:100vh;background:var(--bg);color:var(--text);font-family:'Malgun Gothic',sans-serif;font-size:14px}
+
+.sidebar{width:220px;min-height:100vh;background:var(--side);display:flex;flex-direction:column;padding:20px 0;border-right:1px solid var(--border);flex-shrink:0}
+.logo{padding:0 18px 24px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.logo-title{font-size:15px;font-weight:700;letter-spacing:1px}
+.logo-sub{font-size:11px;color:var(--sub)}
+.nav-section{padding:6px 10px 4px 14px;font-size:11px;color:#4a5568;font-weight:600;letter-spacing:.8px;text-transform:uppercase;margin-top:4px}
+.nav-item{padding:10px 18px;cursor:pointer;border-radius:7px;margin:1px 8px;display:flex;align-items:center;gap:10px;color:var(--sub);transition:.15s;font-size:13px;font-weight:500}
+.nav-item:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.nav-item.active{background:rgba(59,130,246,.15);color:var(--blue)}
+.nav-item svg{flex-shrink:0}
+.sidebar-bottom{margin-top:auto;padding:14px 18px;border-top:1px solid var(--border)}
+.status-badge{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--sub)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;transition:.3s}
+.dot.on{background:var(--green);box-shadow:0 0 6px var(--green)}
+
+.main{flex:1;padding:28px 32px;overflow-y:auto}
+.panel{display:none}
+.panel.active{display:block}
+h2{font-size:18px;font-weight:700;margin-bottom:20px}
+
+.section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:18px}
+.section-title{font-size:12px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
+.row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.row:last-child{margin-bottom:0}
+label.lbl{font-size:13px;color:var(--sub);white-space:nowrap;min-width:82px}
+input[type=text]{flex:1;background:#0d0f16;border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;transition:.15s;font-family:inherit}
+input[type=text]:focus{border-color:var(--blue)}
+input[type=text]::placeholder{color:#3a4050}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-family:inherit;font-weight:600;transition:.15s;white-space:nowrap}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--sub)}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:var(--blue2)}
+.btn-primary:disabled{background:#1e2a3a;color:#3a5070;cursor:not-allowed}
+.btn-big{padding:11px 32px;font-size:14px;border-radius:8px}
+
+.progress-box{display:none;background:#0d0f16;border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-top:14px}
+.progress-box.show{display:block}
+.prog-text{font-size:13px;color:var(--sub);margin-bottom:8px}
+.prog-bar-wrap{height:6px;background:#1a1d27;border-radius:3px;overflow:hidden}
+.prog-bar{height:100%;background:var(--blue);width:0%;transition:.25s;border-radius:3px}
+
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin-top:14px}
+.thumb{background:#0d0f16;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.thumb img{width:100%;display:block;min-height:80px;background:#0d0f16}
+.thumb-label{padding:7px 10px;font-size:11px;color:var(--sub);text-align:center}
+.result-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.count-badge{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.25);border-radius:5px;padding:3px 10px;font-size:12px;font-weight:600}
+.err{color:var(--red);font-size:13px;margin-top:10px;padding:10px 14px;background:rgba(239,68,68,.07);border-radius:7px;border:1px solid rgba(239,68,68,.18);display:none}
+.err.show{display:block}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="logo">
+    <svg viewBox="0 0 100 100" width="62" height="62" xmlns="http://www.w3.org/2000/svg">
+      <defs><clipPath id="cc"><circle cx="50" cy="50" r="49"/></clipPath></defs>
+      <circle cx="50" cy="50" r="49" fill="#111"/>
+      <rect x="0" y="36" width="100" height="28" fill="#dd0000" clip-path="url(#cc)"/>
+      <text x="91" y="58" text-anchor="end" fill="white" font-family="Arial Black,Impact,sans-serif" font-weight="900" font-size="24" letter-spacing="-1">AMS</text>
+      <path d="M 81 19 A 44 44 0 1 0 81 81" fill="none" stroke="#1414cc" stroke-width="15" stroke-linecap="round"/>
+    </svg>
+    <div class="logo-title">CAMS</div>
+    <div class="logo-sub">캡처 도구</div>
+  </div>
+
+  <div class="nav-section">변환</div>
+
+  <div class="nav-item active" id="nav-pptx" onclick="switchTab('pptx')">
+    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+    </svg>
+    자료 캡처
+  </div>
+
+  <div class="nav-item" id="nav-xlsx" onclick="switchTab('xlsx')">
+    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>
+    </svg>
+    엑셀 캡처
+  </div>
+
+  <div class="sidebar-bottom">
+    <div class="status-badge">
+      <div class="dot" id="dot"></div>
+      <span id="srv-txt">연결 중...</span>
+    </div>
+  </div>
+</nav>
+
+<main class="main">
+
+  <!-- ══ PPTX 패널 ══ -->
+  <div class="panel active" id="panel-pptx">
+    <h2>자료 캡처 → JPG 변환</h2>
+    <div class="section">
+      <div class="section-title">PPTX 파일</div>
+      <div class="row">
+        <label class="lbl">파일 경로</label>
+        <input type="text" id="p-path" placeholder="찾기 버튼으로 선택하거나 직접 입력">
+        <button class="btn btn-ghost" onclick="browse('pptx')">찾기</button>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">저장 설정</div>
+      <div class="row">
+        <label class="lbl">파일명 앞자리</label>
+        <input type="text" id="p-name" placeholder="예: 작업지시서" style="max-width:230px" oninput="updatePreview('p')">
+      </div>
+      <div class="row">
+        <label class="lbl">저장 폴더</label>
+        <input type="text" id="p-folder" placeholder="찾기 버튼으로 선택">
+        <button class="btn btn-ghost" onclick="browseFolder('p')">찾기</button>
+      </div>
+      <div class="row"><label class="lbl"></label><span style="font-size:12px;color:var(--sub)">저장 예시: <span id="p-preview" style="color:var(--blue)">slide_001.jpg</span></span></div>
+      <div class="row">
+        <label class="lbl">여백 제거</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;min-width:unset">
+          <input type="checkbox" id="p-crop" checked style="width:15px;height:15px;accent-color:var(--blue)">
+          <span>흰 여백 자동 제거</span>
+        </label>
+        <span style="color:var(--sub);font-size:12px;margin-left:6px">여유 <input type="number" id="p-pad" value="8" min="0" max="80" style="width:44px;padding:3px 6px;font-size:12px;text-align:center;background:#0d0f16;border:1px solid var(--border);border-radius:5px;color:var(--text)"> px</span>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-big" id="p-btn" onclick="startConvert('pptx')">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      변환 시작
+    </button>
+    <div class="err" id="p-err"></div>
+    <div class="progress-box" id="p-prog"><div class="prog-text" id="p-prog-text">변환 중...</div><div class="prog-bar-wrap"><div class="prog-bar" id="p-prog-bar"></div></div></div>
+    <div id="p-result" style="display:none;margin-top:20px">
+      <div class="result-header"><span style="font-weight:600">변환 완료</span><span class="count-badge" id="p-count">0 장</span></div>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:10px" id="p-saved"></div>
+      <div class="gallery" id="p-gallery"></div>
+    </div>
+  </div>
+
+  <!-- ══ 엑셀 패널 ══ -->
+  <div class="panel" id="panel-xlsx">
+    <h2>엑셀 → JPG 변환</h2>
+    <div class="section">
+      <div class="section-title">Excel 파일</div>
+      <div class="row">
+        <label class="lbl">파일 경로</label>
+        <input type="text" id="x-path" placeholder="찾기 버튼으로 선택하거나 직접 입력">
+        <button class="btn btn-ghost" onclick="browse('xlsx')">찾기</button>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">저장 설정</div>
+      <div class="row">
+        <label class="lbl">파일명 앞자리</label>
+        <input type="text" id="x-name" placeholder="예: 생산일보" style="max-width:230px" oninput="updatePreview('x')">
+      </div>
+      <div class="row">
+        <label class="lbl">저장 폴더</label>
+        <input type="text" id="x-folder" placeholder="찾기 버튼으로 선택">
+        <button class="btn btn-ghost" onclick="browseFolder('x')">찾기</button>
+      </div>
+      <div class="row">
+        <label class="lbl">파일명 방식</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;min-width:unset">
+          <input type="checkbox" id="x-sheetname" checked style="width:15px;height:15px;accent-color:var(--blue)" oninput="updatePreview('x')">
+          <span>시트명으로 저장 <span style="color:var(--sub);font-size:12px">(해제 시 순번)</span></span>
+        </label>
+      </div>
+      <div class="row"><label class="lbl"></label><span style="font-size:12px;color:var(--sub)">저장 예시: <span id="x-preview" style="color:var(--blue)">sheet_Sheet1.jpg</span></span></div>
+      <div class="row">
+        <label class="lbl">여백 제거</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;min-width:unset">
+          <input type="checkbox" id="x-crop" checked style="width:15px;height:15px;accent-color:var(--blue)">
+          <span>흰 여백 자동 제거</span>
+        </label>
+        <span style="color:var(--sub);font-size:12px;margin-left:6px">여유 <input type="number" id="x-pad" value="8" min="0" max="80" style="width:44px;padding:3px 6px;font-size:12px;text-align:center;background:#0d0f16;border:1px solid var(--border);border-radius:5px;color:var(--text)"> px</span>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-big" id="x-btn" onclick="startConvert('xlsx')">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      변환 시작
+    </button>
+    <div class="err" id="x-err"></div>
+    <div class="progress-box" id="x-prog"><div class="prog-text" id="x-prog-text">변환 중...</div><div class="prog-bar-wrap"><div class="prog-bar" id="x-prog-bar"></div></div></div>
+    <div id="x-result" style="display:none;margin-top:20px">
+      <div class="result-header"><span style="font-weight:600">변환 완료</span><span class="count-badge" id="x-count">0 장</span></div>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:10px" id="x-saved"></div>
+      <div class="gallery" id="x-gallery"></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const SRV = 'http://localhost:8766';
+
+// 서버 상태
+function checkServer(){
+  fetch(SRV+'/ping',{cache:'no-store'}).then(r=>r.ok?setOnline(true):setOnline(false)).catch(()=>setOnline(false));
+}
+function setOnline(v){
+  document.getElementById('dot').className='dot'+(v?' on':'');
+  document.getElementById('srv-txt').textContent=v?'서버 연결됨':'서버 꺼짐';
+}
+setInterval(checkServer,4000); checkServer();
+
+// 탭 전환
+function switchTab(tab){
+  ['pptx','xlsx'].forEach(t=>{
+    document.getElementById('panel-'+t).classList.toggle('active', t===tab);
+    document.getElementById('nav-'+t).classList.toggle('active', t===tab);
+  });
+}
+
+// 미리보기
+function updatePreview(pfx){
+  const b=document.getElementById(pfx+'-name').value.trim()||(pfx==='p'?'slide':'sheet');
+  if(pfx==='x'){
+    const useSheet=document.getElementById('x-sheetname').checked;
+    document.getElementById('x-preview').textContent=b+'_'+(useSheet?'시트명':'001')+'.jpg';
+  } else {
+    document.getElementById('p-preview').textContent=b+'_001.jpg';
+  }
+}
+
+// 파일 찾기
+async function browse(type){
+  const pfx=type==='pptx'?'p':'x';
+  try{
+    const r=await fetch(SRV+'/browse-'+type);
+    const d=await r.json();
+    if(d.path) document.getElementById(pfx+'-path').value=d.path;
+  }catch(e){showErr(pfx,'서버가 꺼져 있습니다. BAT 파일을 실행해주세요.');}
+}
+
+// 폴더 찾기
+async function browseFolder(pfx){
+  try{
+    const r=await fetch(SRV+'/browse-folder');
+    const d=await r.json();
+    if(d.folder) document.getElementById(pfx+'-folder').value=d.folder;
+  }catch(e){showErr(pfx,'서버가 꺼져 있습니다. BAT 파일을 실행해주세요.');}
+}
+
+// 변환 시작
+async function startConvert(type){
+  const pfx=type==='pptx'?'p':'x';
+  const filePath  = document.getElementById(pfx+'-path').value.trim();
+  const outFolder = document.getElementById(pfx+'-folder').value.trim();
+  const baseName  = document.getElementById(pfx+'-name').value.trim()||(type==='pptx'?'slide':'sheet');
+
+  hideErr(pfx);
+  if(!filePath){showErr(pfx,'파일을 선택해주세요.');return;}
+  if(!outFolder){showErr(pfx,'저장 폴더를 선택해주세요.');return;}
+
+  const btn=document.getElementById(pfx+'-btn');
+  btn.disabled=true; btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" opacity=".25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur=".7s" repeatCount="indefinite"/></path></svg> 변환 중...';
+  document.getElementById(pfx+'-result').style.display='none';
+  showProg(pfx,'변환 준비 중...', 5);
+
+  try{
+    let fp=5;
+    const tick=setInterval(()=>{fp=Math.min(fp+1.5,88);setProg(pfx,fp);},700);
+    const resp=await fetch(SRV+'/convert-'+type,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        file_path:filePath, out_folder:outFolder, base_name:baseName,
+        auto_crop:document.getElementById(pfx+'-crop').checked,
+        crop_pad:parseInt(document.getElementById(pfx+'-pad').value)||8,
+        use_sheet_name:pfx==='x'&&document.getElementById('x-sheetname').checked
+      })
+    });
+    clearInterval(tick);
+    const d=await resp.json();
+    if(!d.ok){showErr(pfx,d.error||'변환 실패');return;}
+    setProg(pfx,100);
+    document.getElementById(pfx+'-prog-text').textContent='완료!';
+    showResults(pfx, d.slides, outFolder);
+  }catch(e){
+    showErr(pfx,'서버 연결 오류. 서버가 실행 중인지 확인해주세요.');
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> 변환 시작';
+    setTimeout(()=>hideProg(pfx),1500);
+  }
+}
+
+function showResults(pfx, slides, folder){
+  document.getElementById(pfx+'-count').textContent=slides.length+' 장';
+  document.getElementById(pfx+'-saved').textContent='저장 위치: '+folder;
+  const g=document.getElementById(pfx+'-gallery');
+  g.innerHTML='';
+  slides.forEach(s=>{
+    const d=document.createElement('div'); d.className='thumb';
+    const sub=s.sheet?s.sheet:s.name;
+    d.innerHTML=`<img src="${s.thumb}"><div class="thumb-label">${sub}</div>`;
+    g.appendChild(d);
+  });
+  document.getElementById(pfx+'-result').style.display='block';
+  document.getElementById(pfx+'-result').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function showProg(pfx,txt,pct){document.getElementById(pfx+'-prog').classList.add('show');document.getElementById(pfx+'-prog-text').textContent=txt;setProg(pfx,pct);}
+function setProg(pfx,pct){document.getElementById(pfx+'-prog-bar').style.width=pct+'%';}
+function hideProg(pfx){document.getElementById(pfx+'-prog').classList.remove('show');}
+function showErr(pfx,msg){const e=document.getElementById(pfx+'-err');e.textContent=msg;e.classList.add('show');}
+function hideErr(pfx){document.getElementById(pfx+'-err').classList.remove('show');}
+</script>
+</body>
+</html>

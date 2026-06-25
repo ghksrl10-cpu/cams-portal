@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3정5S 점검 관리</title>
+<style>
+  :root{
+    --bd:#2a2d35;--line:#23262f;--hd:#1a1d24;--hd2:#20232b;--blue:#3b82f6;--blue2:#2563eb;
+    --ok:#22c55e;--okbg:#052e16;--ng:#ef4444;--ngbg:#2d0a0a;--mut:#9ca3af;--ink:#f1f5f9;
+    --side:#13151c;--bg:#0f1117;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"맑은 고딕","Malgun Gothic",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
+  .app{display:flex;min-height:100vh}
+  .side{width:230px;background:var(--side);border-right:1px solid var(--bd);position:fixed;top:0;bottom:0;left:0;display:flex;flex-direction:column;z-index:30}
+  .brand{display:flex;align-items:center;gap:10px;padding:18px 16px;border-bottom:1px solid var(--line)}
+  .brand .logo{width:44px;height:44px;flex-shrink:0}
+  .brand b{font-size:15px}.brand small{display:block;color:var(--mut);font-size:12px;margin-top:1px}
+  .nav{padding:10px;flex:1}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:9px;cursor:pointer;color:#94a3b8;font-weight:600;font-size:15px;margin-bottom:3px}
+  .nav-item:hover{background:#20232b}
+  .nav-item.active{background:var(--blue);color:#fff}
+  .nav-item .ic{width:20px;text-align:center}
+  .side-foot{padding:14px 16px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .side-foot .av{width:32px;height:32px;border-radius:50%;background:#e0e7ff;color:var(--blue2);display:flex;align-items:center;justify-content:center;font-weight:800}
+  .side-foot small{display:block;color:var(--mut);font-size:12px}
+  .main{flex:1;margin-left:230px;padding:20px 24px 70px;max-width:1600px}
+  .page-h{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0 18px}
+  .page-h h1{font-size:23px;margin:0}
+  .page-h .sub{color:var(--mut);font-size:14px;width:100%;margin-top:-6px}
+  .grow{flex:1}
+  .btn{padding:9px 14px;border:1px solid var(--bd);border-radius:9px;background:#20232b;cursor:pointer;font-size:14px;font-weight:600;color:#e2e8f0}
+  .btn:hover{background:#2a2d35}
+  .btn.pri{background:var(--blue);color:#fff;border-color:var(--blue)}.btn.pri:hover{background:var(--blue2)}
+  .save-note{font-size:13px;color:var(--mut)}.save-note b{color:var(--ok)}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .card{background:#1a1d24;border:1px solid var(--bd);border-radius:14px;padding:16px 18px}
+  .card .ic{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:10px}
+  .card .num{font-size:28px;font-weight:800;line-height:1}.card .lab{color:var(--mut);font-size:13px;margin-top:6px}
+  .ic.b{background:#dbeafe;color:#2563eb}.ic.g{background:var(--okbg);color:var(--ok)}
+  .ic.r{background:var(--ngbg);color:var(--ng)}.ic.y{background:#fef3c7;color:#b45309}
+  .charts{display:grid;grid-template-columns:1.4fr 1fr;gap:14px}
+  .chart-box{background:#1a1d24;border:1px solid var(--bd);border-radius:14px;padding:16px}
+  .chart-box h3{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:7px}
+  .cv-wrap{position:relative;height:260px}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#1a1d24;border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
+  .bar label{font-weight:700;color:#cbd5e1}
+  .bar input,.bar select{padding:8px;border:1px solid var(--bd);border-radius:8px;font-size:14px;background:#0f1117;color:#f1f5f9}
+  .date-in{width:64px;text-align:center}
+  .hint{font-size:13px;color:var(--mut);margin:0 0 12px;line-height:1.6}
+  .sec{background:#1a1d24;border:1px solid var(--bd);border-radius:12px;margin-bottom:12px;overflow:hidden}
+  .sec-h{background:var(--hd);padding:9px 14px;font-weight:800;font-size:15px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .sec-h .stat{font-size:12px;font-weight:600;color:var(--mut)}
+  .scroll{overflow-x:auto}
+  table{border-collapse:collapse;width:100%}
+  th,td{border:1px solid var(--bd);padding:6px 8px;text-align:center;vertical-align:middle}
+  th{background:var(--hd2);font-weight:700;font-size:13px;white-space:nowrap}
+  .rno{background:var(--hd2);font-weight:800;font-size:13px;width:32px}
+  .ritem{text-align:left;padding-left:10px;font-size:13px;line-height:1.4;min-width:200px}
+  .sp-wrap{display:flex;gap:3px;justify-content:center;min-width:172px}
+  .sp{width:32px;height:30px;border:1px solid var(--bd);border-radius:6px;cursor:pointer;font-weight:800;font-size:13px;background:#161820;color:#4b5563;display:flex;align-items:center;justify-content:center;flex-shrink:0;user-select:none}
+  .sp:hover{color:#e2e8f0;border-color:#6b7280}
+  .sp.on.s1{background:#7f1d1d;color:#fecaca;border-color:#991b1b}
+  .sp.on.s2{background:#7c2d12;color:#fdba74;border-color:#9a3412}
+  .sp.on.s3{background:#713f12;color:#fde68a;border-color:#92400e}
+  .sp.on.s4{background:#14532d;color:#86efac;border-color:#166534}
+  .sp.on.s5{background:#052e16;color:#4ade80;border-color:#16a34a}
+  tr.rs1>td:first-child{border-left:3px solid #991b1b}
+  tr.rs2>td:first-child{border-left:3px solid #c2410c}
+  tr.rs3>td:first-child{border-left:3px solid #b45309}
+  tr.rs4>td:first-child{border-left:3px solid #166534}
+  tr.rs5>td:first-child{border-left:3px solid #16a34a}
+  .text-in{width:100%;min-width:100px;border:1px solid var(--bd);border-radius:6px;background:#0a0c12;color:#f1f5f9;padding:5px 7px;font-size:12px;font-family:inherit}
+  .text-in:focus{outline:none;border-color:var(--blue);background:#0c1422}
+  .score-badge{padding:3px 10px;border-radius:20px;font-size:12px;font-weight:800}
+  .sb-hi{background:#052e16;color:#4ade80}.sb-mid{background:#422006;color:#fde68a}.sb-lo{background:#2d0a0a;color:#fca5a5}
+  .photos{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+  .ph{position:relative}
+  .ph img{width:128px;height:96px;object-fit:cover;border:1px solid var(--bd);border-radius:8px;cursor:pointer}
+  .ph .del{position:absolute;top:-7px;right:-7px;background:#fff;border:1px solid var(--bd);border-radius:50%;width:24px;height:24px;cursor:pointer;font-weight:700;color:var(--ng);font-size:15px;line-height:24px;text-align:center}
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px}
+  @media(max-width:700px){.ba{grid-template-columns:1fr}}
+  .ba-box{border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+  .ba-box .ba-h{padding:8px 12px;font-weight:800;font-size:14px;display:flex;align-items:center;gap:6px}
+  .ba-box.before .ba-h{background:#3a1d1d;color:#fca5a5}
+  .ba-box.after .ba-h{background:#0e2a1a;color:#86efac}
+  .ba-body{padding:10px}
+  /* 구역 탭 */
+  .ztabs{display:flex;gap:6px;flex-wrap:wrap;padding:12px 12px 0}
+  .ztab{padding:7px 14px;border:1px solid var(--bd);background:#161820;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;color:#94a3b8}
+  .ztab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+  /* 메인 구역 갤러리 */
+  .zone-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:14px}
+  .zone-card{background:#1a1d24;border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+  .zone-card-h{padding:10px 14px;background:var(--hd2);font-weight:800;font-size:14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--bd)}
+  .zone-card-body{padding:10px}
+  .zone-photos-row{display:flex;flex-wrap:wrap;gap:8px}
+  .zone-photos-row .ph img{width:110px;height:82px}
+  /* 이력 */
+  .rep-head{font-size:15px;font-weight:700;margin:10px 0}
+  .rep-sec{margin-bottom:10px}
+  .rep-sech{background:var(--hd);font-weight:800;padding:6px 10px;border:1px solid var(--bd);border-bottom:0;font-size:14px;display:flex;align-items:center;gap:8px}
+  .rep-tools{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .unit{font-size:12px;color:var(--mut)}
+  #layoutImg{width:100%;border:1px solid var(--bd);border-radius:8px;cursor:pointer;background:#0b0d12}
+  /* 개선현황 */
+  .impr-card{background:#1a1d24;border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:.15s}
+  .impr-card:hover{border-color:var(--blue)}
+  .impr-no{font-size:12px;color:var(--mut);margin-bottom:3px}
+  .impr-title{font-size:15px;font-weight:700;margin-bottom:5px}
+  .impr-problem{font-size:13px;color:#fde68a;line-height:1.5}
+  .impr-meta{display:flex;gap:12px;font-size:12px;color:var(--mut);margin-top:6px;flex-wrap:wrap}
+  .impr-form{background:#1a1d24;border:1px solid var(--blue);border-radius:14px;padding:18px;margin-bottom:16px}
+  .impr-form h3{margin:0 0 14px;font-size:16px}
+  .frow{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;align-items:flex-end}
+  .frow label{font-size:12px;color:var(--mut);font-weight:700;display:flex;flex-direction:column;gap:4px;min-width:100px}
+  .frow input,.frow textarea,.frow select{padding:7px 10px;border:1px solid var(--bd);border-radius:8px;background:#0f1117;color:#f1f5f9;font-size:13px;font-family:inherit;width:100%;box-sizing:border-box}
+  .frow select option{background:#0f1117;color:#f1f5f9}
+  .frow textarea{resize:vertical;min-height:60px}
+  .impr-ba{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:14px}
+  .impr-ba-box{background:#0f1117;border:1px solid var(--bd);border-radius:10px;padding:12px}
+  .impr-ba-box h4{margin:0 0 8px;font-size:13px;font-weight:800}
+  .impr-ba-box.bef h4{color:#f87171}.impr-ba-box.tmp h4{color:#fbbf24}.impr-ba-box.root h4{color:#4ade80}
+  .impr-ba-box textarea{width:100%;margin-top:8px;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:#0a0c12;color:#f1f5f9;font-size:12px;font-family:inherit;resize:vertical;min-height:50px;box-sizing:border-box}
+  @media(max-width:820px){.impr-ba{grid-template-columns:1fr}}
+  .zone-chips{display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap}
+  .zchip{padding:3px 11px;border-radius:14px;border:1.5px solid var(--bd);background:transparent;color:var(--mut);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;line-height:1.6}
+  .zchip:hover{border-color:#60a5fa;color:#60a5fa}
+  .zchip.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+  #overlay{position:fixed;inset:0;background:rgba(15,17,23,.95);display:flex;align-items:center;justify-content:center;text-align:center;font-size:17px;font-weight:700;color:#f1f5f9;z-index:80;padding:20px;line-height:1.6}
+  .hamb{display:none}
+  @media(max-width:820px){
+    .side{transform:translateX(-100%);transition:.25s;box-shadow:0 0 30px rgba(0,0,0,.2)}
+    .side.open{transform:translateX(0)}
+    .main{margin-left:0;padding:14px 14px 70px}
+    .hamb{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border:1px solid var(--bd);border-radius:10px;background:#1a1d24;color:#f1f5f9;font-size:20px;cursor:pointer}
+    .cards{grid-template-columns:repeat(2,1fr)}
+    .charts{grid-template-columns:1fr}
+    .zone-gallery{grid-template-columns:1fr}
+    .page-h h1{font-size:19px}
+    .scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:25}
+    .scrim.show{display:block}
+  }
+  @media print{
+    .side,.page-h .btn,.rep-tools,.hamb,.scrim{display:none!important}
+    .main{margin:0!important}
+    body *{visibility:hidden}
+    #repArea,#repArea *{visibility:visible}
+    #repArea{position:absolute;left:0;top:0;width:100%}
+    table{min-width:0!important}
+  }
+</style>
+</head>
+<body>
+<div id="overlay">불러오는 중…</div>
+<div class="scrim" id="scrim" onclick="toggleNav(false)"></div>
+<div id="lightbox" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:999;align-items:center;justify-content:center;cursor:zoom-out">
+  <img id="lbImg" style="max-width:95vw;max-height:95vh;object-fit:contain;border-radius:10px;box-shadow:0 0 40px rgba(0,0,0,.8)">
+</div>
+
+<div class="app">
+  <aside class="side" id="side">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 100 100" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
+          <defs><clipPath id="cc"><circle cx="50" cy="50" r="49"/></clipPath></defs>
+          <circle cx="50" cy="50" r="49" fill="#111"/>
+          <rect x="0" y="36" width="100" height="28" fill="#dd0000" clip-path="url(#cc)"/>
+          <text x="91" y="58" text-anchor="end" fill="white" font-family="Arial Black,Impact,sans-serif" font-weight="900" font-size="24" letter-spacing="-1">AMS</text>
+          <path d="M 81 19 A 44 44 0 1 0 81 81" fill="none" stroke="#1414cc" stroke-width="15" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div><b>3정5S 점검 관리</b><small>주식회사 캠스</small><small>생산팀 · 김환기PM</small></div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" data-view="dash" onclick="showView('dash')"><span class="ic">🏠</span> 메인</div>
+      <div class="nav-item" data-view="input" onclick="showView('input')"><span class="ic">✏️</span> 점검 입력</div>
+      <div class="nav-item" data-view="history" onclick="showView('history')"><span class="ic">📋</span> 이력 조회</div>
+      <div class="nav-item" data-view="impr" onclick="showView('impr')"><span class="ic">🔧</span> 개선현황</div>
+    </nav>
+    <div class="side-foot">
+      <div class="av">김</div>
+      <div><b>김환기</b><small>캠스 담당자</small></div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ===== 메인 대시보드 ===== -->
+    <section class="view" id="view-dash">
+      <div class="page-h">
+        <button class="hamb" onclick="toggleNav(true)">☰</button>
+        <h1>메인</h1>
+        <span class="grow"></span>
+        <button class="btn" onclick="reloadFromServer()">🔄 새로고침</button>
+        <div class="sub">3정5S 점검 현황을 한눈에 확인하세요</div>
+      </div>
+
+      <!-- 레이아웃 이미지 -->
+      <div class="chart-box" style="margin-bottom:18px">
+        <h3>🗺️ 구획별 LAY-OUT
+          <span class="grow"></span>
+          <label class="btn pri" style="font-size:13px;padding:6px 12px">＋ 레이아웃 등록/교체<input type="file" accept="image/*" style="display:none" onchange="setLayout(this)"></label>
+        </h3>
+        <img id="layoutImg" src="" onclick="this.src&&showLightbox(this.src)" style="display:none;cursor:zoom-in">
+        <div id="layoutEmpty" class="hint">＋ 버튼으로 구획별 LAY-OUT 이미지를 등록하면 여기에 고정 표시됩니다.</div>
+      </div>
+
+      <!-- 조직도 -->
+      <div class="chart-box" style="margin-bottom:18px">
+        <h3>👥 조직도
+          <span class="grow"></span>
+          <label class="btn pri" style="font-size:13px;padding:6px 12px">＋ 조직도 등록/교체<input type="file" accept="image/*" style="display:none" onchange="setOrgChart(this)"></label>
+        </h3>
+        <img id="orgImg" src="" onclick="this.src&&showLightbox(this.src)" style="display:none;width:100%;border:1px solid var(--bd);border-radius:8px;cursor:zoom-in;background:#0b0d12">
+        <div id="orgEmpty" class="hint">＋ 버튼으로 조직도 이미지를 등록하면 여기에 고정 표시됩니다.</div>
+      </div>
+
+      <!-- 통계 카드 -->
+      <div class="cards" id="cards"></div>
+
+      <!-- 차트 -->
+      <div class="charts">
+        <div class="chart-box"><h3>📈 월별 점수 추이</h3><div class="cv-wrap"><canvas id="cM"></canvas></div></div>
+        <div class="chart-box"><h3>📊 항목별 최근 점수</h3><div class="cv-wrap"><canvas id="cZ"></canvas></div></div>
+      </div>
+      <div class="chart-box" style="margin-top:14px">
+        <h3>📊 항목별 전체 평균</h3>
+        <div class="cv-wrap" style="height:300px"><canvas id="cC"></canvas></div>
+      </div>
+
+      <!-- 구역별 사진 갤러리 -->
+      <div class="chart-box" style="margin-top:14px">
+        <h3>📷 구역별 현장 사진
+          <span class="grow"></span>
+          <span style="font-size:12px;color:var(--mut);font-weight:400">구역을 클릭해 사진을 추가/삭제하세요</span>
+        </h3>
+        <div id="zoneGallery"></div>
+      </div>
+    </section>
+
+    <!-- ===== 점검 입력 ===== -->
+    <section class="view" id="view-input" style="display:none">
+      <div class="page-h">
+        <button class="hamb" onclick="toggleNav(true)">☰</button>
+        <h1>점검 입력</h1>
+        <span class="grow"></span>
+        <span class="save-note" id="saveNote"></span>
+      </div>
+      <div class="bar">
+        <label>점검일</label>
+        <input class="date-in" id="dy" type="number" inputmode="numeric"> 년
+        <input class="date-in" id="dm" type="number" inputmode="numeric"> 월
+        <input class="date-in" id="dd" type="number" inputmode="numeric"> 일
+        <label>점검자</label>
+        <input id="dchecker" style="width:90px" placeholder="성명">
+        <span class="grow"></span>
+        <label>기록(월)</label>
+        <select id="recSel" onchange="loadRecord(this.value)"></select>
+        <button class="btn" onclick="newRecord()">＋ 새 기록</button>
+        <button class="btn pri" onclick="saveNow()">💾 저장</button>
+      </div>
+      <div class="hint">
+        · 각 항목을 <b>1~5점</b>으로 평가하세요. 5점=매우 양호 / 3점=보통 / 1점=매우 불량&nbsp;&nbsp;
+        · 미흡한 항목은 <b>지적사항</b>·<b>조치확인</b>란을 채우세요.
+      </div>
+      <div id="sections"></div>
+    </section>
+
+    <!-- ===== 이력 조회 ===== -->
+    <section class="view" id="view-history" style="display:none">
+      <div class="page-h">
+        <button class="hamb" onclick="toggleNav(true)">☰</button>
+        <h1>이력 조회</h1>
+        <span class="grow"></span>
+        <button class="btn" onclick="reloadFromServer()">🔄 새로고침</button>
+        <div class="sub">월별 점검 기록을 조회하고 인쇄(PDF)할 수 있습니다</div>
+      </div>
+      <div id="histList"></div>
+      <div id="histDetail"></div>
+    </section>
+
+    <!-- ===== 개선현황 ===== -->
+    <section class="view" id="view-impr" style="display:none">
+      <div class="page-h">
+        <button class="hamb" onclick="toggleNav(true)">☰</button>
+        <h1>개선현황</h1>
+        <span class="grow"></span>
+        <button class="btn pri" onclick="openImprovForm(null)">＋ 개선 등록</button>
+        <div class="sub">공정 개선 전·후 사진 및 조치 내용을 관리합니다</div>
+      </div>
+      <div id="improvForm" style="display:none"></div>
+      <div id="improvList"></div>
+    </section>
+
+  </main>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDZZSI3ib_rmGz4gSMe0DgZs650IuTCvKs",
+  authDomain: "cams-torque.firebaseapp.com",
+  projectId: "cams-torque",
+  storageBucket: "cams-torque.firebasestorage.app",
+  messagingSenderId: "404254094434",
+  appId: "1:404254094434:web:b4193a15de4153b9aa0d3b"
+};
+const COL = 'fivees';
+const SETTINGS_DOC = 'fivees';
+const LAYOUT_DOC = 'fivees_layout';
+const IMP_COL = 'improvements';
+const ORG_DOC = 'fivees_org';
+</script>
+<script>
+/* ===== 체크리스트 (185점 만점) ===== */
+const CHECK_GROUPS = [
+  {grp:'설비관리', items:[
+    '사출기 내·외부 바닥 오일 및 냉각수 누수상태',
+    '사출기 비닐랩 교체 및 게이지 관리상태',
+    '분쇄기 바닥 및 먼지, 절단품 청소 상태',
+    '파분쇄품 보관용 BAG 정리·정돈 상태',
+    'QMC 레일주변 바닥 청소 관리상태',
+    '호퍼드라이실 청결상태 및 필터 교환주기 준수여부',
+    '설비 일상점검 시행',
+    '자동화 설비의 안전플러그는 체결 관리상태',
+  ]},
+  {grp:'금형 지그관리', items:[
+    '금형 정위치 관리상태',
+    '금형 청결상태',
+    '금형 명판 및 QR코드 인식상태',
+    '금형수리 공구 및 SPARE 부품 정지정돈 상태',
+  ]},
+  {grp:'용기 대차관리', items:[
+    '대차 식별관리 상태',
+    '대차 훼손, 변형여부',
+    '대차 청결상태',
+    '대차 정위치 관리 상태',
+  ]},
+  {grp:'선입선출 관리', items:[
+    '구획선 표시 상태',
+    '부품 식별 TAG 부착상태',
+    '바코드 관리 상태',
+    '물류 LAY-OUT 상태',
+  ]},
+  {grp:'부품관리', items:[
+    '제품간 간섭 및 찍힘 발생여부',
+  ]},
+  {grp:'정리·정돈관리', items:[
+    '불필요품 현장 방치',
+    '작업대 관리 상태',
+    '작업장 청소상태',
+    '구획선 관리상태',
+  ]},
+  {grp:'안전관리', items:[
+    '안전보호구 착용상태',
+    '규정작업복 착용상태',
+    '화재예방관련 소화기 관리상태',
+    'MSDS 가시상태 및 위험물 보관상태',
+    '안전플러그 및 표지판 부착 상태',
+    '사출자동화 공정 가스 누설감지기 및 누설여부 확인상태',
+  ]},
+  {grp:'표준류 관리', items:[
+    '작업표준류, 중점관리표, 설비 일상점검표 관리상태',
+  ]},
+  {grp:'시종시간 관리', items:[
+    '시·종시간 준수 상태',
+  ]},
+  {grp:'품질관리', items:[
+    '작업표준 준수 여부',
+    '한도견본 관리상태',
+    '초중종물 검사시행 및 거치대 보관상태',
+    '부적합품 보관상태',
+  ]},
+];
+const GRAND_MAX = CHECK_GROUPS.reduce((s,g)=>s+g.items.length*5,0); // 185
+function d100(raw){return GRAND_MAX?Math.round(raw/GRAND_MAX*100):0;}
+
+/* 구역 정의 */
+const ZONES = [
+  {key:'A', label:'A구역 (사출)'},
+  {key:'B', label:'B구역 (B/P조립)'},
+  {key:'C', label:'C구역 (보전반)'},
+  {key:'D', label:'D구역 (도장)'},
+  {key:'E', label:'E구역 (C/PAD)'},
+];
+const IMP_ZONES = [
+  'A구역-사출',
+  'B구역-1/2LINE B/P조립',
+  'C구역-보전반',
+  'D구역-도장',
+  'E구역-3공장 C/PAD',
+];
+
+/* ===== 상태 ===== */
+let curRecId='', curPhotoZone='A', DB={}, db=null;
+let IMPROVEMENTS={}, curImprovId=null, impEditMode=false;
+/* SETTINGS.zonePhotos = {A:[{url,name},...], B:[...], ...}  ← 메인 고정 사진 */
+let SETTINGS={layout:'',zonePhotos:{A:[],B:[],C:[],D:[],E:[]}};
+const ADMIN_PIN='103518';
+let _authed=false;
+
+function checkAdmin(){
+  if(_authed)return true;
+  const v=prompt('🔒 관리자 비밀번호');
+  if(v===ADMIN_PIN){_authed=true;setTimeout(()=>_authed=false,30*60*1000);return true;}
+  if(v!==null)alert('비밀번호가 틀렸습니다.');
+  return false;
+}
+function docId(ym){return'rec__'+ym;}
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function showLightbox(url){const lb=document.getElementById('lightbox');document.getElementById('lbImg').src=url;lb.style.display='flex';}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const lb=document.getElementById('lightbox');if(lb)lb.style.display='none';}});
+
+/* ===== Firebase ===== */
+function fbInit(){
+  try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();return true;}
+  catch(e){showOverlay('Firebase 연결 오류:<br>'+e.message);return false;}
+}
+function showOverlay(html){const o=document.getElementById('overlay');o.innerHTML=html;o.style.display='flex';}
+function hideOverlay(){document.getElementById('overlay').style.display='none';}
+
+async function loadAll(){
+  const snap=await db.collection(COL).get();
+  DB={};
+  snap.forEach(d=>{
+    const v=d.data();
+    if(!d.id.startsWith('rec__')||!v.ym)return;
+    DB[v.ym]={
+      date:v.date||{y:'',m:'',d:''},
+      checker:v.checker||'',
+      checklist:v.checklist||{},
+      zonePhotos:v.zonePhotos||initZP(),
+    };
+  });
+  try{
+    const s=await db.collection('settings').doc(SETTINGS_DOC).get();
+    if(s.exists){SETTINGS=s.data()||{};}
+  }catch(e){SETTINGS={};}
+  try{
+    const sl=await db.collection('settings').doc(LAYOUT_DOC).get();
+    if(sl.exists&&sl.data().layout)SETTINGS.layout=sl.data().layout;
+  }catch(e){}
+  try{
+    const so=await db.collection('settings').doc(ORG_DOC).get();
+    if(so.exists&&so.data().orgChart)SETTINGS.orgChart=so.data().orgChart;
+  }catch(e){}
+  if(!SETTINGS.orgChart)SETTINGS.orgChart='';
+  if(!SETTINGS.zonePhotos)SETTINGS.zonePhotos={};
+  ZONES.forEach(z=>{if(!SETTINGS.zonePhotos[z.key])SETTINGS.zonePhotos[z.key]=[];});
+  if(SETTINGS.layout===undefined)SETTINGS.layout='';
+  try{
+    const is=await db.collection(IMP_COL).orderBy('createdAt','desc').get();
+    IMPROVEMENTS={};
+    is.forEach(d=>{IMPROVEMENTS[d.id]=d.data();});
+  }catch(e){IMPROVEMENTS={};}
+}
+
+async function saveSettings(){
+  if(!db)return;
+  const {layout:_,...rest}=SETTINGS;
+  await db.collection('settings').doc(SETTINGS_DOC).set(rest);
+}
+async function saveLayout(){
+  if(!db)return;
+  await db.collection('settings').doc(LAYOUT_DOC).set({layout:SETTINGS.layout||''});
+}
+async function saveOrgChart(){
+  if(!db)return;
+  await db.collection('settings').doc(ORG_DOC).set({orgChart:SETTINGS.orgChart||''});
+}
+
+async function saveRecord(ym){
+  const rec=DB[ym];if(!rec||!db)return;
+  await db.collection(COL).doc(docId(ym)).set({
+    ym,
+    date:rec.date,
+    checker:rec.checker||'',
+    checklist:rec.checklist||{},
+    zonePhotos:rec.zonePhotos||initZP(),
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+let saveTimer=null,saving=false,dirty=false;
+function note(html){const n=document.getElementById('saveNote');if(n)n.innerHTML=html;}
+function persist(){dirty=true;note('저장 대기…');if(saveTimer)clearTimeout(saveTimer);saveTimer=setTimeout(flush,800);}
+async function flush(){
+  if(!dirty||saving||!curRecId)return;saving=true;dirty=false;note('저장 중…');
+  try{
+    await saveRecord(curRecId);
+    const t=new Date();note('<b>저장됨</b> · '+t.getHours()+':'+String(t.getMinutes()).padStart(2,'0'));
+  }catch(e){dirty=true;note('저장 실패 — 재시도');if(saveTimer)clearTimeout(saveTimer);saveTimer=setTimeout(flush,2000);}
+  saving=false;if(dirty){if(saveTimer)clearTimeout(saveTimer);saveTimer=setTimeout(flush,800);}
+}
+
+/* ===== 레코드 ===== */
+function initZP(){const o={};ZONES.forEach(z=>{o[z.key]={before:[],after:[]};});return o;}
+function blankRecord(){
+  const cl={};CHECK_GROUPS.forEach((g,ci)=>g.items.forEach((_,ii)=>{cl[ci+'_'+ii]={score:0,issue:'',action:''};} ));
+  return{date:{y:'',m:'',d:''},checker:'',checklist:cl,zonePhotos:initZP()};
+}
+function cur(){return curRecId?DB[curRecId]:null;}
+
+/* ===== 뷰 전환 ===== */
+function showView(v){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));
+  document.querySelectorAll('.view').forEach(p=>p.style.display='none');
+  document.getElementById('view-'+v).style.display='block';
+  if(v==='dash')renderDash();
+  if(v==='history')openHistory();
+  if(v==='input'){refreshRecSelect();render();}
+  if(v==='impr')renderImprovList();
+  toggleNav(false);
+}
+function toggleNav(open){
+  document.getElementById('side').classList.toggle('open',open);
+  document.getElementById('scrim').classList.toggle('show',open);
+}
+
+/* ===== 기록 관리 ===== */
+function refreshRecSelect(){
+  const sel=document.getElementById('recSel');if(!sel)return;
+  const ids=Object.keys(DB).sort().reverse();
+  sel.innerHTML=ids.map(id=>`<option value="${id}">${id.replace('-','년 ')}월</option>`).join('')||'<option value="">(기록 없음)</option>';
+  if(curRecId&&ids.includes(curRecId))sel.value=curRecId;
+}
+function newRecord(){
+  const t=new Date();let y=t.getFullYear(),m=t.getMonth()+1;
+  const inp=prompt('새 기록 (년-월)\n예: '+y+'-'+String(m).padStart(2,'0'),y+'-'+String(m).padStart(2,'0'));
+  if(!inp)return;
+  const mt=inp.match(/(\d{4})\D+(\d{1,2})/);if(!mt){alert('형식: 2026-06');return;}
+  y=+mt[1];m=+mt[2];
+  const id=y+'-'+String(m).padStart(2,'0');
+  if(!DB[id]){const rec=blankRecord();rec.date={y:String(y),m:String(m),d:''};DB[id]=rec;curRecId=id;persist();}
+  refreshRecSelect();loadRecord(id);
+}
+function loadRecord(id){
+  if(!id||!DB[id])return;
+  curRecId=id;
+  const sel=document.getElementById('recSel');if(sel)sel.value=id;
+  const rec=DB[id];
+  document.getElementById('dy').value=rec.date.y||id.split('-')[0];
+  document.getElementById('dm').value=rec.date.m||(+id.split('-')[1]);
+  document.getElementById('dd').value=rec.date.d||'';
+  document.getElementById('dchecker').value=rec.checker||'';
+  render();
+}
+
+/* ===== 입력 화면 렌더 ===== */
+function render(){
+  const root=document.getElementById('sections');if(!root)return;
+  if(!curRecId){
+    root.innerHTML='<div class="sec"><div style="padding:24px;text-align:center;color:var(--mut)"><b>＋ 새 기록</b> 버튼으로 이번 달 점검을 시작하세요.</div></div>';
+    return;
+  }
+  const rec=cur();if(!rec){root.innerHTML='';return;}
+  root.innerHTML='';
+
+  let itemNo=1;
+  CHECK_GROUPS.forEach((grp,ci)=>{
+    let grpScore=0,grpMax=grp.items.length*5,grpHasIssue=false;
+    grp.items.forEach((_,ii)=>{
+      const d=rec.checklist[ci+'_'+ii]||{};
+      grpScore+=(d.score||0);
+      if(d.issue&&d.issue.trim())grpHasIssue=true;
+    });
+    const grpPct=grpMax?(grpScore/grpMax*100).toFixed(0):0;
+    const sbCls=grpScore/grpMax>=0.8?'sb-hi':grpScore/grpMax>=0.6?'sb-mid':grpScore>0?'sb-lo':'';
+    let rows='';
+    grp.items.forEach((item,ii)=>{
+      const key=ci+'_'+ii;
+      const d=rec.checklist[key]||{score:0,issue:'',action:''};
+      const sc=d.score||0;
+      const pills=[1,2,3,4,5].map(v=>`<div class="sp s${v} ${sc===v?'on':''}" onclick="setScore('${key}',${v})">${v}</div>`).join('');
+      rows+=`<tr class="${sc>0?'rs'+sc:''}">
+        <td class="rno">${itemNo++}</td>
+        <td class="ritem">${escHtml(item)}</td>
+        <td style="min-width:180px"><div class="sp-wrap">${pills}</div></td>
+        <td style="min-width:130px"><input class="text-in" value="${escHtml(d.issue)}" placeholder="지적사항" oninput="setField('${key}','issue',this.value)"></td>
+        <td style="min-width:130px"><input class="text-in" value="${escHtml(d.action)}" placeholder="조치확인" oninput="setField('${key}','action',this.value)"></td>
+      </tr>`;
+    });
+    const div=document.createElement('div');div.className='sec';
+    div.innerHTML=`
+      <div class="sec-h">
+        <span style="background:#1e2a45;color:#93c5fd;font-size:12px;padding:2px 9px;border-radius:20px;font-weight:800;flex-shrink:0">${ci+1}</span>
+        <span style="flex-shrink:0">${escHtml(grp.grp)}</span>
+        <span class="stat">총점 ${grpScore}/${grpMax}</span>
+        ${grpScore>0?`<span class="score-badge ${sbCls}">${grpPct}%</span>`:''}
+        ${grpHasIssue?'<span style="font-size:12px;color:#fde68a">⚠ 지적사항 있음</span>':''}
+      </div>
+      <div class="scroll"><table>
+        <tr><th class="rno">NO</th><th>점검항목</th><th style="min-width:180px">점검결과 (1~5점)</th><th style="min-width:130px">지적사항</th><th style="min-width:130px">조치확인</th></tr>
+        ${rows}
+      </table></div>`;
+    root.appendChild(div);
+  });
+
+  /* 합계 */
+  let total=0;CHECK_GROUPS.forEach((g,ci)=>g.items.forEach((_,ii)=>{total+=(rec.checklist[ci+'_'+ii]||{}).score||0;}));
+  const pct=GRAND_MAX?(total/GRAND_MAX*100).toFixed(1):0;
+  const sumDiv=document.createElement('div');sumDiv.className='sec';
+  sumDiv.innerHTML=`<div class="sec-h" style="font-size:16px">
+    📊 합계 점수
+    <span class="score-badge ${total/GRAND_MAX>=0.8?'sb-hi':total/GRAND_MAX>=0.6?'sb-mid':total>0?'sb-lo':''}" style="font-size:14px;padding:4px 14px">${total} / ${GRAND_MAX}점 (${(total/GRAND_MAX*100).toFixed(1)}%)</span>
+  </div>`;
+  root.appendChild(sumDiv);
+
+  /* 구역별 사진 */
+  const zpSec=document.createElement('div');zpSec.className='sec';
+  const zp=rec.zonePhotos||initZP();
+  let totalPh=0;ZONES.forEach(z=>{const zz=zp[z.key]||{};totalPh+=(zz.before||[]).length+(zz.after||[]).length;});
+  const ztabsHtml=ZONES.map(z=>{
+    const zz=zp[z.key]||{};const cnt=(zz.before||[]).length+(zz.after||[]).length;
+    return`<div class="ztab ${z.key===curPhotoZone?'active':''}" onclick="setPhotoZone('${z.key}')">${escHtml(z.label)}${cnt?` (${cnt})`:''}</div>`;
+  }).join('');
+  const czp=zp[curPhotoZone]||{before:[],after:[]};
+  zpSec.innerHTML=`
+    <div class="sec-h">📷 구역별 조치 전/후 사진 <span class="stat">전체 ${totalPh}장</span></div>
+    <div class="ztabs">${ztabsHtml}</div>
+    <div class="ba">
+      ${baBox(curPhotoZone,'before','🔴 조치 전',czp.before||[])}
+      ${baBox(curPhotoZone,'after','🟢 조치 후',czp.after||[])}
+    </div>`;
+  root.appendChild(zpSec);
+}
+
+function baBox(zk,which,label,photos){
+  return`<div class="ba-box ${which}"><div class="ba-h">${label}</div>
+    <div class="ba-body">
+      <label class="btn pri" style="font-size:13px;padding:7px 12px">＋ 촬영 / 추가<input type="file" accept="image/*" capture="environment" style="display:none" onchange="addPhoto(this,'${zk}','${which}')"></label>
+      <div class="photos">${photos.map((p,i)=>`<div class="ph"><img src="${p.url}" onclick="showLightbox('${p.url}')"><div class="del" onclick="delPhoto('${zk}','${which}',${i})">✕</div></div>`).join('')}</div>
+    </div></div>`;
+}
+
+function setPhotoZone(key){curPhotoZone=key;render();}
+
+function setScore(key,v){
+  const r=cur();if(!r)return;
+  if(!r.checklist[key])r.checklist[key]={score:0,issue:'',action:''};
+  r.checklist[key].score=(r.checklist[key].score===v)?0:v;
+  persist();render();
+}
+function setField(key,field,v){
+  const r=cur();if(!r)return;
+  if(!r.checklist[key])r.checklist[key]={score:0,issue:'',action:''};
+  r.checklist[key][field]=v;persist();
+}
+
+['dy','dm','dd'].forEach(id=>{
+  document.addEventListener('DOMContentLoaded',()=>{
+    const el=document.getElementById(id);
+    if(el)el.addEventListener('change',()=>{const r=cur();if(!r)return;r.date={y:document.getElementById('dy').value,m:document.getElementById('dm').value,d:document.getElementById('dd').value};persist();});
+  });
+});
+document.addEventListener('DOMContentLoaded',()=>{
+  const ec=document.getElementById('dchecker');
+  if(ec)ec.addEventListener('input',function(){const r=cur();if(!r)return;r.checker=this.value;persist();});
+});
+
+async function saveNow(){if(saveTimer)clearTimeout(saveTimer);await flush();alert('저장되었습니다.');}
+async function reloadFromServer(){
+  showOverlay('새로고침 중…');
+  try{await loadAll();showView(document.querySelector('.nav-item.active')?.dataset.view||'dash');}
+  catch(e){alert('불러오기 실패: '+e.message);}
+  hideOverlay();
+}
+
+/* ===== 사진 압축 ===== */
+function compressImage(file,maxDim,q){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        let w=img.width,h=img.height;
+        if(w>=h&&w>maxDim){h=Math.round(h*maxDim/w);w=maxDim;}
+        else if(h>w&&h>maxDim){w=Math.round(w*maxDim/h);h=maxDim;}
+        const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        res(cv.toDataURL('image/jpeg',q));
+      };
+      img.onerror=rej;img.src=r.result;
+    };
+    r.onerror=rej;r.readAsDataURL(file);
+  });
+}
+
+/* 입력 화면 구역 사진 추가/삭제 */
+async function addPhoto(input,zk,which){
+  const f=input.files[0];if(!f)return;
+  const rec=cur();if(!rec){input.value='';return;}
+  if(!rec.zonePhotos)rec.zonePhotos=initZP();
+  if(!rec.zonePhotos[zk])rec.zonePhotos[zk]={before:[],after:[]};
+  const arr=rec.zonePhotos[zk][which];
+  if(arr.length>=4){alert('구역당 전/후 각 최대 4장');input.value='';return;}
+  note('사진 처리 중…');
+  try{
+    const dataUrl=await compressImage(f,1024,0.55);
+    arr.push({url:dataUrl,name:f.name});
+    let total=0;ZONES.forEach(z=>{const zz=rec.zonePhotos[z.key]||{};[...(zz.before||[]),...(zz.after||[])].forEach(p=>total+=(p.url?p.url.length:0));});
+    if(total>1800000){arr.pop();alert('전체 사진 용량 초과. 기존 사진을 지우고 추가하세요.');note('');input.value='';return;}
+    render();note('<b>사진 추가됨</b>');
+    saveRecord(curRecId).catch(e=>alert('클라우드 저장 실패:\n'+e.message));
+  }catch(e){alert('사진 처리 실패: '+e.message);note('');}
+  input.value='';
+}
+async function delPhoto(zk,which,i){
+  const rec=cur();if(!rec)return;
+  const arr=rec.zonePhotos?.[zk]?.[which];
+  if(!arr||arr[i]===undefined)return;
+  if(!confirm('이 사진을 삭제할까요?'))return;
+  arr.splice(i,1);await saveRecord(curRecId);render();
+}
+
+/* ===== 대시보드 ===== */
+let chM=null,chZ=null,chC=null;
+function recScore(rec){let s=0;CHECK_GROUPS.forEach((g,ci)=>g.items.forEach((_,ii)=>{s+=(rec.checklist[ci+'_'+ii]||{}).score||0;}));return s;}
+function catScore(rec,ci){return CHECK_GROUPS[ci].items.reduce((s,_,ii)=>s+((rec.checklist[ci+'_'+ii]||{}).score||0),0);}
+
+function computeStats(){
+  const months={};let total=0,maxTotal=0,recCount=0;
+  const catAvg=CHECK_GROUPS.map(()=>({sum:0,cnt:0}));
+  let latestYm='',latestScore=0,latestRec=null;
+  Object.keys(DB).sort().forEach(ym=>{
+    recCount++;const rec=DB[ym];
+    const rs=recScore(rec);total+=rs;maxTotal+=GRAND_MAX;
+    months[ym]=rs;
+    CHECK_GROUPS.forEach((_,ci)=>{const cs=catScore(rec,ci);if(cs>0){catAvg[ci].sum+=cs;catAvg[ci].cnt++;}});
+    latestYm=ym;latestScore=rs;latestRec=rec;
+  });
+  return{months,total,maxTotal,recCount,catAvg,latestYm,latestScore,latestRec};
+}
+
+function renderDash(){
+  /* 레이아웃 */
+  const img=document.getElementById('layoutImg'),em=document.getElementById('layoutEmpty');
+  if(SETTINGS.layout){img.src=SETTINGS.layout;img.style.display='block';em.style.display='none';}
+  else{img.style.display='none';em.style.display='block';}
+  /* 조직도 */
+  const oi=document.getElementById('orgImg'),oe=document.getElementById('orgEmpty');
+  if(SETTINGS.orgChart){oi.src=SETTINGS.orgChart;oi.style.display='block';oe.style.display='none';}
+  else{oi.style.display='none';oe.style.display='block';}
+
+  const s=computeStats();
+  const avgPct=s.maxTotal?Math.round(s.total/s.maxTotal*100):0;
+  const latestPct=GRAND_MAX?Math.round(s.latestScore/GRAND_MAX*100):0;
+  const lBadge=latestPct>=80?'sb-hi':latestPct>=60?'sb-mid':s.latestScore>0?'sb-lo':'';
+
+  document.getElementById('cards').innerHTML=`
+    <div class="card"><div class="ic b">📋</div><div class="num">${s.recCount}</div><div class="lab">총 기록(월) 수</div></div>
+    <div class="card"><div class="ic g">⭐</div><div class="num">${s.latestScore||'-'}<small style="font-size:13px;font-weight:600"> /185</small></div><div class="lab">최근 점수</div></div>
+    <div class="card"><div class="ic y">📊</div><div class="num">${avgPct}%</div><div class="lab">전체 평균</div></div>
+    <div class="card"><div class="ic b">📅</div><div class="num" style="font-size:18px">${s.latestYm||'-'}</div><div class="lab">최근 점검월</div></div>`;
+
+  const ms=Object.keys(s.months).sort();
+  if(chM)chM.destroy();if(chZ)chZ.destroy();if(chC)chC.destroy();
+  const C=window.Chart;if(!C)return;
+
+  chM=new C(document.getElementById('cM'),{type:'line',data:{
+    labels:ms.length?ms.map(m=>m.replace('-','.')):['데이터 없음'],
+    datasets:[{label:'점수',data:ms.map(m=>d100(s.months[m])),borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.15)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:'#3b82f6'}]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:50,max:100,ticks:{stepSize:10,callback:v=>v+'점'}}},plugins:{legend:{position:'bottom'}}}});
+
+  const catMaxes=CHECK_GROUPS.map(g=>g.items.length*5);
+  const latestCatPcts=CHECK_GROUPS.map((_,ci)=>{
+    if(!s.latestRec)return 0;
+    const cs=catScore(s.latestRec,ci);
+    return catMaxes[ci]?Math.round(cs/catMaxes[ci]*100):0;
+  });
+  chZ=new C(document.getElementById('cZ'),{type:'bar',data:{
+    labels:CHECK_GROUPS.map(g=>g.grp),
+    datasets:[{label:'최근 점수(%)',data:latestCatPcts,backgroundColor:latestCatPcts.map(p=>p>=80?'rgba(22,163,74,.8)':p>=60?'rgba(202,138,4,.8)':'rgba(220,38,38,.8)'),borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%'}}},plugins:{legend:{display:false}}}});
+
+  const catAvgPcts=s.catAvg.map((a,i)=>a.cnt&&catMaxes[i]?Math.round(a.sum/a.cnt/catMaxes[i]*100):0);
+  chC=new C(document.getElementById('cC'),{type:'bar',data:{
+    labels:CHECK_GROUPS.map(g=>g.grp),
+    datasets:[{label:'전체 평균(%)',data:catAvgPcts,backgroundColor:catAvgPcts.map(p=>p>=80?'rgba(22,163,74,.7)':p>=60?'rgba(202,138,4,.7)':'rgba(220,38,38,.7)'),borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%'}}},plugins:{legend:{display:false}}}});
+
+  renderZoneGallery();
+}
+
+/* ===== 메인 구역 갤러리 ===== */
+function renderZoneGallery(){
+  const el=document.getElementById('zoneGallery');if(!el)return;
+  const zp=SETTINGS.zonePhotos||{};
+  el.innerHTML=`<div class="zone-gallery">${ZONES.map(z=>{
+    const photos=zp[z.key]||[];
+    const photosHtml=photos.length
+      ?photos.map((p,i)=>`<div class="ph"><img src="${p.url}" onclick="showLightbox('${p.url}')"><div class="del" onclick="delZonePhoto('${z.key}',${i})">✕</div></div>`).join('')
+      :'<div style="color:var(--mut);font-size:13px;padding:4px 0">사진 없음</div>';
+    return`<div class="zone-card">
+      <div class="zone-card-h">
+        <span>${escHtml(z.label)}</span>
+        <span class="grow"></span>
+        <span style="font-size:12px;color:var(--mut)">${photos.length}장</span>
+        <label class="btn" style="font-size:12px;padding:4px 9px;margin-left:6px">＋ 추가<input type="file" accept="image/*" style="display:none" onchange="addZonePhoto(this,'${z.key}')"></label>
+      </div>
+      <div class="zone-card-body"><div class="zone-photos-row">${photosHtml}</div></div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+async function addZonePhoto(input,zk){
+  const f=input.files[0];if(!f)return;
+  if(!checkAdmin()){input.value='';return;}
+  if(!SETTINGS.zonePhotos)SETTINGS.zonePhotos={};
+  if(!SETTINGS.zonePhotos[zk])SETTINGS.zonePhotos[zk]=[];
+  if(SETTINGS.zonePhotos[zk].length>=6){alert('구역당 최대 6장');input.value='';return;}
+  try{
+    const d=await compressImage(f,1200,0.6);
+    let total=0;ZONES.forEach(z=>(SETTINGS.zonePhotos[z.key]||[]).forEach(p=>total+=(p.url?p.url.length:0)));
+    if(total+d.length>1800000){alert('전체 용량 초과');input.value='';return;}
+    SETTINGS.zonePhotos[zk].push({url:d,name:f.name});
+    renderZoneGallery();
+    saveSettings().catch(e=>alert('저장 실패:\n'+e.message));
+  }catch(e){alert('사진 처리 실패: '+e.message);}
+  input.value='';
+}
+async function delZonePhoto(zk,i){
+  if(!checkAdmin())return;
+  if(!confirm('삭제할까요?'))return;
+  SETTINGS.zonePhotos[zk].splice(i,1);
+  await saveSettings();renderZoneGallery();
+}
+
+async function setLayout(input){
+  const f=input.files[0];if(!f)return;
+  if(!checkAdmin()){input.value='';return;}
+  try{
+    const d=await compressImage(f,1400,0.55);
+    SETTINGS.layout=d;renderDash();
+    saveLayout().catch(e=>alert('클라우드 저장 실패:\n'+e.message));
+  }catch(e){alert('이미지 처리 실패: '+e.message);}
+  input.value='';
+}
+async function setOrgChart(input){
+  const f=input.files[0];if(!f)return;
+  if(!checkAdmin()){input.value='';return;}
+  try{
+    const d=await compressImage(f,1400,0.55);
+    SETTINGS.orgChart=d;renderDash();
+    saveOrgChart().catch(e=>alert('클라우드 저장 실패:\n'+e.message));
+  }catch(e){alert('이미지 처리 실패: '+e.message);}
+  input.value='';
+}
+
+/* ===== 이력 조회 ===== */
+function openHistory(){
+  const yms=Object.keys(DB).sort().reverse();
+  const listEl=document.getElementById('histList');
+  if(!yms.length){listEl.innerHTML='<div class="hint">저장된 기록이 없습니다.</div>';return;}
+  let html='';
+  yms.forEach(ym=>{
+    const rec=DB[ym];
+    const rs=recScore(rec),pct=GRAND_MAX?Math.round(rs/GRAND_MAX*100):0;
+    const sbCls=pct>=80?'sb-hi':pct>=60?'sb-mid':rs>0?'sb-lo':'';
+    const d=rec.date;
+    const dateStr=d.d?`${d.y||ym.split('-')[0]}.${String(d.m||(+ym.split('-')[1])).padStart(2,'0')}.${String(d.d).padStart(2,'0')}`:ym;
+    let totalPh=0;ZONES.forEach(z=>{const zz=(rec.zonePhotos||{})[z.key]||{};totalPh+=(zz.before||[]).length+(zz.after||[]).length;});
+    html+=`<div class="sec" style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;padding:12px 14px;flex-wrap:wrap">
+        <span style="font-size:16px;font-weight:800">📅 ${ym.replace('-','년 ')}월</span>
+        <span class="unit">${dateStr}</span>
+        ${rec.checker?`<span class="unit">· ${escHtml(rec.checker)}</span>`:''}
+        <span class="score-badge ${sbCls}" style="font-size:13px">${rs}/${GRAND_MAX}점 (${pct}%)</span>
+        <span class="grow"></span>
+        ${totalPh?`<span class="unit">📷 ${totalPh}장</span>`:''}
+        <button class="btn" style="padding:5px 11px;font-size:13px" onclick="viewRecord('${ym}')">보기</button>
+        <button class="btn" style="padding:5px 11px;font-size:13px;color:#22c55e;border-color:#555" onclick="editRecord('${ym}')">수정</button>
+        <button class="btn" style="padding:5px 9px;font-size:13px;color:var(--ng);border-color:#555" onclick="deleteRecord('${ym}')">🗑</button>
+      </div>
+    </div>`;
+  });
+  listEl.innerHTML=html;
+  listEl.style.display='block';
+  document.getElementById('histDetail').innerHTML='';
+}
+
+function viewRecord(ym){
+  document.getElementById('histList').style.display='none';
+  document.getElementById('histDetail').innerHTML=
+    `<div class="rep-tools">
+       <button class="btn" onclick="backToList()">‹ 목록</button>
+       <button class="btn" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="editRecord('${ym}')">✏️ 수정하기</button>
+       <button class="btn pri" onclick="window.print()">🖨 인쇄 / PDF 저장</button>
+     </div>
+     <div id="repArea">${buildStatic(ym)}</div>`;
+}
+function editRecord(ym){loadRecord(ym);showView('input');}
+function backToList(){document.getElementById('histDetail').innerHTML='';document.getElementById('histList').style.display='block';}
+async function deleteRecord(ym){
+  if(!checkAdmin())return;
+  if(!confirm(`${ym.replace('-','년 ')}월 기록을 삭제할까요?\n되돌릴 수 없습니다.`))return;
+  try{await db.collection(COL).doc(docId(ym)).delete();delete DB[ym];openHistory();}
+  catch(e){alert('삭제 실패: '+e.message);}
+}
+
+/* ===== 인쇄용 정적 보기 ===== */
+function buildStatic(ym){
+  const rec=DB[ym];if(!rec)return'';
+  const rs=recScore(rec),pct=GRAND_MAX?Math.round(rs/GRAND_MAX*100):0;
+  const d=rec.date;
+  let html=`<div class="rep-head">
+    ■ 3정5S 점검표 · ${ym.replace('-','년 ')}월&nbsp;&nbsp;
+    점검일: ${d.y||ym.split('-')[0]}년 ${d.m||(+ym.split('-')[1])}월 ${d.d||''}일
+    ${rec.checker?` &nbsp; 점검자: ${escHtml(rec.checker)}`:''}
+    &nbsp; <span class="score-badge ${pct>=80?'sb-hi':pct>=60?'sb-mid':rs>0?'sb-lo':''}" style="font-size:13px">${rs}/${GRAND_MAX}점 (${pct}%)</span>
+  </div>`;
+
+  let no=1;
+  CHECK_GROUPS.forEach((grp,ci)=>{
+    let grpScore=0,grpMax=grp.items.length*5;
+    grp.items.forEach((_,ii)=>{grpScore+=(rec.checklist[ci+'_'+ii]||{}).score||0;});
+    const gpct=grpMax?Math.round(grpScore/grpMax*100):0;
+    let rows='';
+    grp.items.forEach((item,ii)=>{
+      const d2=rec.checklist[ci+'_'+ii]||{};const sc=d2.score||0;
+      const scColor=sc>=4?'#16a34a':sc===3?'#ca8a04':sc>0?'#dc2626':'#374151';
+      const scBg=sc>=4?'var(--okbg)':sc===3?'#2d2200':sc>0?'var(--ngbg)':'transparent';
+      rows+=`<tr>
+        <td class="rno">${no++}</td>
+        <td class="ritem" style="min-width:260px">${escHtml(item)}</td>
+        <td style="width:60px;background:${scBg};color:${scColor};font-weight:800;font-size:15px">${sc||'-'}</td>
+        <td style="min-width:140px;text-align:left;padding-left:8px;font-size:13px">${escHtml(d2.issue||'')}</td>
+        <td style="min-width:120px;text-align:left;padding-left:8px;font-size:13px">${escHtml(d2.action||'')}</td>
+      </tr>`;
+    });
+    html+=`<div class="rep-sec"><div class="rep-sech">
+      <span style="background:#1e2a45;color:#93c5fd;font-size:11px;padding:2px 8px;border-radius:20px">${ci+1}</span>
+      ${escHtml(grp.grp)}
+      <span class="score-badge ${gpct>=80?'sb-hi':gpct>=60?'sb-mid':'sb-lo'}" style="font-size:11px">${grpScore}/${grpMax}점 (${gpct}%)</span>
+    </div><div class="scroll"><table>
+      <tr><th class="rno">NO</th><th>점검항목</th><th style="width:60px">점수</th><th style="min-width:140px">지적사항</th><th style="min-width:120px">조치확인</th></tr>
+      ${rows}
+    </table></div></div>`;
+  });
+
+  /* 구역별 사진 */
+  const zp=rec.zonePhotos||{};
+  ZONES.forEach(z=>{
+    const zz=zp[z.key]||{before:[],after:[]};
+    const tot=(zz.before||[]).length+(zz.after||[]).length;
+    if(!tot)return;
+    html+=`<div class="rep-sec"><div class="rep-sech">📷 ${escHtml(z.label)}</div><div class="ba">`;
+    if((zz.before||[]).length)html+=`<div><div style="font-weight:700;color:#fca5a5;padding:6px 0">🔴 조치 전</div><div class="photos">${(zz.before||[]).map(p=>`<div class="ph"><img src="${p.url}" onclick="showLightbox('${p.url}')"></div>`).join('')}</div></div>`;
+    if((zz.after||[]).length)html+=`<div><div style="font-weight:700;color:#86efac;padding:6px 0">🟢 조치 후</div><div class="photos">${(zz.after||[]).map(p=>`<div class="ph"><img src="${p.url}" onclick="showLightbox('${p.url}')"></div>`).join('')}</div></div>`;
+    html+='</div></div>';
+  });
+
+  return html;
+}
+
+/* ===== 개선현황 ===== */
+function blankImprov(){
+  return{no:'',process:'',worker:'',date:'',note:'',
+    problem:'',before_photos:[],before_desc:'',temp_photos:[],temp_desc:'',root_photos:[],root_desc:''};
+}
+function dateToQuarter(d){
+  if(!d)return'';
+  const [y,m]=d.split('-').map(Number);
+  if(!y||!m)return'';
+  return`${y} ${Math.ceil(m/3)}분기`;
+}
+function autoQuarter(){
+  const d=document.getElementById('imp_date');
+  const n=document.getElementById('imp_note');
+  if(d&&n)n.value=dateToQuarter(d.value);
+}
+function pickZone(btn,label){
+  document.querySelectorAll('#impZoneChips .zchip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('imp_proc').value=label;
+}
+
+function renderImprovList(){
+  const listEl=document.getElementById('improvList');
+  const ids=Object.keys(IMPROVEMENTS);
+  if(!ids.length){
+    listEl.innerHTML='<div class="hint" style="padding:20px 0">등록된 개선 현황이 없습니다.<br>＋ 개선 등록 버튼으로 추가하세요.</div>';
+    return;
+  }
+  listEl.innerHTML=ids.map(id=>{
+    const r=IMPROVEMENTS[id];
+    return`<div class="impr-card" onclick="openImprovForm('${id}')">
+      <div class="impr-no">개선번호: ${escHtml(r.no||'—')}</div>
+      <div class="impr-title">${escHtml(r.process||'(공정명 없음)')}&nbsp;&nbsp;<span style="font-weight:400;color:var(--mut);font-size:13px">${escHtml(r.worker||'')}</span></div>
+      ${r.problem?`<div class="impr-problem">- ${escHtml(r.problem)}</div>`:''}
+      <div class="impr-meta">
+        <span>📅 ${escHtml(r.date||'')}</span>
+        ${r.before_photos.length?`<span>📷 개선전 ${r.before_photos.length}장</span>`:''}
+        ${r.root_photos.length?`<span>📷 개선 후 ${r.root_photos.length}장</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openImprovForm(id){
+  curImprovId=id;
+  impEditMode=true;
+  const r=id?IMPROVEMENTS[id]:blankImprov();
+  const formEl=document.getElementById('improvForm');
+  formEl.style.display='block';
+  formEl.innerHTML=`
+  <div class="impr-form">
+    <h3>${id?'✏️ 개선 수정':'＋ 개선 등록'}</h3>
+    <div class="frow">
+      <label>개선번호<input id="imp_no" value="${escHtml(r.no)}" placeholder="예) 2501-01"></label>
+      <label style="flex:2">공정명
+        <select id="imp_proc">
+          <option value="">-- 구역 선택 --</option>
+          ${IMP_ZONES.map(z=>`<option value="${z}"${r.process===z?' selected':''}>${z}</option>`).join('')}
+        </select>
+      </label>
+      <label style="flex:2">담당자<input id="imp_worker" value="${escHtml(r.worker)}" placeholder="예) 최연상 팀장"></label>
+      <label>발췌일<input id="imp_date" type="date" value="${escHtml(r.date)}" oninput="autoQuarter()"></label>
+      <label>분기<input id="imp_note" value="${escHtml(r.note)}" placeholder="자동입력" readonly style="background:#0a0c12;color:#93c5fd;cursor:default"></label>
+    </div>
+    <div class="frow">
+      <label style="flex:1;min-width:100%">문제점
+        <textarea id="imp_prob">${escHtml(r.problem)}</textarea>
+      </label>
+    </div>
+    <div class="impr-ba">
+      ${impPhotoBox('before','🔴 개선 전',r.before_photos,r.before_desc)}
+      ${impPhotoBox('temp','🟡 임시 조치현황',r.temp_photos,r.temp_desc)}
+      ${impPhotoBox('root','🟢 개선 후',r.root_photos,r.root_desc)}
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+      <button class="btn pri" onclick="saveImprov()">💾 저장</button>
+      ${id?`<button class="btn" style="color:var(--ng);border-color:#555" onclick="deleteImprov('${id}')">🗑 삭제</button>`:''}
+      <button class="btn" onclick="closeImprovForm()">✕ 닫기</button>
+    </div>
+  </div>`;
+  formEl.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function impPhotoBox(type,label,photos,desc){
+  const cls=type==='before'?'bef':type==='temp'?'tmp':'root';
+  const photosHtml=photos.map((p,i)=>`<div class="ph"><img src="${p.url}" onclick="showLightbox('${p.url}')" style="width:100px;height:75px;object-fit:cover;border-radius:6px;border:1px solid var(--bd)"><div class="del" onclick="delImprovPhoto('${type}',${i})">✕</div></div>`).join('');
+  return`<div class="impr-ba-box ${cls}">
+    <h4>${label}</h4>
+    <label class="btn" style="font-size:12px;padding:5px 10px;display:inline-flex;align-items:center;gap:5px;cursor:pointer">
+      ＋ 사진 추가<input type="file" accept="image/*" capture="environment" style="display:none" onchange="addImprovPhoto(this,'${type}')">
+    </label>
+    <div class="photos" style="margin-top:8px;flex-wrap:wrap;display:flex;gap:6px">${photosHtml}</div>
+    <textarea id="imp_desc_${type}" placeholder="${label} 설명">${escHtml(desc)}</textarea>
+  </div>`;
+}
+
+function closeImprovForm(){
+  document.getElementById('improvForm').style.display='none';
+  document.getElementById('improvForm').innerHTML='';
+  curImprovId=null;
+}
+
+async function addImprovPhoto(input,type){
+  const f=input.files[0];if(!f)return;
+  const id=curImprovId;
+  const r=id?IMPROVEMENTS[id]:blankImprov();
+  try{
+    const d=await compressImage(f,1024,0.55);
+    r[type+'_photos'].push({url:d,name:f.name});
+    if(id){IMPROVEMENTS[id]=r;await db.collection(IMP_COL).doc(id).set(r);}
+    openImprovForm(id);
+  }catch(e){alert('사진 처리 실패: '+e.message);}
+  input.value='';
+}
+
+async function delImprovPhoto(type,i){
+  if(!confirm('삭제할까요?'))return;
+  const id=curImprovId;
+  const r=id?IMPROVEMENTS[id]:null;if(!r)return;
+  r[type+'_photos'].splice(i,1);
+  IMPROVEMENTS[id]=r;
+  await db.collection(IMP_COL).doc(id).set(r);
+  openImprovForm(id);
+}
+
+async function saveImprov(){
+  const g=id=>document.getElementById(id);
+  const r=curImprovId?{...IMPROVEMENTS[curImprovId]}:blankImprov();
+  r.no=g('imp_no').value.trim();
+  r.process=g('imp_proc').value.trim();
+  r.worker=g('imp_worker').value.trim();
+  r.date=g('imp_date').value.trim();
+  r.note=g('imp_note').value.trim();
+  r.problem=g('imp_prob').value.trim();
+  r.before_desc=g('imp_desc_before').value.trim();
+  r.temp_desc=g('imp_desc_temp').value.trim();
+  r.root_desc=g('imp_desc_root').value.trim();
+  try{
+    if(curImprovId){
+      IMPROVEMENTS[curImprovId]=r;
+      await db.collection(IMP_COL).doc(curImprovId).set(r);
+    }else{
+      r.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+      const ref=await db.collection(IMP_COL).add(r);
+      IMPROVEMENTS[ref.id]=r;
+      curImprovId=ref.id;
+    }
+    closeImprovForm();
+    renderImprovList();
+  }catch(e){alert('저장 실패: '+e.message);}
+}
+
+async function deleteImprov(id){
+  if(!checkAdmin())return;
+  if(!confirm('이 개선 현황을 삭제할까요?'))return;
+  try{
+    await db.collection(IMP_COL).doc(id).delete();
+    delete IMPROVEMENTS[id];
+    closeImprovForm();
+    renderImprovList();
+  }catch(e){alert('삭제 실패: '+e.message);}
+}
+
+/* ===== 시작 ===== */
+(async function init(){
+  if(!fbInit())return;
+  try{await loadAll();}catch(e){showOverlay('데이터 불러오기 실패:<br>'+e.message);return;}
+  const ids=Object.keys(DB).sort();
+  if(ids.length)curRecId=ids[ids.length-1];
+  refreshRecSelect();showView('dash');hideOverlay();
+})();
+</script>
+</body>
+</html>

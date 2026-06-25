@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>PPTX 캡처</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f1117;color:#e2e8f0;font-family:'Malgun Gothic',sans-serif;
+     display:flex;align-items:center;justify-content:center;height:100vh}
+.card{text-align:center;display:flex;flex-direction:column;align-items:center;gap:18px}
+.logo svg{display:block}
+.title{font-size:20px;font-weight:700;letter-spacing:1px}
+.sub{font-size:13px;color:#64748b}
+.btn{margin-top:8px;padding:14px 48px;background:#3b82f6;color:#fff;border:none;
+     border-radius:10px;font-size:16px;font-family:inherit;font-weight:700;
+     cursor:pointer;transition:.15s;letter-spacing:.5px}
+.btn:hover{background:#2563eb;transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.status{font-size:13px;color:#94a3b8;min-height:20px}
+.dot{display:inline-block;animation:blink .9s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <svg viewBox="0 0 100 100" width="72" height="72" xmlns="http://www.w3.org/2000/svg">
+      <defs><clipPath id="cc"><circle cx="50" cy="50" r="49"/></clipPath></defs>
+      <circle cx="50" cy="50" r="49" fill="#111"/>
+      <rect x="0" y="36" width="100" height="28" fill="#dd0000" clip-path="url(#cc)"/>
+      <text x="91" y="58" text-anchor="end" fill="white"
+        font-family="Arial Black,Impact,sans-serif"
+        font-weight="900" font-size="24" letter-spacing="-1">AMS</text>
+      <path d="M 81 19 A 44 44 0 1 0 81 81" fill="none" stroke="#1414cc" stroke-width="15" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div class="title">자료 캡처</div>
+  <div class="sub">주식회사 캠스</div>
+  <button class="btn" onclick="launch()">실행</button>
+  <div class="status" id="st"></div>
+</div>
+
+<script>
+function launch() {
+  document.querySelector('.btn').disabled = true;
+  document.querySelector('.btn').textContent = '시작 중...';
+  document.getElementById('st').innerHTML = '서버 기동 중<span class="dot">...</span>';
+
+  // 사용자 클릭으로 프로토콜 열기 (브라우저 허용)
+  location.href = 'camspptx:run';
+
+  // 3초 후 사이트 이동
+  setTimeout(function(){
+    document.getElementById('st').textContent = '사이트로 이동합니다';
+    location.href = 'http://localhost:8766';
+  }, 3000);
+}
+</script>
+</body>
+</html>

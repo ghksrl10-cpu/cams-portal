@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>알카 실적 종합 관리</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<style>
+  :root{
+    --bd:#2a2d35; --line:#23262f; --hd:#1a1d24; --hd2:#20232b; --blue:#3b82f6; --blue2:#2563eb;
+    --ok:#22c55e; --okbg:#052e16; --ng:#ef4444; --ngbg:#2d0a0a; --mut:#9ca3af; --ink:#f1f5f9;
+    --side:#13151c; --bg:#0f1117;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"맑은 고딕","Malgun Gothic",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
+
+  /* ===== 레이아웃 ===== */
+  .app{display:flex;min-height:100vh}
+  .side{width:230px;background:var(--side);border-right:1px solid var(--bd);position:fixed;top:0;bottom:0;left:0;display:flex;flex-direction:column;z-index:30}
+  .brand{display:flex;align-items:center;gap:10px;padding:18px 16px;border-bottom:1px solid var(--line)}
+  .brand .logo{width:44px;height:44px;flex-shrink:0}
+  .brand b{font-size:15px}
+  .brand small{display:block;color:var(--mut);font-size:12px;margin-top:1px}
+  .nav{padding:10px;flex:1}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:9px;cursor:pointer;color:#94a3b8;font-weight:600;font-size:15px;margin-bottom:3px;transition:background .15s}
+  .nav-item:hover{background:#20232b}
+  .nav-item.active{background:var(--blue);color:#fff}
+  .nav-item .ic{width:20px;text-align:center}
+  .side-foot{padding:14px 16px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .side-foot .av{width:32px;height:32px;border-radius:50%;background:#1e3a5f;color:#60a5fa;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
+  .side-foot small{display:block;color:var(--mut);font-size:12px}
+  .scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:25}
+  .scrim.show{display:block}
+
+  .main{flex:1;margin-left:230px;padding:20px 24px 70px}
+  .page-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 0 18px}
+  .page-h h1{font-size:22px;margin:0;font-weight:800}
+  .page-h .sub{color:var(--mut);font-size:13px;width:100%;margin-top:-4px}
+  .grow{flex:1}
+  .hamb{display:none}
+
+  /* ===== 버튼 ===== */
+  .btn{padding:9px 14px;border:1px solid var(--bd);border-radius:9px;background:#20232b;cursor:pointer;font-size:14px;font-weight:600;color:#e2e8f0;transition:background .15s}
+  .btn:hover{background:#2a2d35}
+  .btn.pri{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .btn.pri:hover{background:var(--blue2)}
+  .btn.grn{background:#15803d;color:#fff;border-color:#15803d}
+  .btn.warn{color:var(--ng);border-color:#7f1d1d}
+
+  /* ===== 입력 바 ===== */
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#1a1d24;border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
+  .bar label{font-weight:700;color:#94a3b8;font-size:14px}
+  .bar input,.bar select{padding:8px;border:1px solid var(--bd);border-radius:8px;font-size:15px;background:#0f1117;color:#f1f5f9}
+  .hint{font-size:13px;color:var(--mut);margin:0 0 12px;line-height:1.6}
+
+  /* ===== 섹션 카드 ===== */
+  .sec{background:#1a1d24;border:1px solid var(--bd);border-radius:12px;margin-bottom:14px;overflow:hidden}
+  .sec-h{background:var(--hd);padding:9px 14px;font-weight:800;font-size:16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px}
+  .sec-h .stat{font-size:13px;font-weight:600;color:var(--mut)}
+  .scroll{overflow-x:auto}
+
+  /* ===== 통계 카드 4열 ===== */
+  .stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .stat-card{background:#1a1d24;border:1px solid var(--bd);border-radius:14px;padding:16px 18px}
+  .stat-card .sic{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:10px}
+  .stat-card .snum{font-size:30px;font-weight:800;line-height:1}
+  .stat-card .slab{color:var(--mut);font-size:13px;margin-top:6px}
+  .sic.b{background:#1e3a5f;color:#3b82f6}
+  .sic.g{background:var(--okbg);color:var(--ok)}
+  .sic.r{background:var(--ngbg);color:var(--ng)}
+  .sic.y{background:#2d1800;color:#f59e0b}
+
+  /* ===== 요약 카드 3열 ===== */
+  .sum3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+  .sum-card{background:#1a1d24;border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+  .sc-h{padding:9px 14px;font-weight:800;font-size:15px;border-bottom:1px solid var(--bd);text-align:center;letter-spacing:1px}
+  .sc-h.cams{background:#1e3a5f;color:#93c5fd}
+  .sc-h.kia{background:#2d0a0a;color:#fca5a5}
+  .sc-h.buy{background:#1c1500;color:#fcd34d}
+
+  /* ===== 요약 테이블 ===== */
+  .stbl{border-collapse:collapse;width:100%}
+  .stbl th,.stbl td{border:1px solid var(--bd);padding:5px 8px;text-align:center;font-size:13px;white-space:nowrap;color:var(--ink)}
+  .stbl th{background:var(--hd2);font-weight:700}
+  .stbl .veh{background:var(--hd2);font-weight:700}
+  .stbl .tot-row td{background:var(--hd2);font-weight:800}
+  .stbl .sub-row td{background:#13151c;font-size:12px;color:var(--mut);font-weight:600}
+  .amt{text-align:right !important}
+
+  /* ===== 달성률 ===== */
+  .dal-grid{display:grid;grid-template-columns:repeat(4,1fr)}
+  .dal-cell{border:1px solid var(--bd);padding:14px 10px;text-align:center;background:#1a1d24}
+  .dal-cell:not(:first-child){border-left:none}
+  .dal-h{font-size:12px;color:var(--mut);font-weight:700;margin-bottom:6px}
+  .dal-v{font-size:24px;font-weight:800;color:var(--blue)}
+  .dal-u{font-size:11px;color:var(--mut);margin-top:2px}
+
+  /* ===== 데이터 테이블 ===== */
+  table{border-collapse:collapse;width:100%}
+  th,td{border:1px solid var(--bd);padding:0;text-align:center;height:38px;font-size:13px;white-space:nowrap;color:var(--ink)}
+  th{background:var(--hd2);font-weight:700;padding:0 4px}
+  tr:hover td{background:#1e2128}
+  td.day-c{background:var(--hd2);font-weight:800;font-size:14px}
+  .kia-c{color:#f87171;font-weight:700}
+  .cams-c{color:#60a5fa;font-weight:700}
+  td.loc1{color:#34d399;font-weight:700}
+  td.part-c{color:#a78bfa;font-size:12px;font-weight:600}
+  td.def-c{color:var(--ng);font-weight:600}
+  td.amt-c{text-align:right;padding-right:8px}
+  .warn-box{background:#2d0a0a;border:1px solid #7f1d1d;border-radius:10px;padding:14px 16px;margin-bottom:12px}
+  .warn-box .warn-ttl{color:#f87171;font-weight:800;font-size:15px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .warn-box .warn-item{font-size:13px;color:#fca5a5;padding:4px 0 4px 22px;border-bottom:1px solid #3f1111;line-height:1.5}
+  .warn-box .warn-item:last-child{border-bottom:none}
+  td.err-c{color:#f87171;font-weight:800;background:#2d0a0a !important}
+  .yr-h td{background:#1e2a3a;font-weight:800;color:#93c5fd}
+  .edit-in{width:100%;height:100%;border:0;text-align:right;font-size:13px;background:transparent;outline:none;padding-right:6px;color:var(--ink)}
+  .edit-in:focus{background:#1e2a3a}
+
+  /* ===== 설정 인라인 ===== */
+  .def-row{display:flex;gap:6px;align-items:center;margin-bottom:8px;padding:10px;background:#0f1117;border:1px solid var(--bd);border-radius:8px}
+  .def-name{width:90px;padding:7px 8px;border:1px solid var(--bd);border-radius:6px;font-size:14px;font-weight:700;background:#1a1d24;color:var(--ink)}
+  .def-keys{flex:1;padding:7px 8px;border:1px solid var(--bd);border-radius:6px;font-size:13px;background:#1a1d24;color:var(--ink)}
+  .def-del{padding:5px 12px;border:1px solid #7f1d1d;border-radius:6px;background:#1a1d24;color:var(--ng);cursor:pointer;font-size:13px}
+
+  /* ===== 월 내비 ===== */
+  .mon-bar{display:flex;align-items:center;justify-content:center;gap:12px;background:#1a1d24;border:1px solid var(--bd);border-radius:12px;padding:12px 16px;margin-bottom:14px}
+  .mon-btn{width:36px;height:36px;border:1px solid var(--bd);border-radius:8px;background:#0f1117;color:#f1f5f9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+  .mon-btn:hover{background:#2a2d35}
+  .mon-btn:disabled{opacity:.3;cursor:default}
+  .mon-label{font-size:20px;font-weight:500;color:#f1f5f9;min-width:120px;text-align:center}
+  .mon-dots{display:flex;gap:5px}
+  .mon-dot{width:7px;height:7px;border-radius:50%;background:#2a2d35;cursor:pointer;transition:background .15s}
+  .mon-dot.cur{background:#3b82f6}
+
+  /* ===== 모바일 ===== */
+  @media(max-width:820px){
+    .side{transform:translateX(-100%);transition:.25s}
+    .side.open{transform:translateX(0)}
+    .main{margin-left:0;padding:14px 14px 70px}
+    .hamb{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border:1px solid var(--bd);border-radius:9px;background:#1a1d24;font-size:18px;cursor:pointer;color:var(--ink)}
+    .stat-cards{grid-template-columns:repeat(2,1fr)}
+    .sum3{grid-template-columns:1fr}
+    .dal-grid{grid-template-columns:repeat(2,1fr)}
+  }
+  @media(max-width:560px){
+    .stat-cards{grid-template-columns:1fr 1fr}
+    .dal-grid{grid-template-columns:1fr 1fr}
+  }
+</style>
+</head>
+<body>
+<div class="scrim" id="scrim" onclick="toggleNav(false)"></div>
+
+<div class="app">
+  <!-- ===== 사이드바 ===== -->
+  <aside class="side" id="side">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 100 100" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
+          <defs><clipPath id="cc"><circle cx="50" cy="50" r="49"/></clipPath></defs>
+          <circle cx="50" cy="50" r="49" fill="#111"/>
+          <rect x="0" y="36" width="100" height="28" fill="#dd0000" clip-path="url(#cc)"/>
+          <text x="91" y="58" text-anchor="end" fill="white"
+            font-family="Arial Black,Impact,sans-serif"
+            font-weight="900" font-size="24" letter-spacing="-1">AMS</text>
+          <path d="M 81 19 A 44 44 0 1 0 81 81" fill="none" stroke="#1414cc" stroke-width="15" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div><b>알카 실적 종합</b><small>주식회사 캠스</small><small>생산팀 · 김환기PM</small></div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" data-view="main" onclick="showView('main')"><span class="ic">🏠</span> 메인</div>
+      <div class="nav-item" data-view="kpi" onclick="showView('kpi')"><span class="ic">📊</span> KPI</div>
+      <div class="nav-item" data-view="reg" onclick="showView('reg')"><span class="ic">✏️</span> 등록</div>
+      <div class="nav-item" data-view="mgmt" onclick="showView('mgmt')"><span class="ic">📋</span> 종합 관리</div>
+      <div class="nav-item" data-view="kpidata" onclick="showView('kpidata')"><span class="ic">📑</span> KPI 자료화</div>
+      <div class="nav-item" data-view="edu" onclick="showView('edu')"><span class="ic">📚</span> 교육(인수인계)</div>
+      <div class="nav-item" data-view="cfg" onclick="showView('cfg')"><span class="ic">⚙️</span> 설정</div>
+    </nav>
+    <div class="side-foot">
+      <div class="av">김</div>
+      <div><b style="font-size:14px">김환기</b><small>캠스 담당자</small></div>
+    </div>
+  </aside>
+
+  <!-- ===== 본문 ===== -->
+  <main class="main">
+
+    <!-- ─── 메인 ─────────────────────────────── -->
+    <section id="view-main">
+      <div class="page-h">
+        <button class="hamb" onclick="toggleNav(true)">☰</button>
+        <h1>메인</h1>
+        <span class="grow"></span>
+        <label style="font-size:13px;color:var(--mut)">계획수량</label>
+        <input type="number" id="targetIn" value="155" onchange="saveDB();renderMain()"
+          style="width:72px;padding:8px;border:1px solid var(--bd);border-radius:8px;font-size:15px;background:#0f1117;color:#f1f5f9">
+        <span style="font-size:13px;color:var(--mut)">건</span>
+        <select id="mainMonSel" onchange="renderMain()" style="display:none"></select>
+        <div class="sub">알카 실적 월간 KPI 현황</div>
+      </div>
+
+      <!-- 월 내비게이션 -->
+      <div class="mon-bar">
+        <button class="mon-btn" id="btnPrev" onclick="prevMonth()">‹</button>
+        <span id="monLabel" style="font-size:20px;font-weight:500;color:#f1f5f9;min-width:120px;text-align:center">(등록 없음)</span>
+        <button class="mon-btn" id="btnNext" onclick="nextMonth()">›</button>
+        <div class="mon-dots" id="monDots"></div>
+      </div>
+
+      <div class="stat-cards" id="statCards"></div>
+
+      <!-- KPI 목록 -->
+      <div class="sec">
+        <div class="sec-h">📊 KPI 목록</div>
+        <div style="padding:14px">
+          <div class="sum3" id="sum3"></div>
+          <div style="border:1px solid var(--bd);border-radius:10px;overflow:hidden;margin-top:4px">
+            <div style="background:var(--hd);padding:8px 12px;font-size:13px;font-weight:700;color:var(--mut);border-bottom:1px solid var(--bd)">달성률</div>
+            <div class="dal-grid" id="dalGrid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 월별 금액 현황 -->
+      <div class="sec">
+        <div class="sec-h">월별 금액 현황 <span class="stat">(빈 칸 직접 입력 가능)</span></div>
+        <div class="scroll"><table id="histTbl"></table></div>
+      </div>
+    </section>
+
+    <!-- ─── KPI ──────────────────────────────── -->
+    <section id="view-kpi" style="display:none">
+      <div class="page-h">
+        <button class="hamb" onclick="toggleNav(true)">☰</button>
+        <h1>KPI</h1>
+        <span class="grow"></span>
+        <select id="kpiMonSel" onchange="renderKpi()" style="padding:8px;border:1px solid var(--bd);border-radius:8px;font-size:14px;background:#0f1117;color:#f1f5f9"></select>
+        <div class="sub">차종별 귀책·출하장 현황 (시트1) + 귀책별 FRT/RR 현황 (시트2)</div>
+      </div>
+
+      <!-- 시트 1번: 차종 × 귀책/출하장 (FRT / RR 2단) -->
+      <div class="sec">
+        <div class="sec-h">📋 차종별 현황 <span class="stat">(시트 1번)</span></div>
+        <div style="padding:14px;display:flex;flex-direction:column;gap:14px">
+          <div>
+            <div style="font-weight:800;font-size:13px;color:#93c5fd;margin-bottom:6px;letter-spacing:1px">▶ FRT</div>
+            <div class="scroll"><table class="stbl" id="kpi1FRT"></table></div>
+          </div>
+          <div>
+            <div style="font-weight:800;font-size:13px;color:#86efac;margin-bottom:6px;letter-spacing:1px">▶ RR</div>
+            <div class="scroll"><table class="stbl" id="kpi1RR"></table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 시트 2번: 귀책/발생 × FRT/RR -->
+      <div class="sec">
+        <div class="sec-h">📋 귀책별 현황 <span class="stat">(시트 2번)</span></div>
+        <div class="scroll" style="padding:14px">
+          <table class="stbl" id="kpi2"></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── 등록 ─────────────────────────────── -->
+    <section id="view-reg" style="display:none">
+      <div class="page-h">
+        <button class="hamb" onclick="toggleNav(true)">☰</button>
+        <h1>등록</h1>
+        <div class="sub">카카오톡 대화를 붙여넣어 알카 내역을 분석·저장합니다</div>
+      </div>
+
+      <div class="bar">
+        <label>등록 월</label>
+        <input type="number" id="regY" style="width:60px" placeholder="26"> 년
+        <input type="number" id="regM" style="width:50px" placeholder="5"> 월
+        <span class="grow"></span>
+        <button class="btn pri" onclick="runParse()">▶ 분석</button>
+        <button class="btn grn" onclick="saveRecords()">💾 저장</button>
+        <button class="btn warn" onclick="clearReg()">✕ 초기화</button>
+        <button class="btn" onclick="toggleXlsPaste()" title="엑셀에서 복사 후 붙여넣기">
+          📋 엑셀 붙여넣기
+        </button>
+        <label class="btn" style="cursor:pointer" title="과거 엑셀 파일 불러오기">
+          📂 엑셀 파일
+          <input type="file" id="xlsIn" accept=".xlsx,.xls" style="display:none" onchange="loadXls(this)">
+        </label>
+      </div>
+
+      <div class="sec">
+        <div class="sec-h">카카오톡 대화 입력</div>
+        <div style="padding:12px">
+          <textarea id="chatInput" style="width:100%;min-height:160px;padding:10px;border:1px solid var(--bd);border-radius:8px;font-size:13px;font-family:inherit;background:#0f1117;color:#f1f5f9;resize:vertical;line-height:1.5;outline:none" placeholder="카카오톡 내보내기 내용을 여기에 붙여넣으세요..."></textarea>
+        </div>
+      </div>
+      <div class="hint">· 카카오톡 대화방 → 메뉴 → 대화 내보내기 → txt 내용 복사 붙여넣기</div>
+
+      <div id="xlsPasteArea" style="display:none">
+        <div class="sec">
+          <div class="sec-h">엑셀 붙여넣기 <span class="stat">엑셀에서 헤더 포함 전체 셀 선택 → Ctrl+C → 아래 붙여넣기</span></div>
+          <div style="padding:12px">
+            <textarea id="xlsPasteInput" style="width:100%;min-height:120px;padding:10px;border:1px solid var(--bd);border-radius:8px;font-size:13px;font-family:inherit;background:#0f1117;color:#f1f5f9;resize:vertical;line-height:1.5;outline:none" placeholder="엑셀에서 헤더 포함 셀을 선택 후 Ctrl+C → 여기에 Ctrl+V 붙여넣기"></textarea>
+            <div style="margin-top:8px;display:flex;gap:8px">
+              <button class="btn pri" onclick="parsePaste()">▶ 분석</button>
+              <button class="btn" onclick="document.getElementById('xlsPasteInput').value='';toggleXlsPaste()">✕ 닫기</button>
+            </div>
+            <div class="hint" style="margin-top:8px">· 열 순서: 일자 / 발생 / 차종 / 아이템 / 귀책 / 평동 / 경산 / 목포항 / 충주 / 신태인 / 오토큐 / 덕평 / 단품만 요청 / 불량 사유</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="regPreview" style="display:none">
+        <div id="parseWarn" style="display:none" class="warn-box">
+          <div class="warn-ttl">⚠ 파싱 오류 — 확인이 필요합니다</div>
+          <div id="parseWarnList"></div>
+        </div>
+        <div class="sec">
+          <div class="sec-h">분석 결과 미리보기 <span class="stat" id="regStat"></span></div>
+          <div class="scroll">
+            <table>
+              <thead><tr>
+                <th>일자</th><th>발생</th><th>차종</th><th>아이템</th><th>귀책</th>
+                <th>평동</th><th>경산</th><th>목포항</th><th>충주</th><th>신태인</th><th>오토큐</th><th>덕평</th>
+                <th>단품만 요청</th><th>불량 사유</th>
+              </tr></thead>
+              <tbody id="regBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── 종합 관리 ─────────────────────────── -->
+    <section id="view-mgmt" style="display:none">
+      <div class="page-h">
+        <button class="hamb" onclick="toggleNav(true)">☰</button>
+        <h1>종합 관리</h1>
+        <span class="grow"></span>
+        <select id="mgmtMonSel" onchange="renderMgmt()" style="padding:8px;border:1px solid var(--bd);border-radius:8px;font-size:14px;background:#0f1117;color:#f1f5f9">
+          <option value="all">전체</option>
+        </select>
+        <button class="btn grn" onclick="dlExcel()">⬇ 엑셀 다운</button>
+        <button class="btn warn" onclick="delMonth()">🗑 이 달 삭제</button>
+        <div class="sub">전체 알카 상세 기록 조회</div>
+      </div>
+      <div class="sec">
+        <div class="sec-h">상세 내역 <span class="stat" id="mgmtStat"></span></div>
+        <div class="scroll">
+          <table>
+            <thead><tr>
+              <th>일자</th><th>발생</th><th>차종</th><th>아이템</th><th>귀책</th>
+              <th>평동</th><th>경산</th><th>목포항</th><th>충주</th><th>신태인</th><th>오토큐</th><th>덕평</th>
+              <th>단품만 요청</th><th>불량 사유</th>
+            </tr></thead>
+            <tbody id="mgmtBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── 교육(인수인계) ───────────────────────── -->
+    <section id="view-edu" style="display:none">
+      <div class="page-h">
+        <button class="hamb" onclick="toggleNav(true)">☰</button>
+        <h1>교육(인수인계)</h1>
+        <div class="sub">카톡 알카 신청 → 엑셀 입력 규칙</div>
+      </div>
+
+      <!-- 차종 코드 대조표 -->
+      <div class="sec" style="margin-bottom:14px">
+        <div class="sec-h">🚗 차종 코드 대조표</div>
+        <div style="padding:16px;overflow-x:auto">
+          <div style="font-size:12px;color:#f87171;background:#2a1515;border:1px solid #7f1d1d;border-radius:8px;padding:10px 14px;margin-bottom:14px">
+            ⚠️ <b>주의:</b> 카톡에서 <b>스포티지(GYW/JWW)</b>가 오면 → 엑셀 <b>NQ5</b>로 입력 (SP2 아님. SP2는 셀토스)
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead>
+              <tr style="background:#1e2230;color:#94a3b8">
+                <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--bd)">엑셀 코드</th>
+                <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--bd)">실제 차종명</th>
+                <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--bd)">카톡에서 쓰는 표현</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid #1e2230"><td style="padding:9px 14px;font-weight:700;color:#60a5fa">NQ5</td><td style="padding:9px 14px">스포티지 (공용 — 단종 후 PE 포함)</td><td style="padding:9px 14px;color:#94a3b8">NQ5 / NQ5 PE / NQ PE / NQ / 스포티지(GYW.../JWW...)</td></tr>
+              <tr style="border-bottom:1px solid #1e2230"><td style="padding:9px 14px;font-weight:700;color:#60a5fa">SP2</td><td style="padding:9px 14px">셀토스 (TH)</td><td style="padding:9px 14px;color:#94a3b8">SP2 / SP2PE</td></tr>
+              <tr style="border-bottom:1px solid #1e2230;background:#0f1117"><td style="padding:9px 14px;font-weight:700;color:#60a5fa">SP3</td><td style="padding:9px 14px">셀토스 풀체인지 (1S)</td><td style="padding:9px 14px;color:#94a3b8">SP3</td></tr>
+              <tr style="border-bottom:1px solid #1e2230"><td style="padding:9px 14px;font-weight:700;color:#60a5fa">OV1</td><td style="padding:9px 14px">EV5</td><td style="padding:9px 14px;color:#94a3b8">OV1 / Ov1 / X9</td></tr>
+              <tr style="border-bottom:1px solid #1e2230;background:#0f1117"><td style="padding:9px 14px;font-weight:700;color:#60a5fa">AX</td><td style="padding:9px 14px">캐스퍼</td><td style="padding:9px 14px;color:#94a3b8">AX / AX PE</td></tr>
+              <tr><td style="padding:9px 14px;font-weight:700;color:#60a5fa">JX</td><td style="padding:9px 14px">캐스퍼 EV</td><td style="padding:9px 14px;color:#94a3b8">AX EV / AX EV LOUNGE / AX EV CROSS</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 엑셀 컬럼 구조 -->
+      <div class="sec" style="margin-bottom:14px">
+        <div class="sec-h">📋 엑셀 Sheet1 컬럼 구조</div>
+        <div style="padding:16px;overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead>
+              <tr style="background:#1e2230;color:#94a3b8">
+                <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--bd)">컬럼</th>
+                <th style="padding:10px 14px;text-align:left;border-bottom:1px solid var(--bd)">내용</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid #1e2230"><td style="padding:9px 14px;font-weight:600;color:#a5b4fc">일자</td><td style="padding:9px 14px;color:#94a3b8">카톡 날짜 헤더의 일(日)</td></tr>
+              <tr style="border-bottom:1px solid #1e2230;background:#0f1117"><td style="padding:9px 14px;font-weight:600;color:#a5b4fc">발생</td><td style="padding:9px 14px;color:#94a3b8">단품만 해당 — SP3/OV1(K1)=1, NQ5(K2)=2, ASSY=공란</td></tr>
+              <tr style="border-bottom:1px solid #1e2230"><td style="padding:9px 14px;font-weight:600;color:#a5b4fc">차종</td><td style="padding:9px 14px;color:#94a3b8">NQ5 / SP2 / SP3 / OV1 / AX / JX 등</td></tr>
+              <tr style="border-bottom:1px solid #1e2230;background:#0f1117"><td style="padding:9px 14px;font-weight:600;color:#a5b4fc">아이템</td><td style="padding:9px 14px;color:#94a3b8">FRT / RR</td></tr>
+              <tr style="border-bottom:1px solid #1e2230"><td style="padding:9px 14px;font-weight:600;color:#a5b4fc">귀책</td><td style="padding:9px 14px;color:#94a3b8">기아 / 캠스 / 부영</td></tr>
+              <tr style="border-bottom:1px solid #1e2230;background:#0f1117"><td style="padding:9px 14px;font-weight:600;color:#a5b4fc">평동~덕평</td><td style="padding:9px 14px;color:#94a3b8">출하장별 (해당=1, 공장직납은 모두 0)</td></tr>
+              <tr style="border-bottom:1px solid #1e2230"><td style="padding:9px 14px;font-weight:600;color:#a5b4fc">단품만 요청</td><td style="padding:9px 14px;color:#94a3b8">O=단품, X=ASSY</td></tr>
+              <tr><td style="padding:9px 14px;font-weight:600;color:#a5b4fc">불량 사유</td><td style="padding:9px 14px;color:#94a3b8">찍힘 / 이물 / 칠까짐 등</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 파싱 규칙 -->
+      <div class="sec" style="margin-bottom:14px">
+        <div class="sec-h">📌 핵심 파싱 규칙</div>
+        <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+          <div style="background:#0f1117;border:1px solid var(--bd);border-radius:10px;padding:14px">
+            <div style="font-weight:700;color:#60a5fa;margin-bottom:10px">📍 위치 판단</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.9">
+              <div><b style="color:#e2e8f0">"1공장알카" / "1공장 캠스알카"</b> → K1 (출하장 모두 0)</div>
+              <div><b style="color:#e2e8f0">"2공장 NQ5..." / "2공장알카"</b> → K2 (출하장 모두 0)</div>
+              <div style="margin-top:6px"><b style="color:#e2e8f0">평동출하장 / 평동 출하장</b> → 평동=1</div>
+              <div><b style="color:#e2e8f0">경산출하장 / 경산출고센터 / 경산</b> → 경산=1</div>
+              <div><b style="color:#e2e8f0">충주출하장 / 충주출고센터</b> → 충주=1</div>
+              <div><b style="color:#e2e8f0">덕평출하장 / 덕평출고센터 / 덕평</b> → 덕평=1</div>
+              <div><b style="color:#e2e8f0">신태인출하장 / 신태인출고센터 / 신태인</b> → 신태인=1</div>
+              <div><b style="color:#e2e8f0">기아오토큐 / 오토큐(원주/금천 등)</b> → 오토큐=1</div>
+              <div><b style="color:#e2e8f0">목포항 / 수출항 / JWW번호</b> → 목포항=1</div>
+              <div><b style="color:#e2e8f0">서비스센터 (각 지역)</b> → 오토큐=1</div>
+            </div>
+          </div>
+
+          <div style="background:#0f1117;border:1px solid var(--bd);border-radius:10px;padding:14px">
+            <div style="font-weight:700;color:#f59e0b;margin-bottom:10px">🎯 귀책 판단</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.9">
+              <div><b style="color:#e2e8f0">"기아알카" / "귀책 기아" / "기아~RC" / "귀책: 기아"</b> → 기아</div>
+              <div><b style="color:#e2e8f0">"캠스알카" / "귀책 캠스" / "캠스~RC" / "캠스 알카"</b> → 캠스</div>
+              <div><b style="color:#e2e8f0">"부영알카" / "귀책 부영"</b> → 부영</div>
+              <div style="margin-top:6px"><b style="color:#e2e8f0">"귀책 불분명" / "귀책 NTF"</b> → 기아 (추정)</div>
+              <div><b style="color:#e2e8f0">"수출항 사고차 캠스알카식으로"</b> → 캠스</div>
+              <div><b style="color:#e2e8f0">서비스센터 알카 (귀책 미표기)</b> → 기아</div>
+            </div>
+          </div>
+
+          <div style="background:#0f1117;border:1px solid var(--bd);border-radius:10px;padding:14px">
+            <div style="font-weight:700;color:#34d399;margin-bottom:10px">📦 단품 여부</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.9">
+              <div style="color:#86efac;font-weight:700;margin-bottom:4px">O (단품):</div>
+              <div>스키드만 / 스키드 하나</div>
+              <div>몰딩 하나 / LH(RH)몰딩 하나 / 몰딩(색상코드) 하나</div>
+              <div>R/D그릴만 / 라디에이터그릴 / 그릴 하나</div>
+              <div>어퍼가니쉬 하나 / 사이드가니쉬</div>
+              <div>PDC센서 / 센서 하나</div>
+              <div style="color:#f87171;font-weight:700;margin-top:8px;margin-bottom:4px">X (ASSY):</div>
+              <div>앗세이 / BPR / 번호만 나열</div>
+              <div>전장제외 + 풀범퍼 (완성품 기준)</div>
+            </div>
+          </div>
+
+          <div style="background:#0f1117;border:1px solid var(--bd);border-radius:10px;padding:14px">
+            <div style="font-weight:700;color:#f87171;margin-bottom:10px">⚠️ 예외 처리</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.9">
+              <div><b style="color:#e2e8f0">"알카 취소" / "취소해주세요"</b> → 미입력/삭제</div>
+              <div><b style="color:#e2e8f0">"알카 보류"</b> → 미입력</div>
+              <div><b style="color:#e2e8f0">"재알카 신청" / "재신청"</b> → 새 행으로 입력</div>
+              <div><b style="color:#e2e8f0">번호 정정 (xxxx→yyyy)</b> → yyyy로 교체</div>
+              <div><b style="color:#e2e8f0">비알 번호 여러 개 나열</b> → 각 1행씩</div>
+              <div><b style="color:#e2e8f0">날짜는 신청일 기준</b> (처리일 아님)</div>
+              <div><b style="color:#e2e8f0">FRT/RR 혼재</b> → 아이템별 행 분리</div>
+              <div><b style="color:#e2e8f0">"내일 주간에 진행"</b> → 신청한 날짜 기록</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 카톡 예시 -->
+      <div class="sec" style="margin-bottom:14px">
+        <div class="sec-h">💬 실제 카톡 메시지 예시</div>
+        <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#86efac;margin-bottom:8px">공장 직납 (K1/K2)</div>
+            <div style="background:#0f1117;border:1px solid #1e3a5f;border-radius:8px;padding:12px;font-size:12px;color:#94a3b8;line-height:2">
+              <div style="color:#60a5fa">→ K1 / 캠스 / SP3 / FRT / ASSY</div>
+              <div style="font-family:monospace;background:#13151c;padding:6px 10px;border-radius:6px;margin:4px 0;color:#e2e8f0">1공장 캠스알카<br>SP3 프런트 6123번</div>
+              <div style="color:#60a5fa;margin-top:8px">→ K2 / 기아 / NQ5 / RR / ASSY</div>
+              <div style="font-family:monospace;background:#13151c;padding:6px 10px;border-radius:6px;margin:4px 0;color:#e2e8f0">2공장 기아 알카<br>NQ5 리어 5731번</div>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#fcd34d;margin-bottom:8px">출하장</div>
+            <div style="background:#0f1117;border:1px solid #1e3a5f;border-radius:8px;padding:12px;font-size:12px;color:#94a3b8;line-height:2">
+              <div style="color:#60a5fa">→ 목포항 / 캠스 / NQ5 / RR / ASSY</div>
+              <div style="font-family:monospace;background:#13151c;padding:6px 10px;border-radius:6px;margin:4px 0;color:#e2e8f0">목포항 출하 캠스알카<br>NQ5 리어 JWW123456</div>
+              <div style="color:#60a5fa;margin-top:8px">→ 평동 / 기아 / SP3 / FRT / ASSY</div>
+              <div style="font-family:monospace;background:#13151c;padding:6px 10px;border-radius:6px;margin:4px 0;color:#e2e8f0">평동출하장 기아알카<br>SP3 FRT 6501</div>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#f9a8d4;margin-bottom:8px">단품 요청</div>
+            <div style="background:#0f1117;border:1px solid #1e3a5f;border-radius:8px;padding:12px;font-size:12px;color:#94a3b8;line-height:2">
+              <div style="color:#60a5fa">→ K1 / 캠스 / SP3 / RR / 단품(몰딩)</div>
+              <div style="font-family:monospace;background:#13151c;padding:6px 10px;border-radius:6px;margin:4px 0;color:#e2e8f0">1공장 캠스알카<br>SP3 리어 LH몰딩 하나 6789번</div>
+              <div style="color:#60a5fa;margin-top:8px">→ K2 / 기아 / NQ5 / FRT / 단품(스키드)</div>
+              <div style="font-family:monospace;background:#13151c;padding:6px 10px;border-radius:6px;margin:4px 0;color:#e2e8f0">2공장 기아 알카<br>NQ5 프런트 스키드만 5821번</div>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#fca5a5;margin-bottom:8px">여러 건 / 취소 / 재신청</div>
+            <div style="background:#0f1117;border:1px solid #1e3a5f;border-radius:8px;padding:12px;font-size:12px;color:#94a3b8;line-height:2">
+              <div style="color:#60a5fa">→ 2행 입력 (FRT 1행 + RR 1행)</div>
+              <div style="font-family:monospace;background:#13151c;padding:6px 10px;border-radius:6px;margin:4px 0;color:#e2e8f0">1공장 캠스알카<br>SP3 FRT 6100, RR 6101</div>
+              <div style="color:#f87171;margin-top:8px">→ 취소: 미입력</div>
+              <div style="font-family:monospace;background:#13151c;padding:6px 10px;border-radius:6px;margin:4px 0;color:#e2e8f0">알카 취소합니다 (6100번)</div>
+              <div style="color:#86efac;margin-top:4px">→ 재신청: 새 행으로 입력</div>
+              <div style="font-family:monospace;background:#13151c;padding:6px 10px;border-radius:6px;margin:4px 0;color:#e2e8f0">재알카 신청합니다 6200번</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 집계 흐름 -->
+      <div class="sec">
+        <div class="sec-h">🔄 엑셀 집계 흐름</div>
+        <div style="padding:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px">
+          <div style="background:#1e3a5f;border:1px solid #2563eb;border-radius:8px;padding:10px 16px;color:#93c5fd">Sheet1<br><small style="color:#64748b">원장 입력</small></div>
+          <div style="color:#475569;font-size:18px">→</div>
+          <div style="background:#1e3a5f;border:1px solid #2563eb;border-radius:8px;padding:10px 16px;color:#93c5fd">1번 시트<br><small style="color:#64748b">차종×출하장 집계</small></div>
+          <div style="color:#475569;font-size:18px">→</div>
+          <div style="background:#1e3a5f;border:1px solid #2563eb;border-radius:8px;padding:10px 16px;color:#93c5fd">2번 시트<br><small style="color:#64748b">귀책×FRT/RR 집계</small></div>
+          <div style="color:#475569;font-size:18px">→</div>
+          <div style="background:#1a2e1a;border:1px solid #16a34a;border-radius:8px;padding:10px 16px;color:#86efac">KPI PPTX<br><small style="color:#64748b">차트 자동 생성</small></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ─── 설정 ─────────────────────────────── -->
+    <section id="view-cfg" style="display:none">
+      <div class="page-h">
+        <button class="hamb" onclick="toggleNav(true)">☰</button>
+        <h1>설정</h1>
+        <div class="sub">불량 사유 유형을 편집합니다</div>
+      </div>
+      <div class="sec" style="margin-bottom:14px">
+        <div class="sec-h">🔢 발생 값 설정</div>
+        <div style="padding:16px">
+          <div style="font-size:12px;color:var(--mut);margin-bottom:12px">발생=2로 처리할 차종을 선택하세요. 선택 안 된 차종은 발생=1로 처리됩니다.</div>
+          <div id="bal2List" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
+          <div style="font-size:11px;color:var(--mut)">현재: 발생=2 → <span id="bal2Preview" style="color:#60a5fa"></span></div>
+        </div>
+      </div>
+
+      <div class="sec" style="margin-bottom:14px">
+        <div class="sec-h">⚙️ 파싱 옵션</div>
+        <div style="padding:16px">
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:12px;background:#0f1117;border:1px solid var(--bd);border-radius:8px">
+            <input type="checkbox" id="buyAssyChk" style="width:18px;height:18px;cursor:pointer;accent-color:var(--blue)" onchange="saveBuyAssy()">
+            <div>
+              <b style="font-size:14px">부영 단품 → ASSY 강제 처리</b>
+              <div style="font-size:12px;color:var(--mut);margin-top:3px">부영 귀책 메시지에 몰딩/그릴/스키드/어퍼가니쉬가 언급되어도 ASSY로 취급합니다</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="sec" style="margin-bottom:14px">
+        <div class="sec-h">🚚 출하장 관리</div>
+        <div style="padding:16px">
+          <div style="font-size:12px;color:var(--mut);margin-bottom:12px">기본 출하장 외 신규 출하장을 추가합니다. 이름과 카톡에서 쓰는 키워드(쉼표 구분)를 입력하세요.</div>
+          <div id="locList" style="margin-bottom:12px"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+            <div>
+              <div style="font-size:12px;color:var(--mut);margin-bottom:4px">출하장 이름</div>
+              <input id="locNameIn" type="text" placeholder="예: 광주" style="padding:8px;border:1px solid var(--bd);border-radius:8px;font-size:14px;background:#0f1117;color:#f1f5f9;width:120px">
+            </div>
+            <div style="flex:1;min-width:200px">
+              <div style="font-size:12px;color:var(--mut);margin-bottom:4px">카톡 키워드 (쉼표 구분)</div>
+              <input id="locKwIn" type="text" placeholder="예: 광주출하장,광주 출하장,광주출고센터" style="padding:8px;border:1px solid var(--bd);border-radius:8px;font-size:14px;background:#0f1117;color:#f1f5f9;width:100%">
+            </div>
+            <button class="btn pri" onclick="addCustomLoc()">＋ 추가</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-h">불량 사유 유형 관리</div>
+        <div style="padding:16px">
+          <div style="font-size:13px;color:var(--mut);margin-bottom:14px">유형명과 감지 키워드(쉼표 구분)를 편집하세요. 저장 후 다음 분석부터 적용됩니다.</div>
+          <div id="defList"></div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn" onclick="addDefRow()">＋ 유형 추가</button>
+            <button class="btn pri" onclick="saveSettings()">💾 저장</button>
+            <button class="btn" onclick="resetSettings()">초기화</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── KPI 자료화 ─────────────────────────── -->
+    <section id="view-kpidata" style="display:none">
+      <div class="page-h">
+        <button class="hamb" onclick="toggleNav(true)">☰</button>
+        <h1>KPI 자료화</h1>
+        <span class="grow"></span>
+        <select id="kpiDataMonSel" onchange="renderKpiData()" style="padding:8px;border:1px solid var(--bd);border-radius:8px;font-size:14px;background:#0f1117;color:#f1f5f9">
+          <option value="all">(월 선택)</option>
+        </select>
+        <button id="kpiPptxBtn" onclick="dlKpiPptx()" style="padding:8px 18px;background:#2563eb;color:#fff;border:0;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;font-weight:700">PPTX 다운로드</button>
+        <div class="sub">월 선택 후 PPTX 다운로드 — 슬라이드 1(연간) + 슬라이드 2(월별)</div>
+      </div>
+
+      <!-- 슬라이드 1용: 연간 추이 업데이트 -->
+      <div class="sec" style="margin-bottom:14px">
+        <div class="sec-h">📊 슬라이드 1 — 연간 추이 업데이트용 수치</div>
+        <div style="padding:16px" id="kpiSlide1">
+          <div style="color:var(--mut);font-size:13px">월을 선택하면 해당 월에 추가할 수치가 표시됩니다.</div>
+        </div>
+      </div>
+
+      <!-- 슬라이드 2용: 신규 월 슬라이드 -->
+      <div class="sec">
+        <div class="sec-h">📋 슬라이드 2 — 신규 월 슬라이드 데이터</div>
+        <div style="padding:16px" id="kpiSlide2">
+          <div style="color:var(--mut);font-size:13px">월을 선택하면 새 슬라이드에 들어갈 테이블이 표시됩니다.</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// ─── 상수 ────────────────────────────────────────────────
+const UNIT={NQ5:{FRT:120678,RR:94921},OV1:{FRT:210349,RR:188959},SP3:{FRT:193396,RR:153988}};
+const VEHICLES=['NQ5','OV1','SP3'];
+const DEFAULT_LOCS=['평동','경산','목포항','충주','신태인','오토큐','덕평'];
+const DEFAULT_LOCATION_MAP=[
+  ['평동',['평동출하장','평동 출하장']],
+  ['경산',['경산출하장','경산 출하장','경산']],
+  ['목포항',['수출항','목포항','JWW']],
+  ['충주',['충주출하장','충주 출하장']],
+  ['신태인',['신태인']],
+  ['오토큐',['광주서비스센터','오토큐','서비스센터','바디넘버']],
+  ['덕평',['덕평','송악출하장','송악 출하장']],
+];
+let LOCS=[...DEFAULT_LOCS];
+let LOCATION_MAP=[...DEFAULT_LOCATION_MAP];
+let REC_COLS=['일자','발생','차종','아이템','귀책',...LOCS,'단품만 요청','불량 사유'];
+
+function applyCustomLocs(){
+  const custom=(DB.customLocs||[]);
+  LOCS=[...DEFAULT_LOCS,...custom.map(l=>l.name)];
+  LOCATION_MAP=[...DEFAULT_LOCATION_MAP,...custom.map(l=>[l.name,l.keywords])];
+  REC_COLS=['일자','발생','차종','아이템','귀책',...LOCS,'단품만 요청','불량 사유'];
+}
+
+const DEFAULT_DEFECTS=[
+  ['도장',['칠까짐','도장불','칠흐름','로아칠흐름','칠뭉침','핀홀','박리','터치업불량','터치업 불량','도장전 긁힘','도장전긁힘','이물','티이물','티.이물','실바리이물','미도장']],
+  ['찍힘',['찍힘','찍혀']],
+  ['긁힘',['긁힘','기스','이탈','까짐']],
+  ['기타',['변형','굴곡','눌림','리브파손','파손','사고차','홀더']],
+];
+let DEFECTS=DEFAULT_DEFECTS;
+
+// ─── DB ─────────────────────────────────────────────────
+const DB_KEY='alka_db_v1';
+let DB=loadDB();
+function loadDB(){
+  try{const d=JSON.parse(localStorage.getItem(DB_KEY));if(d)return d;}catch(e){}
+  return {months:{},histAmounts:{캠스:{},기아:{},부영:{}},targetCount:155,defects:null,buyAssyOverride:true,발생2:['NQ5'],customLocs:[]};
+}
+function saveDB(){
+  DB.targetCount=+document.getElementById('targetIn').value||155;
+  localStorage.setItem(DB_KEY,JSON.stringify(DB));
+}
+function loadDefects(){
+  if(DB.defects&&DB.defects.length)DEFECTS=DB.defects;
+  else DEFECTS=DEFAULT_DEFECTS;
+}
+
+// ─── 네비 ────────────────────────────────────────────────
+function showView(v){
+  document.querySelectorAll('section[id^="view-"]').forEach(s=>s.style.display='none');
+  document.getElementById('view-'+v).style.display='block';
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.view===v));
+  toggleNav(false);
+  if(v==='main'){refreshMonSel('mainMonSel');renderMain();}
+  if(v==='kpi'){refreshKpiMon();renderKpi();}
+  if(v==='mgmt'){refreshMgmtSel();renderMgmt();}
+  if(v==='kpidata'){refreshKpiDataSel();renderKpiData();}
+  if(v==='cfg'){renderDefList();renderBuyAssyToggle();renderBal2();renderLocList();}
+}
+function toggleNav(open){
+  document.getElementById('side').classList.toggle('open',open);
+  document.getElementById('scrim').classList.toggle('show',open);
+}
+
+// ─── 월 관리 ─────────────────────────────────────────────
+function monthList(){return Object.keys(DB.months).sort();}
+function refreshMonSel(id){
+  const sel=document.getElementById(id),cur=sel.value,months=monthList();
+  sel.innerHTML=months.map(m=>`<option value="${m}">${m}</option>`).join('')||'<option value="">(등록 없음)</option>';
+  if(months.includes(cur))sel.value=cur;
+  else if(months.length)sel.value=months[months.length-1];
+  updateMonNav();
+}
+function updateMonNav(){
+  const months=monthList();
+  const sel=document.getElementById('mainMonSel');
+  const idx=months.indexOf(sel.value);
+  const label=document.getElementById('monLabel');
+  if(label)label.textContent=sel.value||'(등록 없음)';
+  const prev=document.getElementById('btnPrev'),next=document.getElementById('btnNext');
+  if(prev)prev.disabled=idx<=0;
+  if(next)next.disabled=idx<0||idx>=months.length-1;
+  const dots=document.getElementById('monDots');
+  if(dots){
+    const show=months.slice(Math.max(0,idx-2),idx+3);
+    dots.innerHTML=show.map(m=>`<div class="mon-dot${m===sel.value?' cur':''}" onclick="jumpMonth('${m}')" title="${m}"></div>`).join('');
+  }
+}
+function prevMonth(){
+  const months=monthList(),sel=document.getElementById('mainMonSel');
+  const idx=months.indexOf(sel.value);
+  if(idx>0){sel.value=months[idx-1];renderMain();}
+}
+function nextMonth(){
+  const months=monthList(),sel=document.getElementById('mainMonSel');
+  const idx=months.indexOf(sel.value);
+  if(idx<months.length-1){sel.value=months[idx+1];renderMain();}
+}
+function jumpMonth(m){
+  document.getElementById('mainMonSel').value=m;renderMain();
+}
+function refreshMgmtSel(){
+  const sel=document.getElementById('mgmtMonSel'),cur=sel.value,months=monthList();
+  sel.innerHTML='<option value="all">전체</option>'+months.map(m=>`<option value="${m}">${m}</option>`).join('');
+  if(cur&&sel.querySelector(`option[value="${cur}"]`))sel.value=cur;
+}
+
+// ─── 메인 렌더 ───────────────────────────────────────────
+function renderMain(){
+  const mon=document.getElementById('mainMonSel').value;
+  const recs=mon&&DB.months[mon]?DB.months[mon]:[];
+  updateMonNav();
+  renderStatCards(recs);
+  renderSum3(recs);
+  renderDal(recs);
+  renderHist(mon);
+}
+
+function renderStatCards(recs){
+  const cnt=(g,p)=>recs.filter(r=>r.귀책===g&&!r['단품만 요청']).length;
+  const total=recs.filter(r=>!r['단품만 요청']).length;
+  const cams=cnt('캠스'),kia=cnt('기아'),buy=cnt('부영');
+  document.getElementById('statCards').innerHTML=`
+    <div class="stat-card"><div class="sic b">🏭</div><div class="snum">${cams}</div><div class="slab">캠스 알카</div></div>
+    <div class="stat-card"><div class="sic r">🚗</div><div class="snum">${kia}</div><div class="slab">기아 알카</div></div>
+    <div class="stat-card"><div class="sic y">🔧</div><div class="snum">${buy}</div><div class="slab">부영 알카</div></div>
+    <div class="stat-card"><div class="sic g">📊</div><div class="snum">${total}</div><div class="slab">R-CAR ASSY 합계</div></div>`;
+}
+
+function calcSummary(recs,g){
+  const assys=recs.filter(r=>r.귀책===g&&!r['단품만 요청']);
+  const parts=recs.filter(r=>r.귀책===g&&r['단품만 요청']);
+  const rows={};VEHICLES.forEach(v=>{rows[v]={FRT:0,RR:0};});
+  for(const r of assys){const v=r.차종,it=r.아이템;if(rows[v]){if(it==='FRT')rows[v].FRT++;else if(it==='RR')rows[v].RR++;}}
+  return{rows,assyCnt:assys.length,partCnt:parts.length};
+}
+function fa(v){return v?v.toLocaleString('ko-KR'):'-';}
+
+function buildSumCard(recs,g,label,cls){
+  const{rows,assyCnt,partCnt}=calcSummary(recs,g);
+  let tot=0,totCnt=0;
+  let html=`<div class="sum-card"><div class="sc-h ${cls}">${label}</div><div class="scroll"><table class="stbl">`;
+  html+=`<tr><th>차종</th><th>대수</th><th></th><th>건수</th><th>금액(원)</th></tr>`;
+  for(const v of VEHICLES){
+    const f=rows[v].FRT,r=rows[v].RR,t=f+r;
+    const fa2=(UNIT[v]?.FRT||0)*f,ra=(UNIT[v]?.RR||0)*r;
+    tot+=fa2+ra;totCnt+=t;
+    html+=`<tr><td class="veh" rowspan="2">${v}</td><td rowspan="2">${t||'-'}</td><td>FRT</td><td>${f||'-'}</td><td class="amt">${fa(fa2)}</td></tr>
+           <tr><td>RR</td><td>${r||'-'}</td><td class="amt">${fa(ra)}</td></tr>`;
+  }
+  html+=`<tr class="tot-row"><td>총합</td><td>${totCnt}</td><td></td><td>총합</td><td class="amt">${fa(tot)}</td></tr>
+         </table></div>
+         <table class="stbl"><tr class="sub-row"><td>R-CAR</td><td>ASSY</td><td>${assyCnt}</td></tr>
+         <tr class="sub-row"><td>207</td><td>단품</td><td>${partCnt}</td></tr></table></div>`;
+  return html;
+}
+
+function renderSum3(recs){
+  document.getElementById('sum3').innerHTML=
+    buildSumCard(recs,'캠스','캠스 알카','cams')+
+    buildSumCard(recs,'기아','기아 알카','kia')+
+    buildSumCard(recs,'부영','부영 알카','buy');
+}
+
+function renderDal(recs){
+  const target=DB.targetCount||155;
+  const camsTotal=recs.filter(r=>r.귀책==='캠스'&&!r['단품만 요청']).length;
+  const dal=camsTotal?Math.round(target/camsTotal*10000)/100:0;
+  const p5=Math.round(dal/20*100)/100;
+  document.getElementById('dalGrid').innerHTML=`
+    <div class="dal-cell"><div class="dal-h">계획수량</div><div class="dal-v">${target}</div><div class="dal-u">건</div></div>
+    <div class="dal-cell"><div class="dal-h">월 알카(캠스)</div><div class="dal-v">${camsTotal}</div><div class="dal-u">건</div></div>
+    <div class="dal-cell"><div class="dal-h">달성률</div><div class="dal-v">${dal}</div><div class="dal-u">%</div></div>
+    <div class="dal-cell"><div class="dal-h">5점 만점 기준</div><div class="dal-v">${p5}</div><div class="dal-u">점</div></div>`;
+}
+
+function renderHist(curMon){
+  const autoAmt={};
+  for(const[mon,recs] of Object.entries(DB.months)){
+    autoAmt[mon]={};
+    for(const g of ['캠스','기아','부영']){
+      let s=0;
+      for(const r of recs.filter(x=>x.귀책===g&&!x['단품만 요청']))s+=(UNIT[r.차종]?.[r.아이템]||0);
+      autoAmt[mon][g]=s;
+    }
+  }
+  const allMons=new Set([...Object.keys(autoAmt),...Object.keys(DB.histAmounts?.캠스||{}),...Object.keys(DB.histAmounts?.기아||{}),...Object.keys(DB.histAmounts?.부영||{})]);
+  const sorted=[...allMons].sort();
+  const byYear={};
+  for(const m of sorted){const yr=m.slice(0,2);if(!byYear[yr])byYear[yr]=[];byYear[yr].push(m);}
+  let html=`<thead><tr><th>월</th><th>캠스</th><th>기아</th><th>부영</th></tr></thead><tbody>`;
+  for(const[yr,mons] of Object.entries(byYear)){
+    for(const m of mons){
+      html+=`<tr ${m===curMon?'style="outline:2px solid var(--blue);outline-offset:-1px"':''}>
+        <td class="day-c">${m}</td>`;
+      for(const g of ['캠스','기아','부영']){
+        const auto=autoAmt[m]?.[g]||0;
+        const manual=DB.histAmounts?.[g]?.[m]||'';
+        const disp=auto>0?auto:manual;
+        html+=`<td class="amt-c"><input class="edit-in" type="text" value="${disp?Number(disp).toLocaleString('ko-KR'):''}"
+          data-mon="${m}" data-g="${g}" onchange="onHistChange(this)" placeholder="-"></td>`;
+      }
+      html+='</tr>';
+    }
+    const yt={캠스:0,기아:0,부영:0};
+    for(const m of mons)for(const g of ['캠스','기아','부영']){
+      const v=(autoAmt[m]?.[g]||0)||(+(((DB.histAmounts?.[g]?.[m])||'').toString().replace(/,/g,''))||0);
+      yt[g]+=v;
+    }
+    html+=`<tr class="yr-h"><td>${yr}년 합계</td>${['캠스','기아','부영'].map(g=>`<td class="amt-c">${yt[g]?yt[g].toLocaleString('ko-KR'):'-'}</td>`).join('')}</tr>`;
+  }
+  html+='</tbody>';
+  document.getElementById('histTbl').innerHTML=html;
+}
+
+function onHistChange(el){
+  const mon=el.dataset.mon,g=el.dataset.g;
+  const v=+(el.value.replace(/,/g,''));
+  if(!DB.histAmounts)DB.histAmounts={캠스:{},기아:{},부영:{}};
+  if(!DB.histAmounts[g])DB.histAmounts[g]={};
+  if(v)DB.histAmounts[g][mon]=v;else delete DB.histAmounts[g][mon];
+  saveDB();
+}
+
+// ─── 파싱 ────────────────────────────────────────────────
+function gG(c){
+  if(/낙하|추락/.test(c))return '부영';
+  if(/기아\s*알카|기아~\s*RC|기아RC|귀책.{0,6}기아|기아알카/.test(c))return '기아';
+  if(/캠스\s*알카|캠스~\s*RC|캠스RC|귀책.{0,6}캠스|캠스알카/.test(c))return '캠스';
+  if(/부영\s*알카|귀책.{0,6}부영|부영알카/.test(c))return '부영';
+  const dp=DEFECTS.flatMap(([,ks])=>ks).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
+  if(new RegExp('캠스\\s*('+dp+')').test(c))return '캠스';
+  if(new RegExp('기아\\s*('+dp+')').test(c))return '기아';
+  if(new RegExp('부영\\s*('+dp+')').test(c))return '부영';
+  if(c.includes('기아 알카 요청'))return '기아';
+  return '캠스';
+}
+function gL(c){for(const[n,ks] of LOCATION_MAP)for(const k of ks)if(c.includes(k))return n;return null;}
+function gD(c){for(const[n,ks] of DEFECTS)for(const k of ks)if(c.includes(k))return n;return '';}
+function isSingle(c){return c.includes('몰딩')||c.includes('스키드')||c.includes('어퍼가니쉬')||c.includes('라디에이터그릴')||c.includes('그릴');}
+function gPart(c){
+  if(c.includes('어퍼가니쉬'))return '어퍼가니쉬';
+  if(c.includes('스키드'))return '스키드';
+  if(c.includes('라디에이터그릴')||c.includes('그릴'))return '그릴';
+  if(c.includes('몰딩'))return '리어몰딩';
+  return '';
+}
+function defVeh(c,s){const t=c+s;if(t.includes('1공장'))return 'SP3';if(t.includes('2공장'))return 'NQ5';return '?';}
+function normV(v){return v.toUpperCase().replace(/(?:OV1)/i,'OV1').replace(/(?:SP3)/i,'SP3');}
+function countChassis(line){
+  // 날짜 형식 제거(4/20일자 등) 후 4자리 숫자 개수 = 차체번호 수
+  const clean=line.replace(/\d+\/\d+일자?/g,'');
+  return Math.max(1,(clean.match(/\b\d{4}\b/g)||[]).length);
+}
+function gPairs(content,sender){
+  const lines=content.split('\n'),pairCounts=new Map();
+  for(const line of lines){
+    const frt=[...line.matchAll(/프런트|프런트범퍼|FRT|frt|Frt|프론트|프렌트/g)].map(m=>m.index);
+    const rr=[...line.matchAll(/리어|리어범퍼|RR(?!\w)/g)].map(m=>m.index);
+    const vms=[...line.matchAll(/NQ5|OV1|SP3|Ov1|Sp3|sp3/gi)];
+    if(!vms.length)continue;
+    const sorted=vms.map(vm=>({vp:vm.index,vn:normV(vm[0])})).sort((a,b)=>a.vp-b.vp);
+    for(let vi=0;vi<sorted.length;vi++){
+      const {vp,vn}=sorted[vi];
+      const nf=frt.filter(p=>p>=vp-60&&p<=vp+25),nr=rr.filter(p=>p>=vp-60&&p<=vp+25);
+      let item;
+      if(nf.length&&nr.length){
+        const bf=Math.max(...nf),br=Math.max(...nr);
+        const fPre=bf<vp,rPre=br<vp;
+        if(fPre&&!rPre)item='FRT';
+        else if(rPre&&!fPre)item='RR';
+        else if(fPre&&rPre)item=bf>br?'FRT':'RR';
+        else item=Math.abs(bf-vp)<=Math.abs(br-vp)?'FRT':'RR';
+      } else if(nf.length)item='FRT';
+      else if(nr.length)item='RR';
+      else{const b=line.slice(Math.max(0,vp-80),vp+40);item=/프런트|FRT|frt|프론트|프렌트/i.test(b)?'FRT':/리어|RR/.test(b)?'RR':'?';}
+      // 차체번호를 이 차종 구간에서만 카운트 (다음 차종 이전까지)
+      const segEnd=vi+1<sorted.length?sorted[vi+1].vp:line.length;
+      const seg=line.slice(vp,segEnd).replace(/\d+\/\d+일자?/g,'');
+      const cnt=Math.max(1,(seg.match(/\b\d{4}\b/g)||[]).length);
+      const key=vn+'|'+item;
+      pairCounts.set(key,(pairCounts.get(key)||0)+cnt);
+    }
+  }
+  if(!pairCounts.size){
+    const v=defVeh(content,sender);
+    if(/프런트|프런트범퍼|FRT|frt|프론트|프렌트/i.test(content))pairCounts.set(v+'|FRT',1);
+    if(/리어|리어범퍼|RR(?!\w)|범퍼몰딩/.test(content))pairCounts.set(v+'|RR',1);
+    if(!pairCounts.size)pairCounts.set(v+'|?',1);
+  }
+  return[...pairCounts.entries()].map(([k,cnt])=>[...k.split('|'),cnt]);
+}
+function isAlka(c,s){
+  if(s.startsWith('디에프_'))return false;
+  const skip=['출하됐습니다','출하됬습니다','알카진행하겠습니다','취소해주세요','총검 측정','알겠습니다','입고 안됌','업체직원부재','폼 말씀','측정용 범퍼','검사구 측정','알카 취소','수정했습니다','나갔습니다','사양같은지','AMEW','AMAW','그릴이 다르','센서3호차'];
+  if(skip.some(p=>c.includes(p)))return false;
+  if(c.includes('센서 보내주세요')&&!c.includes('알카'))return false;
+  return ['알카 신청','알카신청','알카 요청','알카요청','R/C신청','RC신청','요청합니다','보내주세요','알카 입니다','알카입니다','신청합니다','요청드립니다'].some(t=>c.includes(t));
+}
+function parseChat(text){
+  const recs=[],lines=text.trim().split('\n');
+  let day=null,i=0,altIdx=0;
+  while(i<lines.length){
+    const line=lines[i].trim();
+    const dm=line.match(/(\d{4})년 (\d{1,2})월 (\d{1,2})일/);
+    if(dm){day=+dm[3];i++;continue;}
+    const mm=line.match(/^\[(.+?)\] \[([오전오후]+ \d+:\d+)\] (.+)/);
+    if(mm){
+      const sender=mm[1];let content=mm[3];
+      let j=i+1;
+      while(j<lines.length){const nl=lines[j].trim();if(/^\[.+?\] \[/.test(nl)||/^\d{4}년 \d/.test(nl))break;if(nl&&nl!=='메시지가 삭제되었습니다')content+='\n'+nl;j++;}
+      i=j;
+      if(day&&isAlka(content,sender)){
+        const g=gG(content),loc=gL(content),rawDef=g==='기아'?'찍힘':g==='부영'?'낙하':gD(content);
+        const single=(g==='부영'&&DB.buyAssyOverride!==false)?false:isSingle(content);
+        const part=single?gPart(content):'';
+        const locCols=Object.fromEntries(LOCS.map(l=>[l,'']));if(loc)locCols[loc]=1;
+        const pairs=gPairs(content,sender);
+        for(const[vm,item,cnt] of pairs){
+          for(let ci=0;ci<cnt;ci++){
+            const def=rawDef?rawDef:(g==='캠스'?(altIdx++%2===0?'도장':'찍힘'):'');
+            const bal=single?((DB.발생2||['NQ5']).includes(vm)?2:1):'';
+            recs.push({일자:day,발생:bal,차종:vm,아이템:item,귀책:g,...locCols,'단품만 요청':part,'불량 사유':def});
+          }
+        }
+      }
+      continue;
+    }
+    i++;
+  }
+  return recs;
+}
+
+// ─── 등록 탭 ─────────────────────────────────────────────
+let _parsed=[];
+function runParse(){
+  const txt=document.getElementById('chatInput').value.trim();
+  if(!txt){alert('카톡 대화를 붙여넣으세요.');return;}
+  _parsed=parseChat(txt);
+  if(!_parsed.length){alert('분석된 알카 내역이 없습니다.');return;}
+  showPreview('카톡');
+}
+function saveRecords(){
+  if(!_parsed.length){alert('먼저 분석을 실행하세요.');return;}
+  const y=document.getElementById('regY').value||'26';
+  const m=document.getElementById('regM').value||'5';
+  const key=y+'년'+m+'월';
+  if(DB.months[key]&&!confirm(`${key} 데이터가 이미 있습니다. 덮어씌울까요?`))return;
+  DB.months[key]=_parsed;
+  saveDB();
+  refreshMonSel('mainMonSel');
+  alert(`${key} 저장 완료 (${_parsed.length}건)`);
+}
+function clearReg(){
+  document.getElementById('chatInput').value='';
+  _parsed=[];
+  document.getElementById('regPreview').style.display='none';
+}
+function loadXls(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    if(rows.length<2){alert('데이터가 없습니다.');return;}
+    const hdrs=rows[0].map(h=>String(h).trim());
+    const ci={};
+    REC_COLS.forEach(c=>{const i=hdrs.indexOf(c);ci[c]=i>=0?i:-1;});
+    _parsed=[];let lastDay=null;
+    for(let i=1;i<rows.length;i++){
+      const row=rows[i];if(!row||!row.length)continue;
+      const dv=row[ci['일자']];
+      if(dv!==null&&dv!==undefined&&dv!==''){
+        const n=typeof dv==='number'?dv:parseInt(dv);
+        if(!isNaN(n))lastDay=n;
+      }
+      if(!lastDay)continue;
+      const veh=String(row[ci['차종']]||'').trim();
+      if(!veh)continue;
+      const rec={일자:lastDay};
+      for(const c of REC_COLS.slice(1)){
+        const v=ci[c]>=0?row[ci[c]]:'';
+        rec[c]=v===null||v===undefined?'':v;
+      }
+      _parsed.push(rec);
+    }
+    input.value='';
+    if(!_parsed.length){alert('알카 기록을 찾을 수 없습니다.\n열 이름을 확인하세요: '+REC_COLS.join(', '));return;}
+    // 파일명에서 년/월 자동추출
+    const ym=file.name.match(/(\d{2,4})년\s*(\d{1,2})월/);
+    if(ym){
+      document.getElementById('regY').value=ym[1].length===4?ym[1].slice(-2):ym[1];
+      document.getElementById('regM').value=ym[2];
+    }
+    showPreview('엑셀');
+  };
+  reader.readAsArrayBuffer(file);
+}
+function toggleXlsPaste(){
+  const el=document.getElementById('xlsPasteArea');
+  el.style.display=el.style.display==='none'?'block':'none';
+  if(el.style.display==='block')setTimeout(()=>document.getElementById('xlsPasteInput').focus(),50);
+}
+function parsePaste(){
+  const raw=document.getElementById('xlsPasteInput').value.trim();
+  if(!raw){alert('붙여넣은 내용이 없습니다.');return;}
+  const rows=raw.split('\n').map(r=>r.split('\t').map(c=>c.trim()));
+  if(rows.length<2){alert('데이터가 없습니다.');return;}
+  const hdrs=rows[0].map(h=>h.replace(/\r/g,''));
+  const ci={};
+  REC_COLS.forEach(c=>{const i=hdrs.indexOf(c);ci[c]=i>=0?i:-1;});
+  _parsed=[];let lastDay=null;
+  for(let i=1;i<rows.length;i++){
+    const row=rows[i];if(!row||row.every(c=>!c))continue;
+    const dv=ci['일자']>=0?row[ci['일자']]:'';
+    if(dv){const n=parseInt(dv);if(!isNaN(n))lastDay=n;}
+    if(!lastDay)continue;
+    const veh=ci['차종']>=0?row[ci['차종']].trim():'';
+    if(!veh)continue;
+    const rec={일자:lastDay};
+    for(const c of REC_COLS.slice(1)){
+      const v=ci[c]>=0?(row[ci[c]]??''):'';
+      rec[c]=v===null||v===undefined?'':v;
+    }
+    _parsed.push(rec);
+  }
+  if(!_parsed.length){alert('알카 기록을 찾을 수 없습니다.\n첫 행이 헤더인지, 열 이름이 맞는지 확인하세요.\n필요 열: '+REC_COLS.join(', '));return;}
+  document.getElementById('xlsPasteArea').style.display='none';
+  showPreview('엑셀붙여넣기');
+}
+function showPreview(src){
+  document.getElementById('regPreview').style.display='block';
+  // 오류 감지: 차종 또는 아이템이 '?'인 레코드
+  const errs=_parsed.map((r,i)=>({r,i})).filter(({r})=>r.차종==='?'||r.아이템==='?');
+  const warnBox=document.getElementById('parseWarn');
+  if(errs.length){
+    const items=errs.map(({r})=>`<div class="warn-item">📅 ${r.일자}일 | 차종: <b>${r.차종}</b> | 아이템: <b>${r.아이템}</b> | 귀책: ${r.귀책}</div>`).join('');
+    document.getElementById('parseWarnList').innerHTML=items;
+    warnBox.style.display='block';
+  } else {
+    warnBox.style.display='none';
+  }
+  const errIdx=new Set(errs.map(({i})=>i));
+  document.getElementById('regStat').textContent='총 '+_parsed.length+'건'+(src?' ('+src+')':'')+(errs.length?` ⚠ 오류 ${errs.length}건`:'');
+  let prev=null,html='';
+  for(let ri=0;ri<_parsed.length;ri++){
+    const r=_parsed[ri];
+    const sd=r.일자!==prev?r.일자:'';prev=r.일자;
+    const isErr=errIdx.has(ri);
+    html+=`<tr${isErr?' style="background:#1a0a0a"':''}>`;
+    for(const c of REC_COLS){
+      let v=c==='일자'?sd:(r[c]??''),cls='';
+      if(isErr&&(c==='차종'||c==='아이템')&&v==='?')cls='err-c';
+      else if(c==='일자'&&v)cls='day-c';
+      else if(c==='귀책')cls=v==='기아'?'kia-c':v==='캠스'?'cams-c':'';
+      else if(LOCS.includes(c)&&v===1)cls='loc1';
+      else if(c==='단품만 요청'&&v)cls='part-c';
+      else if(c==='불량 사유'&&v)cls='def-c';
+      html+=`<td class="${cls}">${v===''||v===null?'':v}</td>`;
+    }
+    html+='</tr>';
+  }
+  document.getElementById('regBody').innerHTML=html;
+}
+
+// ─── 종합 관리 ───────────────────────────────────────────
+function renderMgmt(){
+  const mon=document.getElementById('mgmtMonSel').value;
+  let recs=[];
+  if(mon==='all'){for(const m of monthList())recs.push(...(DB.months[m]||[]));}
+  else recs=DB.months[mon]||[];
+  document.getElementById('mgmtStat').textContent='총 '+recs.length+'건';
+  let prev=null,html='';
+  for(const r of recs){
+    const sd=r.일자!==prev?r.일자:'';prev=r.일자;
+    html+='<tr>';
+    for(const c of REC_COLS){
+      let v=c==='일자'?sd:(r[c]??''),cls='';
+      if(c==='일자'&&v)cls='day-c';
+      else if(c==='귀책')cls=v==='기아'?'kia-c':v==='캠스'?'cams-c':'';
+      else if(LOCS.includes(c)&&v===1)cls='loc1';
+      else if(c==='단품만 요청'&&v)cls='part-c';
+      else if(c==='불량 사유'&&v)cls='def-c';
+      html+=`<td class="${cls}">${v===''||v===null?'':v}</td>`;
+    }
+    html+='</tr>';
+  }
+  document.getElementById('mgmtBody').innerHTML=html;
+}
+function delMonth(){
+  const mon=document.getElementById('mgmtMonSel').value;
+  if(mon==='all'){alert('특정 월을 선택하세요.');return;}
+  if(!confirm(`${mon} 데이터를 삭제할까요?`))return;
+  delete DB.months[mon];saveDB();refreshMgmtSel();refreshMonSel('mainMonSel');renderMgmt();
+}
+function dlExcel(){
+  const mon=document.getElementById('mgmtMonSel').value;
+  let recs=[];
+  if(mon==='all'){for(const m of monthList())recs.push(...(DB.months[m]||[]));}
+  else recs=DB.months[mon]||[];
+  if(!recs.length){alert('데이터가 없습니다.');return;}
+  const rows=[REC_COLS];let prev=null;
+  for(const r of recs){
+    const sd=r.일자!==prev?r.일자:'';prev=r.일자;
+    rows.push(REC_COLS.map(c=>c==='일자'?sd:(r[c]??'')));
+  }
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[5,5,7,7,7,7,7,8,7,8,8,7,13,16].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws,'알카 실적 종합');
+  XLSX.writeFile(wb,'알카_실적종합_'+(mon==='all'?'전체':mon)+'.xlsx');
+}
+
+// ─── KPI ─────────────────────────────────────────────────
+function refreshKpiMon(){
+  const sel=document.getElementById('kpiMonSel'),months=monthList();
+  sel.innerHTML=months.map(m=>`<option value="${m}">${m}</option>`).join('')||'<option value="">(등록 없음)</option>';
+  if(months.length&&!months.includes(sel.value))sel.value=months[months.length-1];
+}
+function renderKpi(){
+  const mon=document.getElementById('kpiMonSel').value;
+  const recs=mon&&DB.months[mon]?DB.months[mon].filter(r=>!r['단품만 요청']):[];
+  renderKpi1(recs);
+  renderKpi2(recs);
+}
+function renderKpi1(recs){
+  const COLS=['기아 1','기아 2',...LOCS,'TOTAL'];
+  for(const item of ['FRT','RR']){
+    let html=`<thead>
+      <tr>
+        <th rowspan="2">차종</th>
+        <th colspan="2">기아</th>
+        <th colspan="${LOCS.length}" style="background:#1e2a3a;color:#93c5fd">출하장</th>
+        <th rowspan="2" style="color:var(--ng)">TOTAL</th>
+      </tr>
+      <tr>
+        <th>1공장</th><th>2공장</th>
+        ${LOCS.map(l=>`<th>${l}</th>`).join('')}
+      </tr>
+    </thead><tbody>`;
+    let tK1=0,tK2=0,tL=Object.fromEntries(LOCS.map(l=>[l,0])),tAll=0;
+    for(const v of VEHICLES){
+      const vr=recs.filter(r=>r.차종===v&&r.아이템===item);
+      const k1=vr.filter(r=>r.귀책==='기아'&&(r.발생===1||r.발생==='1')).length;
+      const k2=vr.filter(r=>r.귀책==='기아'&&(r.발생===2||r.발생==='2')).length;
+      const lc=Object.fromEntries(LOCS.map(l=>[l,vr.filter(r=>r[l]===1||r[l]==='1').length]));
+      const tot=vr.length;
+      tK1+=k1;tK2+=k2;tAll+=tot;LOCS.forEach(l=>tL[l]+=lc[l]);
+      html+=`<tr>
+        <td class="veh">${v}</td>
+        <td>${k1||'-'}</td><td>${k2||'-'}</td>
+        ${LOCS.map(l=>`<td>${lc[l]||'-'}</td>`).join('')}
+        <td style="font-weight:800;color:var(--ng)">${tot||'-'}</td>
+      </tr>`;
+    }
+    html+=`<tr class="tot-row">
+      <td>TOTAL</td>
+      <td>${tK1||'-'}</td><td>${tK2||'-'}</td>
+      ${LOCS.map(l=>`<td>${tL[l]||'-'}</td>`).join('')}
+      <td style="color:var(--ng)">${tAll||'-'}</td>
+    </tr></tbody>`;
+    document.getElementById('kpi1'+item).innerHTML=html;
+  }
+}
+function renderKpi2(recs){
+  let html=`<thead>
+    <tr>
+      <th colspan="2">구분</th>
+      <th style="color:#93c5fd">FRT</th>
+      <th style="color:#86efac">RR</th>
+      <th style="color:var(--ng)">TOTAL</th>
+    </tr>
+  </thead><tbody>`;
+  let gtF=0,gtR=0;
+  for(const g of ['기아','캠스','부영']){
+    const gr=recs.filter(r=>r.귀책===g);
+    const f1=gr.filter(r=>r.아이템==='FRT'&&(r.발생===1||r.발생==='1')).length;
+    const f2=gr.filter(r=>r.아이템==='FRT'&&(r.발생===2||r.발생==='2')).length;
+    const r1=gr.filter(r=>r.아이템==='RR'&&(r.발생===1||r.발생==='1')).length;
+    const r2=gr.filter(r=>r.아이템==='RR'&&(r.발생===2||r.발생==='2')).length;
+    const gF=f1+f2,gR=r1+r2,gT=gF+gR;
+    gtF+=gF;gtR+=gR;
+    html+=`<tr>
+        <td class="veh" rowspan="3">${g}</td>
+        <td>1</td><td>${f1||'-'}</td><td>${r1||'-'}</td><td>${(f1+r1)||'-'}</td>
+      </tr>
+      <tr><td>2</td><td>${f2||'-'}</td><td>${r2||'-'}</td><td>${(f2+r2)||'-'}</td></tr>
+      <tr class="tot-row"><td>계</td><td>${gF||'-'}</td><td>${gR||'-'}</td><td style="color:var(--ng)">${gT||'-'}</td></tr>`;
+  }
+  html+=`<tr class="tot-row">
+    <td colspan="2">TOTAL</td>
+    <td>${gtF||'-'}</td><td>${gtR||'-'}</td>
+    <td style="color:var(--ng)">${(gtF+gtR)||'-'}</td>
+  </tr></tbody>`;
+  document.getElementById('kpi2').innerHTML=html;
+}
+
+// ─── 설정 ────────────────────────────────────────────────
+const ALL_MODELS=['NQ5','SP2','SP3','OV1','AX','JX'];
+
+function renderBal2(){
+  const cur=DB.발생2||['NQ5'];
+  const wrap=document.getElementById('bal2List');
+  if(!wrap)return;
+  wrap.innerHTML=ALL_MODELS.map(m=>{
+    const on=cur.includes(m);
+    return `<label style="display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid ${on?'#2563eb':'var(--bd)'};border-radius:8px;background:${on?'#1e3a5f':'#0f1117'};cursor:pointer;font-size:13px">
+      <input type="checkbox" ${on?'checked':''} value="${m}" onchange="saveBal2()" style="accent-color:var(--blue)">
+      <span style="color:${on?'#93c5fd':'#94a3b8'}">${m}</span>
+    </label>`;
+  }).join('');
+  updateBal2Preview(cur);
+}
+function saveBal2(){
+  const checks=[...document.querySelectorAll('#bal2List input[type=checkbox]')];
+  DB.발생2=checks.filter(c=>c.checked).map(c=>c.value);
+  saveDB();
+  renderBal2();
+}
+function updateBal2Preview(cur){
+  const el=document.getElementById('bal2Preview');
+  if(el)el.textContent=cur.length?cur.join(', '):'(없음 — 모두 발생=1)';
+}
+
+function renderBuyAssyToggle(){
+  const chk=document.getElementById('buyAssyChk');
+  if(chk)chk.checked=DB.buyAssyOverride!==false;
+}
+function saveBuyAssy(){
+  DB.buyAssyOverride=document.getElementById('buyAssyChk').checked;
+  saveDB();
+}
+
+// ─── KPI 자료화 ──────────────────────────────────────────
+function refreshKpiDataSel(){
+  const sel=document.getElementById('kpiDataMonSel'),cur=sel.value,months=monthList();
+  sel.innerHTML='<option value="">(월 선택)</option>'+months.map(m=>`<option value="${m}">${m}</option>`).join('');
+  if(months.includes(cur))sel.value=cur;
+  else if(months.length)sel.value=months[months.length-1];
+}
+function renderKpiData(){
+  const mon=document.getElementById('kpiDataMonSel').value;
+  if(!mon||!DB.months[mon]){
+    document.getElementById('kpiSlide1').innerHTML='<div style="color:var(--mut);font-size:13px">월을 선택하면 수치가 표시됩니다.</div>';
+    document.getElementById('kpiSlide2').innerHTML='<div style="color:var(--mut);font-size:13px">월을 선택하면 수치가 표시됩니다.</div>';
+    return;
+  }
+  const recs=DB.months[mon];
+  renderKpiSlide1(recs,mon);
+  renderKpiSlide2(recs,mon);
+}
+function kpiCnt(recs,pred){return recs.filter(pred).length;}
+function renderKpiSlide1(recs,mon){
+  const total=recs.length;
+  const g={기아:kpiCnt(recs,r=>r.귀책==='기아'),캠스:kpiCnt(recs,r=>r.귀책==='캠스'),부영:kpiCnt(recs,r=>r.귀책==='부영')};
+  const k1=kpiCnt(recs,r=>r.발생===1&&!LOCS.some(l=>r[l]===1));
+  const k2=kpiCnt(recs,r=>r.발생===2&&!LOCS.some(l=>r[l]===1));
+  const loc=kpiCnt(recs,r=>LOCS.some(l=>r[l]===1));
+  // 연누계
+  const allMons=monthList().filter(m=>m<=mon);
+  const allRecs=allMons.flatMap(m=>DB.months[m]||[]);
+  const ytd={기아:kpiCnt(allRecs,r=>r.귀책==='기아'),캠스:kpiCnt(allRecs,r=>r.귀책==='캠스'),부영:kpiCnt(allRecs,r=>r.귀책==='부영'),total:allRecs.length};
+
+  document.getElementById('kpiSlide1').innerHTML=`
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div>
+      <div style="font-weight:800;color:#93c5fd;margin-bottom:10px;font-size:14px">◎ ${mon} 월간 발생</div>
+      <table class="stbl">
+        <tr><th>구분</th><th>건수</th><th>비율</th></tr>
+        <tr><td class="kia-c"><b>기아</b></td><td>${g.기아}</td><td>${pct(g.기아,total)}%</td></tr>
+        <tr><td class="cams-c"><b>캠스</b></td><td>${g.캠스}</td><td>${pct(g.캠스,total)}%</td></tr>
+        <tr><td style="color:#fcd34d"><b>부영</b></td><td>${g.부영}</td><td>${pct(g.부영,total)}%</td></tr>
+        <tr class="tot-row"><td>합계</td><td>${total}</td><td>100%</td></tr>
+      </table>
+    </div>
+    <div>
+      <div style="font-weight:800;color:#93c5fd;margin-bottom:10px;font-size:14px">◎ ${mon} 공장별 발생</div>
+      <table class="stbl">
+        <tr><th>구분</th><th>건수</th><th>비율</th></tr>
+        <tr><td><b>K1 (1공장)</b></td><td>${k1}</td><td>${pct(k1,total)}%</td></tr>
+        <tr><td><b>K2 (2공장)</b></td><td>${k2}</td><td>${pct(k2,total)}%</td></tr>
+        <tr><td><b>출하장</b></td><td>${loc}</td><td>${pct(loc,total)}%</td></tr>
+        <tr class="tot-row"><td>합계</td><td>${total}</td><td>100%</td></tr>
+      </table>
+    </div>
+  </div>
+  <div style="margin-top:14px">
+    <div style="font-weight:800;color:#93c5fd;margin-bottom:10px;font-size:14px">◎ 연누계 (${allMons[0]} ~ ${mon})</div>
+    <table class="stbl">
+      <tr><th></th>${allMons.map(m=>`<th>${m.replace(/\d+년/,'').replace('월','월')}</th>`).join('')}<th style="color:#f59e0b">합계</th></tr>
+      ${['기아','캠스','부영'].map(gn=>{
+        const cls=gn==='기아'?'kia-c':gn==='캠스'?'cams-c':'';
+        return `<tr><td class="${cls}"><b>${gn}</b></td>${allMons.map(m=>{const r=DB.months[m]||[];return`<td>${kpiCnt(r,x=>x.귀책===gn)}</td>`;}).join('')}<td><b>${ytd[gn]}</b></td></tr>`;
+      }).join('')}
+      <tr class="tot-row"><td>TL</td>${allMons.map(m=>{const r=DB.months[m]||[];return`<td>${r.length}</td>`;}).join('')}<td>${ytd.total}</td></tr>
+    </table>
+  </div>`;
+}
+function renderKpiSlide2(recs,mon){
+  const total=recs.length;
+  const VEHS=['NQ5','OV1','SP3'];
+  // 차종 × 위치
+  const vd={};
+  VEHS.forEach(v=>{
+    vd[v]={K1:0,K2:0};
+    LOCS.forEach(l=>vd[v][l]=0);
+    recs.filter(r=>r.차종===v).forEach(r=>{
+      if(LOCS.some(l=>r[l]===1))LOCS.forEach(l=>{if(r[l]===1)vd[v][l]++;});
+      else if(r.발생===1)vd[v].K1++;
+      else vd[v].K2++;
+    });
+  });
+  const usedLocs=LOCS.filter(l=>VEHS.some(v=>vd[v][l]>0));
+  const locCols=['K1','K2',...usedLocs];
+  const k1t=VEHS.reduce((s,v)=>s+vd[v].K1,0);
+  const k2t=VEHS.reduce((s,v)=>s+vd[v].K2,0);
+
+  // 귀책 × 발생 × FRT/RR
+  const tbl={};
+  ['기아','캠스','부영'].forEach(g=>{
+    tbl[g]={};
+    [1,2].forEach(k=>{
+      tbl[g][k]={FRT:kpiCnt(recs,r=>r.귀책===g&&r.발생===k&&r.아이템==='FRT'),RR:kpiCnt(recs,r=>r.귀책===g&&r.발생===k&&r.아이템==='RR')};
+      tbl[g][k].tot=tbl[g][k].FRT+tbl[g][k].RR;
+    });
+    tbl[g].계={FRT:tbl[g][1].FRT+tbl[g][2].FRT,RR:tbl[g][1].RR+tbl[g][2].RR};
+    tbl[g].계.tot=tbl[g].계.FRT+tbl[g].계.RR;
+  });
+  const frtT=kpiCnt(recs,r=>r.아이템==='FRT'),rrT=kpiCnt(recs,r=>r.아이템==='RR');
+
+  const colLabel={K1:'기아 1',K2:'기아 2',평동:'평동',경산:'경산',목포항:'목포항',충주:'충주',신태인:'신태인',오토큐:'오토큐',덕평:'덕평'};
+
+  document.getElementById('kpiSlide2').innerHTML=`
+  <div style="font-weight:800;color:#f1f5f9;margin-bottom:4px;font-size:16px">■ 26. ${mon} 알카 공급 현황</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+    <div>
+      <div style="font-weight:800;color:#93c5fd;margin-bottom:10px;font-size:14px">◎ 공장 및 출하장 공급 수량</div>
+      <table class="stbl">
+        <tr><th>차종</th>${locCols.map(c=>`<th>${colLabel[c]||c}</th>`).join('')}<th style="color:#f59e0b">TOTAL</th></tr>
+        ${VEHS.filter(v=>VEHS.some(()=>Object.values(vd[v]).some(n=>n>0))).map(v=>{
+          const rowTotal=locCols.reduce((s,c)=>s+vd[v][c],0);
+          if(!rowTotal)return'';
+          return`<tr><td class="veh">${v==='NQ5'?'NQ':v}</td>${locCols.map(c=>`<td>${vd[v][c]||''}</td>`).join('')}<td><b>${rowTotal}</b></td></tr>`;
+        }).join('')}
+        <tr class="tot-row"><td>TOTAL</td>${locCols.map(c=>{
+          const s=c==='K1'?k1t:c==='K2'?k2t:VEHS.reduce((a,v)=>a+vd[v][c],0);
+          return`<td>${s||''}</td>`;
+        }).join('')}<td>${total}</td></tr>
+      </table>
+    </div>
+    <div>
+      <div style="font-weight:800;color:#93c5fd;margin-bottom:10px;font-size:14px">◎ 아이템 및 귀책 현황</div>
+      <table class="stbl">
+        <tr><th colspan="2">구분</th><th>FRT</th><th>RR</th><th style="color:#f59e0b">TOTAL</th></tr>
+        ${['기아','캠스','부영'].map(gn=>{
+          const cls=gn==='기아'?'kia-c':gn==='캠스'?'cams-c':'';
+          return[1,2,'계'].map((k,ki)=>{
+            const d=tbl[gn][k];
+            return`<tr${k==='계'?' class="sub-row"':''}>
+              ${ki===0?`<td class="${cls}" rowspan="3"><b>${gn}</b></td>`:''}
+              <td>${k===1?'1':k===2?'2':'계'}</td>
+              <td>${d.FRT||'-'}</td><td>${d.RR||'-'}</td>
+              <td${k==='계'?` style="font-weight:800"`:''}>${d.tot||'-'}</td></tr>`;
+          }).join('');
+        }).join('')}
+        <tr class="tot-row"><td colspan="2">TOTAL</td><td>${frtT}</td><td>${rrT}</td><td>${total}</td></tr>
+      </table>
+    </div>
+  </div>`;
+}
+function pct(n,t){return t?Math.round(n/t*100):0;}
+
+// ─── KPI PPTX 생성 (JSZip 클라이언트 사이드) ────────────────
+function _monIdx(m){const r=m.match(/(\d+)월$/);return r?+r[1]-1:0;}
+
+function _setNumCache(xml,idx,ivals,ptCount){
+  // ivals: [[ptIdx,val], ...] or [val,val,...] (dense from 0)
+  if(!Array.isArray(ivals[0]))ivals=ivals.map((v,i)=>[i,v]);
+  const n=ptCount??Math.max(...ivals.map(([i])=>i))+1;
+  let inner=`<c:formatCode>General</c:formatCode><c:ptCount val="${n}"/>`;
+  for(const[pi,v]of ivals)inner+=`<c:pt idx="${pi}"><c:v>${v}</c:v></c:pt>`;
+  const re=/<c:numCache>[\s\S]*?<\/c:numCache>/g;
+  let ci=0,out=xml;
+  out=xml.replace(re,m=>ci++===idx?`<c:numCache>${inner}</c:numCache>`:m);
+  return out;
+}
+
+function _multiReplace(xml,pairs){
+  const found=[];let pos=0;
+  for(const[old,nv]of pairs){
+    const tag=`<a:t>${old}</a:t>`;
+    const i=xml.indexOf(tag,pos);
+    if(i>=0){found.push([i,tag.length,`<a:t>${nv}</a:t>`]);pos=i+tag.length;}
+  }
+  found.sort((a,b)=>b[0]-a[0]);
+  for(const[i,ol,nt]of found)xml=xml.slice(0,i)+nt+xml.slice(i+ol);
+  return xml;
+}
+
+function _pct(n,t){return t?`(${Math.round(n/t*100)}%)`:'(0%)';}
+
+function _updSld1(xml,c){
+  return _multiReplace(xml,[
+    ['101',String(c.FRT)],['106',String(c.RR)],
+    ['141',String(c.ASSY)],['64',String(c.리어몰딩)],
+    ['2',String(c.스키드)],['0',String(c.기타)],
+    ['93',String(c.기아ASSY)],['6',String(c.기아단품)],
+    ['45',String(c.캠스ASSY)],['60',String(c.캠스단품)],
+    ['3',String(c.부영ASSY)],['0',String(c.부영단품)],
+  ]);
+}
+
+function _updSld2(xml,c){
+  const mn=(c.mon.match(/(\d+)월$/)||[])[1]||'?';
+  const t=c.total;
+  return _multiReplace(xml,[
+    ['26. 4',`26. ${mn}`],
+    ['140',String(c.K1)],['(68%)',_pct(c.K1,t)],
+    ['58',String(c.K2)],['(28%)',_pct(c.K2,t)],
+    ['9',String(c.loc)],['(4%)',_pct(c.loc,t)],
+    ['99',String(c.기아)],['(48%)',_pct(c.기아,t)],
+    ['105',String(c.캠스)],['(50%)',_pct(c.캠스,t)],
+    ['3',String(c.부영)],['(2%)',_pct(c.부영,t)],
+  ]);
+}
+
+// ── PPTX 표 XML 빌더 ─────────────────────────────────────────
+function _mkCell(t,fill,fc,bold,sz=800){
+  const fi=fill?`<a:solidFill><a:srgbClr val="${fill}"/></a:solidFill>`:'<a:noFill/>';
+  const fo=fc?`<a:solidFill><a:srgbClr val="${fc}"/></a:solidFill>`:'';
+  const b=bold?' b="1"':'';
+  return `<a:tc><a:txBody><a:bodyPr/><a:lstStyle/><a:p><a:pPr algn="ctr"/><a:r><a:rPr lang="ko-KR" sz="${sz}"${b} dirty="0">${fo}</a:rPr><a:t>${t}</a:t></a:r></a:p></a:txBody><a:tcPr>${fi}</a:tcPr></a:tc>`;
+}
+function _mkCellVm(fill){
+  const fi=fill?`<a:solidFill><a:srgbClr val="${fill}"/></a:solidFill>`:'<a:noFill/>';
+  return `<a:tc vMerge="1"><a:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="ko-KR" sz="800" dirty="0"/><a:t></a:t></a:r></a:p></a:txBody><a:tcPr>${fi}</a:tcPr></a:tc>`;
+}
+function _mkCellRs(t,fill,fc,bold,sz=800,rs=1){
+  const fi=fill?`<a:solidFill><a:srgbClr val="${fill}"/></a:solidFill>`:'<a:noFill/>';
+  const fo=fc?`<a:solidFill><a:srgbClr val="${fc}"/></a:solidFill>`:'';
+  const b=bold?' b="1"':'';
+  const ra=rs>1?` rowSpan="${rs}"`:'';
+  return `<a:tc${ra}><a:txBody><a:bodyPr/><a:lstStyle/><a:p><a:pPr algn="ctr"/><a:r><a:rPr lang="ko-KR" sz="${sz}"${b} dirty="0">${fo}</a:rPr><a:t>${t}</a:t></a:r></a:p></a:txBody><a:tcPr>${fi}</a:tcPr></a:tc>`;
+}
+function _mkCellGs(t,fill,fc,bold,sz=800,gs=1){
+  const fi=fill?`<a:solidFill><a:srgbClr val="${fill}"/></a:solidFill>`:'<a:noFill/>';
+  const fo=fc?`<a:solidFill><a:srgbClr val="${fc}"/></a:solidFill>`:'';
+  const b=bold?' b="1"':'';
+  const ga=gs>1?` gridSpan="${gs}"`:'';
+  return `<a:tc${ga}><a:txBody><a:bodyPr/><a:lstStyle/><a:p><a:pPr algn="ctr"/><a:r><a:rPr lang="ko-KR" sz="${sz}"${b} dirty="0">${fo}</a:rPr><a:t>${t}</a:t></a:r></a:p></a:txBody><a:tcPr>${fi}</a:tcPr></a:tc>`;
+}
+function _mkTbl(id,x,y,cx,cy,cws,rh,rows){
+  const grid=cws.map(w=>`<a:gridCol w="${w}"/>`).join('');
+  const trs=rows.map(cells=>`<a:tr h="${rh}">${cells.join('')}</a:tr>`).join('');
+  return `<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="${id}" name="Tbl${id}"/><p:cNvGraphicFramePr><a:graphicFrameLocks noGrp="1"/></p:cNvGraphicFramePr><p:nvPr/></p:nvGraphicFramePr><p:xfrm><a:off x="${x}" y="${y}"/><a:ext cx="${cx}" cy="${cy}"/></p:xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table"><a:tbl><a:tblPr/><a:tblGrid>${grid}</a:tblGrid>${trs}</a:tbl></a:graphicData></a:graphic></p:graphicFrame>`;
+}
+
+// Slide1 귀책비교 월별 표 (14열×5행)
+function _sld1Tbl1(mvFn){
+  const x=263525,y=5611813,cx=4727575,cy=1101725;
+  const lw=520000,tw=520000,mw=Math.round((cx-lw-tw)/12);
+  const cws=[lw,...Array(12).fill(mw),tw];
+  const rh=Math.round(cy/5);
+  const H='1F3864',HF='FFFFFF',D='FFFFFF',T='2E4776',TF='FFFFFF';
+  const hdr=[_mkCell('구분',H,HF,true,750),...[1,2,3,4,5,6,7,8,9,10,11,12].map(m=>_mkCell(m+'월',H,HF,true,620)),_mkCell('TL',H,HF,true,750)];
+  const mkR=(lbl,arr,isTot)=>{
+    const f=isTot?T:D,fc=isTot?TF:'',bo=isTot;
+    const sum=arr.reduce((s,n)=>s+n,0);
+    return[_mkCell(lbl,f,fc,bo,750),...arr.map(v=>_mkCell(v||0,f,fc,bo,620)),_mkCell(sum,f,fc,bo,750)];
+  };
+  return _mkTbl(201,x,y,cx,cy,cws,rh,[hdr,mkR('기아',mvFn('기아')),mkR('캠스',mvFn('캠스')),mkR('부영',mvFn('부영')),mkR('TL',mvFn('total'),true)]);
+}
+
+// Slide1 K1/K2/출하 월별 표 (14열×5행)
+function _sld1Tbl2(mvFn){
+  const x=5064125,y=5629275,cx=4808538,cy=1103313;
+  const lw=520000,tw=520000,mw=Math.round((cx-lw-tw)/12);
+  const cws=[lw,...Array(12).fill(mw),tw];
+  const rh=Math.round(cy/5);
+  const H='1F3864',HF='FFFFFF',D='FFFFFF',T='2E4776',TF='FFFFFF';
+  const hdr=[_mkCell('구분',H,HF,true,750),...[1,2,3,4,5,6,7,8,9,10,11,12].map(m=>_mkCell(m+'월',H,HF,true,620)),_mkCell('TL',H,HF,true,750)];
+  const mkR=(lbl,arr,isTot)=>{
+    const f=isTot?T:D,fc=isTot?TF:'',bo=isTot;
+    const sum=arr.reduce((s,n)=>s+n,0);
+    return[_mkCell(lbl,f,fc,bo,750),...arr.map(v=>_mkCell(v||0,f,fc,bo,620)),_mkCell(sum,f,fc,bo,750)];
+  };
+  return _mkTbl(202,x,y,cx,cy,cws,rh,[hdr,mkR('K1',mvFn('K1')),mkR('K2',mvFn('K2')),mkR('출하',mvFn('loc')),mkR('TL',mvFn('total'),true)]);
+}
+
+// Slide6 차종×출하 표 (동적열×5행)
+function _sld6Tbl1(recs,LOCS_LIST){
+  const x=3652838,y=1306513,cx=5719762,cy=2166937;
+  const VEHS=['NQ5','OV1','SP3'];
+  const vd={};
+  VEHS.forEach(v=>{
+    vd[v]={K1:0,K2:0};
+    LOCS_LIST.forEach(l=>vd[v][l]=0);
+    recs.filter(r=>r.차종===v).forEach(r=>{
+      if(LOCS_LIST.some(l=>r[l]==1))LOCS_LIST.forEach(l=>{if(r[l]==1)vd[v][l]++;});
+      else if(r.발생==1)vd[v].K1++;
+      else vd[v].K2++;
+    });
+  });
+  const usedL=LOCS_LIST.filter(l=>VEHS.some(v=>vd[v][l]>0));
+  const cols=['K1','K2',...usedL];
+  const nc=cols.length;
+  const lw=700000,tw=700000,cw=Math.round((cx-lw-tw)/nc);
+  const cws=[lw,...Array(nc).fill(cw),tw];
+  const rh=Math.round(cy/5);
+  const H='1F3864',HF='FFFFFF',D='FFFFFF',DA='DCE6F1',T='2E4776',TF='FFFFFF';
+  const colLbl={K1:'기아1',K2:'기아2',평동:'평동',경산:'경산',목포항:'목포항',충주:'충주',신태인:'신태인',오토큐:'오토큐',덕평:'덕평'};
+  const hdr=[_mkCell('차종',H,HF,true),...cols.map(c=>_mkCell(colLbl[c]||c,H,HF,true)),_mkCell('TOTAL',H,HF,true)];
+  const rows=[hdr];
+  const k1t=VEHS.reduce((s,v)=>s+vd[v].K1,0);
+  const k2t=VEHS.reduce((s,v)=>s+vd[v].K2,0);
+  let ai=0;
+  VEHS.forEach(v=>{
+    const rowTot=cols.reduce((s,c)=>s+vd[v][c],0);
+    if(!rowTot)return;
+    const f=ai++%2===0?D:DA;
+    rows.push([_mkCell(v==='NQ5'?'NQ':v,f,'',true),...cols.map(c=>_mkCell(vd[v][c]||'',f,'',false)),_mkCell(rowTot,f,'',true)]);
+  });
+  rows.push([_mkCell('TOTAL',T,TF,true),...cols.map(c=>{
+    const s=c==='K1'?k1t:c==='K2'?k2t:VEHS.reduce((a,v2)=>a+vd[v2][c],0);
+    return _mkCell(s||'',T,TF,true);
+  }),_mkCell(recs.length,T,TF,true)]);
+  return _mkTbl(203,x,y,cx,cy,cws,rh,rows);
+}
+
+// Slide6 귀책×FRT/RR 표 (5열×11행, 단순 평면)
+function _sld6Tbl2(recs){
+  const x=3654425,y=4043363,cx=5721350,cy=2400300;
+  const tbl={};
+  ['기아','캠스','부영'].forEach(g=>{
+    tbl[g]={};
+    [1,2].forEach(k=>{
+      const frt=recs.filter(rec=>rec.귀책===g&&rec.발생==k&&rec.아이템==='FRT').length;
+      const rr=recs.filter(rec=>rec.귀책===g&&rec.발생==k&&rec.아이템==='RR').length;
+      tbl[g][k]={FRT:frt,RR:rr,tot:frt+rr};
+    });
+    tbl[g]['계']={FRT:tbl[g][1].FRT+tbl[g][2].FRT,RR:tbl[g][1].RR+tbl[g][2].RR};
+    tbl[g]['계'].tot=tbl[g]['계'].FRT+tbl[g]['계'].RR;
+  });
+  const frtT=recs.filter(rec=>rec.아이템==='FRT').length;
+  const rrT=recs.filter(rec=>rec.아이템==='RR').length;
+  const nRows=11;
+  const rh=Math.round(cy/nRows);
+  const gw=900000,kw=500000,dw=Math.round((cx-gw-kw)/3);
+  const cws=[gw,kw,dw,dw,dw];
+  const H='1F3864',HF='FFFFFF',D='FFFFFF',DA='DCE6F1',S='C5D9E8',T='2E4776',TF='FFFFFF';
+  const rows=[[_mkCell('귀책',H,HF,true),_mkCell('발생',H,HF,true),_mkCell('FRT',H,HF,true),_mkCell('RR',H,HF,true),_mkCell('계',H,HF,true)]];
+  ['기아','캠스','부영'].forEach((g,gi)=>{
+    [1,2,'계'].forEach((k,ki)=>{
+      const d=tbl[g][k];
+      const isSub=k==='계';
+      const f=isSub?S:ki%2===0?D:DA;
+      const bo=isSub;
+      rows.push([
+        _mkCell(isSub?g+' 계':g,f,'',bo),
+        _mkCell(isSub?'계':String(k),f,'',bo),
+        _mkCell(d.FRT||0,f,'',bo),
+        _mkCell(d.RR||0,f,'',bo),
+        _mkCell(d.tot||0,f,'',bo)
+      ]);
+    });
+  });
+  rows.push([_mkCell('TOTAL',T,TF,true),_mkCell('',T,TF,true),_mkCell(frtT,T,TF,true),_mkCell(rrT,T,TF,true),_mkCell(frtT+rrT,T,TF,true)]);
+  return _mkTbl(404,x,y,cx,cy,cws,rh,rows);
+}
+
+async function dlKpiPptx(){
+  const mon=document.getElementById('kpiDataMonSel').value;
+  if(!mon||!DB.months[mon]){alert('월을 선택하세요.');return;}
+  const btn=document.getElementById('kpiPptxBtn');
+  btn.disabled=true;btn.textContent='생성 중...';
+  try{
+    const allMons=monthList().filter(m=>m<=mon);
+    const recs=DB.months[mon].filter(r=>!r['단품만 요청']);
+    const allRecs=DB.months[mon];
+    const ytd=allMons.flatMap(m=>DB.months[m]||[]).filter(r=>!r['단품만 요청']);
+
+    const isK1=(r)=>r.발생==1&&!LOCS.some(l=>r[l]==1);
+    const isK2=(r)=>r.발생==2&&!LOCS.some(l=>r[l]==1);
+    const isLoc=(r)=>LOCS.some(l=>r[l]==1);
+
+    const mv=(key)=>allMons.map(m=>{const rs=DB.months[m]||[];
+      if(key==='K1')return rs.filter(isK1).length;
+      if(key==='K2')return rs.filter(isK2).length;
+      if(key==='loc')return rs.filter(isLoc).length;
+      if(key==='total')return rs.length;
+      return rs.filter(r=>r.귀책===key).length;
+    }).map((v,i)=>[_monIdx(allMons[i]),v]);
+
+    const mvArr=(key)=>{const a=new Array(12).fill(0);mv(key).forEach(([i,v])=>a[i]=v);return a;};
+
+    const c={
+      mon,total:recs.length,
+      기아:recs.filter(r=>r.귀책==='기아').length,
+      캠스:recs.filter(r=>r.귀책==='캠스').length,
+      부영:recs.filter(r=>r.귀책==='부영').length,
+      K1:recs.filter(isK1).length,
+      K2:recs.filter(isK2).length,
+      loc:recs.filter(isLoc).length,
+      FRT:recs.filter(r=>r.아이템==='FRT').length,
+      RR:recs.filter(r=>r.아이템==='RR').length,
+      ASSY:recs.length,
+      리어몰딩:allRecs.filter(r=>r['단품만 요청']==='리어몰딩').length,
+      스키드:allRecs.filter(r=>r['단품만 요청']==='스키드').length,
+      기타:allRecs.filter(r=>r['단품만 요청']&&!['리어몰딩','스키드'].includes(r['단품만 요청'])).length,
+      기아ASSY:recs.filter(r=>r.귀책==='기아').length,
+      기아단품:allRecs.filter(r=>r.귀책==='기아'&&r['단품만 요청']).length,
+      캠스ASSY:recs.filter(r=>r.귀책==='캠스').length,
+      캠스단품:allRecs.filter(r=>r.귀책==='캠스'&&r['단품만 요청']).length,
+      부영ASSY:recs.filter(r=>r.귀책==='부영').length,
+      부영단품:allRecs.filter(r=>r.귀책==='부영'&&r['단품만 요청']).length,
+      NQ5:recs.filter(r=>r.차종==='NQ5').length,
+      OV1:recs.filter(r=>r.차종==='OV1').length,
+      SP3:recs.filter(r=>r.차종==='SP3').length,
+      NQ5ytd:ytd.filter(r=>r.차종==='NQ5').length,
+      OV1ytd:ytd.filter(r=>r.차종==='OV1').length,
+      SP3ytd:ytd.filter(r=>r.차종==='SP3').length,
+    };
+
+    const tmpl=await fetch('template_kpi.pptx');
+    if(!tmpl.ok)throw new Error('template_kpi.pptx를 찾을 수 없습니다');
+    const zip=await JSZip.loadAsync(await tmpl.arrayBuffer());
+
+    const upd=async(path,fn)=>{
+      const x=await zip.file(path).async('string');
+      zip.file(path,fn(x));
+    };
+
+    await upd('ppt/charts/chart1.xml',x=>{
+      x=_setNumCache(x,0,mv('기아'),12);
+      x=_setNumCache(x,1,mv('캠스'),12);
+      x=_setNumCache(x,2,mv('부영'),12);return x;});
+    await upd('ppt/charts/chart2.xml',x=>_setNumCache(x,0,mv('total'),12));
+    await upd('ppt/charts/chart3.xml',x=>_setNumCache(x,0,[c.NQ5,0,c.OV1,c.SP3]));
+    await upd('ppt/charts/chart4.xml',x=>_setNumCache(x,0,[c.FRT,c.RR]));
+    await upd('ppt/charts/chart5.xml',x=>_setNumCache(x,0,[c.ASSY,c.리어몰딩,c.스키드,c.기타]));
+    await upd('ppt/charts/chart6.xml',x=>{
+      x=_setNumCache(x,0,[c.기아ASSY,c.기아단품]);
+      x=_setNumCache(x,1,[c.캠스ASSY,c.캠스단품]);
+      x=_setNumCache(x,2,[c.부영ASSY,c.부영단품]);return x;});
+    await upd('ppt/charts/chart7.xml',x=>{
+      x=_setNumCache(x,0,mv('K1'),12);
+      x=_setNumCache(x,1,mv('K2'),12);
+      x=_setNumCache(x,2,mv('loc'),12);return x;});
+    await upd('ppt/charts/chart9.xml',x=>_setNumCache(x,0,[c.NQ5ytd,0,c.OV1ytd,c.SP3ytd]));
+    await upd('ppt/slides/slide1.xml',x=>{
+      x=_updSld1(x,c);
+      // OLE 컨테이너(rId15=귀책비교, rId17=K1/K2) 전체 제거
+      x=x.replace(/<p:graphicFrame\b[\s\S]*?<\/p:graphicFrame>/g,m=>(m.includes('"rId15"')||m.includes('"rId17"'))?'':m);
+      // 새 표 XML 생성 및 유효성 검증
+      try{
+        const t1=_sld1Tbl1(mvArr),t2=_sld1Tbl2(mvArr);
+        const ns='xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
+        const pd=new DOMParser();
+        const d1=pd.parseFromString(`<root ${ns}>${t1}</root>`,'text/xml');
+        const d2=pd.parseFromString(`<root ${ns}>${t2}</root>`,'text/xml');
+        if(d1.querySelector('parseerror')||d2.querySelector('parseerror')){
+          console.error('표 XML 오류:',d1.querySelector('parseerror')?.textContent,d2.querySelector('parseerror')?.textContent);
+        }else{
+          x=x.replace('</p:spTree>',t1+t2+'</p:spTree>');
+        }
+      }catch(te){console.error('표 생성 오류:',te);}
+      return x;
+    });
+
+    // 현재 월 스냅샷 슬라이드를 slide2 복사본으로 새로 추가 (기존 슬라이드 유지)
+    {
+      const sld2xml=await zip.file('ppt/slides/slide2.xml').async('string');
+      let newSldXml=_updSld2(sld2xml,c);
+      // OLE 컨테이너(rId4=차종표, rId6=귀책표) 전체 제거
+      newSldXml=newSldXml.replace(/<p:graphicFrame\b[\s\S]*?<\/p:graphicFrame>/g,m=>(m.includes('"rId4"')||m.includes('"rId6"'))?'':m);
+      try{
+        const s1=_sld6Tbl1(recs,LOCS),s2=_sld6Tbl2(recs);
+        const ns='xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
+        const pd=new DOMParser();
+        const e1=pd.parseFromString(`<root ${ns}>${s1}</root>`,'text/xml').querySelector('parseerror');
+        const e2=pd.parseFromString(`<root ${ns}>${s2}</root>`,'text/xml').querySelector('parseerror');
+        if(e1||e2){console.error('슬6 표 오류:',e1?.textContent,e2?.textContent);}
+        else{newSldXml=newSldXml.replace('</p:spTree>',s1+s2+'</p:spTree>');}
+      }catch(se){console.error('슬6 표 오류:',se);}
+      const newNum=6;
+      zip.file(`ppt/slides/slide${newNum}.xml`,newSldXml);
+
+      // slide2 _rels 복사 (notesSlide 참조만 제거)
+      const sld2rels=await zip.file('ppt/slides/_rels/slide2.xml.rels').async('string');
+      zip.file(`ppt/slides/_rels/slide${newNum}.xml.rels`,
+        sld2rels.replace(/<Relationship\b[^>]*notesSlide[^>]*\/>/g,''));
+
+      // [Content_Types].xml 에 새 슬라이드 추가
+      let ct=await zip.file('[Content_Types].xml').async('string');
+      zip.file('[Content_Types].xml',ct.replace('</Types>',
+        `<Override PartName="/ppt/slides/slide${newNum}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/></Types>`));
+
+      // presentation.xml.rels 에 새 슬라이드 관계 추가
+      const newRid='rId20';
+      let pRels=await zip.file('ppt/_rels/presentation.xml.rels').async('string');
+      zip.file('ppt/_rels/presentation.xml.rels',pRels.replace('</Relationships>',
+        `<Relationship Id="${newRid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide${newNum}.xml"/></Relationships>`));
+
+      // presentation.xml sldIdLst: 월별추이(slide1) 바로 다음에 신규 슬라이드 삽입
+      let pXml=await zip.file('ppt/presentation.xml').async('string');
+      zip.file('ppt/presentation.xml',pXml.replace(
+        '<p:sldId id="265" r:id="rId5"/>',
+        `<p:sldId id="265" r:id="rId5"/><p:sldId id="600" r:id="${newRid}"/>`
+      ));
+    }
+
+    const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=`알카_${mon}_KPI.pptx`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }catch(e){alert('오류: '+e.message);console.error(e);}
+  finally{btn.disabled=false;btn.textContent='PPTX 다운로드';}
+}
+
+
+function renderDefList(){
+  document.getElementById('defList').innerHTML=DEFECTS.map((d,i)=>`
+    <div class="def-row" id="dr${i}">
+      <input class="def-name" value="${d[0]}" placeholder="유형명">
+      <input class="def-keys" value="${d[1].join(', ')}" placeholder="키워드1, 키워드2, ...">
+      <button class="def-del" onclick="removeDefRow(${i})">✕</button>
+    </div>`).join('');
+}
+function addDefRow(){
+  DEFECTS=[...DEFECTS,['',[]]];renderDefList();
+  document.getElementById('defList').lastElementChild.querySelector('.def-name').focus();
+}
+function removeDefRow(i){DEFECTS=DEFECTS.filter((_,idx)=>idx!==i);renderDefList();}
+function saveSettings(){
+  const rows=document.querySelectorAll('#defList .def-row');
+  const newD=[];
+  rows.forEach(row=>{
+    const name=row.querySelector('.def-name').value.trim();
+    const keys=row.querySelector('.def-keys').value.split(',').map(k=>k.trim()).filter(Boolean);
+    if(name&&keys.length)newD.push([name,keys]);
+  });
+  if(!newD.length){alert('유형이 1개 이상 있어야 합니다.');return;}
+  DEFECTS=newD;DB.defects=DEFECTS;saveDB();
+  alert('저장되었습니다.');
+}
+function resetSettings(){
+  if(!confirm('기본값으로 초기화할까요?'))return;
+  DEFECTS=DEFAULT_DEFECTS;DB.defects=null;saveDB();renderDefList();
+}
+
+// ─── 출하장 관리 ──────────────────────────────────────────
+function renderLocList(){
+  const el=document.getElementById('locList');if(!el)return;
+  const custom=DB.customLocs||[];
+  const defaultHtml=DEFAULT_LOCS.map(n=>`<span style="display:inline-flex;align-items:center;gap:6px;background:#1e2230;border:1px solid var(--bd);border-radius:6px;padding:5px 10px;font-size:13px;margin:3px">${n}<span style="font-size:11px;color:var(--mut)">(기본)</span></span>`).join('');
+  const customHtml=custom.map((l,i)=>`<span style="display:inline-flex;align-items:center;gap:6px;background:#1e3a1e;border:1px solid #16a34a;border-radius:6px;padding:5px 10px;font-size:13px;margin:3px">${l.name}<span style="font-size:11px;color:#86efac">[${l.keywords.join(', ')}]</span><button onclick="removeCustomLoc(${i})" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:14px;padding:0 2px">✕</button></span>`).join('');
+  el.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:2px">${defaultHtml}${customHtml}</div>`;
+}
+function addCustomLoc(){
+  const name=document.getElementById('locNameIn').value.trim();
+  const kwRaw=document.getElementById('locKwIn').value.trim();
+  if(!name){alert('출하장 이름을 입력하세요.');return;}
+  if(LOCS.includes(name)){alert('이미 등록된 출하장입니다.');return;}
+  const keywords=kwRaw?kwRaw.split(',').map(k=>k.trim()).filter(Boolean):[name];
+  if(!DB.customLocs)DB.customLocs=[];
+  DB.customLocs.push({name,keywords});
+  localStorage.setItem(DB_KEY,JSON.stringify(DB));
+  applyCustomLocs();renderLocList();
+  document.getElementById('locNameIn').value='';
+  document.getElementById('locKwIn').value='';
+}
+function removeCustomLoc(i){
+  if(!confirm('삭제하면 기존 데이터의 해당 컬럼도 집계에서 제외됩니다. 삭제할까요?'))return;
+  DB.customLocs.splice(i,1);
+  localStorage.setItem(DB_KEY,JSON.stringify(DB));
+  applyCustomLocs();renderLocList();
+}
+
+// ─── 시작 ────────────────────────────────────────────────
+applyCustomLocs();
+document.getElementById('targetIn').value=DB.targetCount||155;
+loadDefects();
+showView('main');
+</script>
+</body>
+</html>

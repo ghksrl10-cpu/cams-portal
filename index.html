@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>캠스 자동화 도구</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  background: #111;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header {
+  background: #1c1c1e;
+  border-bottom: 1px solid #2c2c2e;
+  flex-shrink: 0;
+}
+
+.header-top {
+  padding: 8px 16px 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #636366;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.tab-bar {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tab-bar::-webkit-scrollbar { display: none; }
+
+.tab {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #636366;
+  cursor: pointer;
+  border-bottom: 2.5px solid transparent;
+  white-space: nowrap;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.tab.active {
+  color: #fff;
+  border-bottom-color: #0a84ff;
+}
+
+.tab:active { opacity: 0.7; }
+
+.content {
+  flex: 1;
+  position: relative;
+  background: #fff;
+}
+
+iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: none;
+  background: #fff;
+}
+
+iframe.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">CAMS 자동화</div>
+  <div class="tab-bar" id="tabBar"></div>
+</div>
+<div class="content" id="content"></div>
+
+<script>
+const BASE = 'https://ghksrl10-cpu.github.io';
+
+const TOOLS = [
+  { name: '토크 측정',  src: BASE + '/cams-torque/' },
+  { name: '토크 관리',  src: '토크관리/index.html' },
+  { name: '대차 관리',  src: BASE + '/cams-cart-mgmt/' },
+  { name: '3정5S',     src: '라인 3정5S/index.html' },
+  { name: '알카 KPI',  src: '알카_실적종합.html' },
+  { name: 'ALC 정리',  src: 'ALC정리.html' },
+  { name: '컨베어',    src: BASE + '/cams-conveyor-sim/' },
+  { name: 'PPTX 캡처', src: 'pptx캡처/index.html' },
+];
+
+const tabBar = document.getElementById('tabBar');
+const content = document.getElementById('content');
+let activeIdx = 0;
+
+TOOLS.forEach((tool, i) => {
+  const tab = document.createElement('div');
+  tab.className = 'tab' + (i === 0 ? ' active' : '');
+  tab.textContent = tool.name;
+  tab.addEventListener('click', () => activate(i));
+  tabBar.appendChild(tab);
+
+  const frame = document.createElement('iframe');
+  frame.className = i === 0 ? 'active' : '';
+  frame.dataset.src = tool.src;
+  if (i === 0) frame.src = tool.src;
+  content.appendChild(frame);
+});
+
+function activate(idx) {
+  if (idx === activeIdx) return;
+  const tabs = tabBar.querySelectorAll('.tab');
+  const frames = content.querySelectorAll('iframe');
+  tabs[activeIdx].classList.remove('active');
+  frames[activeIdx].classList.remove('active');
+  activeIdx = idx;
+  tabs[idx].classList.add('active');
+  frames[idx].classList.add('active');
+  if (!frames[idx].src || frames[idx].src === location.href) {
+    frames[idx].src = frames[idx].dataset.src;
+  }
+  tabs[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+}
+</script>
+</body>
+</html>

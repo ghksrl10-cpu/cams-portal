@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASSY ALC 정리 → ERP 등록</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --bd:#2a2d35;--line:#23262f;--hd:#1a1d24;--hd2:#20232b;
+    --blue:#3b82f6;--blue2:#2563eb;--ok:#22c55e;--okbg:#052e16;
+    --ng:#ef4444;--ngbg:#2d0a0a;--mut:#9ca3af;--ink:#f1f5f9;
+    --side:#13151c;--bg:#0f1117;--card:#1a1d24;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"맑은 고딕","Malgun Gothic",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
+
+  /* 레이아웃 */
+  .app{display:flex;min-height:100vh}
+  .side{width:230px;background:var(--side);border-right:1px solid var(--bd);position:fixed;top:0;bottom:0;left:0;display:flex;flex-direction:column;z-index:30}
+  .brand{display:flex;align-items:center;gap:10px;padding:18px 16px;border-bottom:1px solid var(--line)}
+  .brand .logo{width:44px;height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .brand b{font-size:15px}.brand small{display:block;color:var(--mut);font-size:12px;margin-top:1px}
+  .nav{padding:10px;flex:1}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:9px;cursor:pointer;color:#94a3b8;font-weight:600;font-size:15px;margin-bottom:3px;transition:.15s}
+  .nav-item:hover{background:#20232b}
+  .nav-item.active{background:var(--blue);color:#fff}
+  .nav-item .ic{width:20px;text-align:center}
+  .side-foot{padding:14px 16px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .side-foot .av{width:32px;height:32px;border-radius:50%;background:#e0e7ff;color:var(--blue2);display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}
+  .side-foot small{display:block;color:var(--mut);font-size:12px}
+  .main{flex:1;margin-left:230px;padding:24px 28px 80px;max-width:1400px}
+  .view{display:none}.view.on{display:block}
+  .page-h{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+  .page-h h1{font-size:22px;font-weight:800}
+  .page-h .sub{color:var(--mut);font-size:14px;width:100%;margin-top:-4px}
+  .grow{flex:1}
+
+  /* 버튼 */
+  .btn{padding:9px 16px;border:1px solid var(--bd);border-radius:9px;background:#20232b;cursor:pointer;font-size:14px;font-weight:600;color:#e2e8f0;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{background:#2a2d35}
+  .btn.pri{background:var(--blue);color:#fff;border-color:var(--blue)}.btn.pri:hover{background:var(--blue2)}
+  .btn.suc{background:#16a34a;color:#fff;border-color:#16a34a}.btn.suc:hover{background:#15803d}
+  .btn.dan{background:#dc2626;color:#fff;border-color:#dc2626}.btn.dan:hover{background:#b91c1c}
+  .btn.sm{padding:6px 12px;font-size:13px}
+
+  /* 메인 차종 카드 그리드 */
+  .model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+  .model-card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:20px;position:relative;overflow:hidden;transition:.2s}
+  .model-card:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:0 8px 24px rgba(59,130,246,.15)}
+  .model-card .mc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+  .model-card .mc-name{font-size:18px;font-weight:800;letter-spacing:.5px}
+  .model-card .mc-nq{font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;background:#1e2a3a;color:var(--blue);border:1px solid #2563eb44}
+  .model-card .mc-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+  .mc-stat{background:var(--hd);border-radius:10px;padding:10px 12px;text-align:center}
+  .mc-stat .s-val{font-size:22px;font-weight:800;color:#f1f5f9}
+  .mc-stat .s-lab{font-size:12px;color:var(--mut);margin-top:3px}
+  .mc-stat.frt .s-val{color:#60a5fa}
+  .mc-stat.rr .s-val{color:#a78bfa}
+  .model-card .mc-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--bd)}
+  .mc-date-box{display:flex;flex-direction:column;gap:3px}
+  .mc-date-row{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)}
+  .mc-date-row .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .dot.frt{background:#3b82f6}.dot.rr{background:#8b5cf6}.dot.merged{background:#22c55e}
+  .mc-date-row b{color:#e2e8f0;font-weight:600}
+  .mc-badge-new{position:absolute;top:14px;right:14px;background:var(--ok);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+  .mc-empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--mut)}
+  .mc-empty .ec-icon{font-size:48px;margin-bottom:12px}
+  .mc-empty p{font-size:16px}
+
+  /* 요약 카드 (상단) */
+  .sum-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+  .sum-card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:14px}
+  .sum-card .si{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .si.b{background:#1e3a5f;color:#60a5fa}.si.g{background:#052e16;color:#22c55e}
+  .si.v{background:#2d1b69;color:#a78bfa}.si.y{background:#3d2a00;color:#f59e0b}
+  .sum-card .sv{font-size:26px;font-weight:800}.sum-card .sl{font-size:13px;color:var(--mut);margin-top:2px}
+
+  /* 변환 탭 */
+  .conv-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+  .upload-box{background:var(--card);border:2px dashed var(--bd);border-radius:14px;padding:24px;text-align:center;transition:.2s;cursor:pointer}
+  .upload-box:hover,.upload-box.drag{border-color:var(--blue);background:#111827}
+  .upload-box.done{border-style:solid;border-color:var(--ok);background:#052e16}
+  .upload-box .ub-icon{font-size:36px;margin-bottom:8px}
+  .upload-box .ub-title{font-size:16px;font-weight:700;margin-bottom:4px}
+  .upload-box .ub-sub{font-size:13px;color:var(--mut)}
+  .upload-box .ub-file{font-size:13px;color:var(--ok);font-weight:600;margin-top:8px}
+  .upload-box input[type=file]{display:none}
+
+  .preview-wrap{background:var(--card);border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+  .preview-head{background:var(--hd);padding:12px 16px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;border-bottom:1px solid var(--bd)}
+  .preview-scroll{overflow:auto;max-height:460px}
+  table{border-collapse:collapse;width:100%}
+  th,td{border:1px solid var(--bd);padding:9px 12px;text-align:left;white-space:nowrap;font-size:14px}
+  th{background:var(--hd2);font-weight:700;position:sticky;top:0;z-index:2}
+  tr:hover td{background:#1e2a3a}
+  td.tf{color:#60a5fa;font-weight:700}
+  td.tr2{color:#a78bfa;font-weight:700}
+  .tag-f{display:inline-block;background:#1e3a5f;color:#60a5fa;border:1px solid #2563eb55;padding:2px 8px;border-radius:6px;font-size:13px;font-weight:700}
+  .tag-r{display:inline-block;background:#2d1b69;color:#a78bfa;border:1px solid #7c3aed55;padding:2px 8px;border-radius:6px;font-size:13px;font-weight:700}
+
+  /* 설정 탭 */
+  .settings-wrap{max-width:720px}
+  .sec{background:var(--card);border:1px solid var(--bd);border-radius:14px;margin-bottom:16px;overflow:hidden}
+  .sec-h{background:var(--hd);padding:12px 16px;font-weight:800;font-size:15px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px}
+  .sec-body{padding:16px}
+  .field-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .field-row label{width:80px;font-weight:700;color:#94a3b8;font-size:14px;flex-shrink:0}
+  .field-row input,.field-row select{flex:1;padding:9px 12px;border:1px solid var(--bd);border-radius:8px;background:#111;color:var(--ink);font-size:14px}
+  .field-row input:focus,.field-row select:focus{outline:none;border-color:var(--blue)}
+  .model-list-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--hd);border-radius:10px;margin-bottom:8px;border:1px solid var(--bd)}
+  .mli-name{font-weight:700;font-size:15px;flex:1}
+  .mli-nq{font-size:13px;color:var(--blue);background:#1e2a3a;padding:3px 10px;border-radius:6px;font-weight:600}
+  .empty-msg{color:var(--mut);font-size:14px;text-align:center;padding:20px}
+
+  /* 토스트 */
+  #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:#1e293b;border:1px solid var(--bd);border-radius:12px;padding:12px 22px;font-size:14px;font-weight:600;color:#f1f5f9;z-index:9999;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* 모바일 */
+  .hamb{display:none}
+  @media(max-width:860px){
+    .side{transform:translateX(-100%);transition:.25s}
+    .side.open{transform:translateX(0)}
+    .main{margin-left:0;padding:14px 14px 70px}
+    .hamb{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid var(--bd);border-radius:9px;background:#1a1d24;font-size:18px;cursor:pointer;color:var(--ink)}
+    .sum-cards{grid-template-columns:1fr 1fr}
+    .conv-grid{grid-template-columns:1fr}
+    .model-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+<div class="scrim" id="scrim" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:25" onclick="closeSide()"></div>
+
+<div class="app">
+  <!-- 사이드바 -->
+  <aside class="side" id="side">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 100 100" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
+          <defs><clipPath id="cc"><circle cx="50" cy="50" r="49"/></clipPath></defs>
+          <circle cx="50" cy="50" r="49" fill="#111"/>
+          <rect x="0" y="36" width="100" height="28" fill="#dd0000" clip-path="url(#cc)"/>
+          <text x="91" y="58" text-anchor="end" fill="white" font-family="Arial Black,Impact,sans-serif" font-weight="900" font-size="24" letter-spacing="-1">AMS</text>
+          <path d="M 81 19 A 44 44 0 1 0 81 81" fill="none" stroke="#1414cc" stroke-width="15" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div><b>ALC 정리 도구</b><small>주식회사 캠스</small><small>생산팀 · 김환기PM</small></div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="showView('dash')"><span class="ic">🏠</span> 메인</div>
+      <div class="nav-item" onclick="showView('conv')"><span class="ic">🔄</span> 변환 · 등록</div>
+      <div class="nav-item" onclick="showView('settings')"><span class="ic">⚙️</span> 차종 설정</div>
+    </nav>
+    <div class="side-foot">
+      <div class="av">김</div>
+      <div><b style="font-size:14px">김환기</b><small>캠스 담당자</small></div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ===== 메인 ===== -->
+    <div class="view on" id="view-dash">
+      <div class="page-h">
+        <button class="hamb" onclick="openSide()">☰</button>
+        <h1>📋 차종별 ALC 현황</h1>
+        <span class="grow"></span>
+        <button class="btn pri" onclick="showView('conv')">＋ 새 파일 변환</button>
+        <div class="sub">차종별 마지막 업데이트 날짜와 등록 현황입니다</div>
+      </div>
+
+      <!-- 요약 카드 -->
+      <div class="sum-cards" id="sumCards"></div>
+
+      <!-- 차종 카드 그리드 -->
+      <div class="model-grid" id="modelGrid"></div>
+    </div>
+
+    <!-- ===== 변환 ===== -->
+    <div class="view" id="view-conv">
+      <div class="page-h">
+        <button class="hamb" onclick="openSide()">☰</button>
+        <h1>🔄 ALC 변환 · ERP 등록</h1>
+        <div class="sub">파일 선택 → 차종 지정 → 변환 → 저장</div>
+      </div>
+
+      <!-- 폴더 경로 표시 -->
+      <div id="convFolderBanner" style="background:#1a1d24;border:1px solid var(--bd);border-radius:10px;padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:13px">
+        <span style="color:var(--mut)">📁 ALC 폴더:</span>
+        <span id="convFolderPath" style="color:#60a5fa;font-weight:600">설정에서 경로를 입력하세요</span>
+        <span class="grow"></span>
+        <button class="btn sm" onclick="showView('settings')">⚙️ 경로 설정</button>
+      </div>
+
+      <!-- 파일 선택 + 차종 한 줄 -->
+      <div style="display:flex;gap:12px;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap">
+        <div style="flex:1;min-width:260px">
+          <div style="font-size:13px;color:var(--mut);margin-bottom:6px;font-weight:600">파일 선택 <span style="color:#6b7280">(FRT/RR 자동 감지)</span></div>
+          <div id="filePickBtn" onclick="openFilePick()" style="background:var(--card);border:2px dashed var(--bd);border-radius:10px;padding:14px 18px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:.2s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--bd)'">
+            <span style="font-size:22px">📂</span>
+            <div>
+              <div style="font-weight:700;font-size:14px" id="filePickLabel">클릭하여 파일 선택</div>
+              <div style="font-size:12px;color:var(--mut)" id="filePickSub">ASSY ALC 폴더에서 선택</div>
+            </div>
+          </div>
+        </div>
+        <div style="min-width:180px">
+          <div style="font-size:13px;color:var(--mut);margin-bottom:6px;font-weight:600">차종</div>
+          <select id="convModel" onchange="onModelSelect()" style="width:100%;padding:14px 12px;border:1px solid var(--bd);border-radius:10px;background:#111;color:var(--ink);font-size:15px;font-weight:700">
+            <option value="">-- 차종 선택 --</option>
+          </select>
+        </div>
+        <div style="min-width:100px">
+          <div style="font-size:13px;color:var(--mut);margin-bottom:6px;font-weight:600">시리즈 <span style="color:#6b7280;font-weight:400">(예: 25)</span></div>
+          <input id="convSeries" type="text" maxlength="4" placeholder="25" style="width:100%;padding:14px 12px;border:1px solid var(--bd);border-radius:10px;background:#111;color:var(--ink);font-size:15px;font-weight:700;box-sizing:border-box">
+        </div>
+        <button class="btn pri" onclick="doConvert()" id="btnConvert" disabled style="padding:14px 22px;font-size:15px">⚡ 변환</button>
+        <button class="btn suc" onclick="doDownload()" id="btnDown" disabled style="padding:14px 22px;font-size:15px">💾 저장</button>
+      </div>
+
+      <!-- 선택된 파일 태그 목록 -->
+      <div id="selectedFiles" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px"></div>
+      <div id="convStat" style="font-size:14px;color:var(--mut);margin-bottom:12px"></div>
+      <div id="saveBanner" style="display:none;background:#052e16;border:1px solid #16a34a;border-radius:12px;padding:16px 20px;margin-bottom:16px;align-items:center;gap:12px">
+        <span style="font-size:28px">✅</span>
+        <div style="flex:1">
+          <div style="font-size:16px;font-weight:800;color:#22c55e">저장 완료</div>
+          <div id="saveBannerPath" style="font-size:13px;color:#86efac;margin-top:2px"></div>
+        </div>
+        <button class="btn suc" onclick="openInExcel()" style="white-space:nowrap">📊 엑셀로 열기</button>
+      </div>
+
+      <!-- 미리보기 -->
+      <div class="preview-wrap" id="previewWrap" style="display:none">
+        <div class="preview-head">
+          📊 변환 결과 미리보기
+          <span id="previewCount" style="font-size:13px;color:var(--mut);margin-left:6px"></span>
+          <span class="grow"></span>
+          <span style="font-size:13px;color:var(--mut)">처음 100개 표시</span>
+        </div>
+        <div class="preview-scroll">
+          <table>
+            <thead><tr><th>순번</th><th>차종</th><th>F/R</th><th>CODE</th><th>PART NO</th><th>시리즈</th></tr></thead>
+            <tbody id="previewBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 설정 ===== -->
+    <div class="view" id="view-settings">
+      <div class="page-h">
+        <button class="hamb" onclick="openSide()">☰</button>
+        <h1>⚙️ 차종 설정</h1>
+        <div class="sub">차종별 NQ 값을 설정합니다. NQ는 ERP 등록 시 사용됩니다.</div>
+      </div>
+
+      <div class="settings-wrap">
+        <!-- 차종 추가 -->
+        <div class="sec">
+          <div class="sec-h">➕ 차종 추가</div>
+          <div class="sec-body">
+            <div class="field-row">
+              <label>차종</label>
+              <input id="newModelNQ" type="text" placeholder="예: NQ, 1S, AX">
+            </div>
+            <button class="btn pri" onclick="addModel()">➕ 추가</button>
+          </div>
+        </div>
+
+        <!-- ALC 폴더 경로 -->
+        <div class="sec">
+          <div class="sec-h">📁 ALC 파일 폴더 경로</div>
+          <div class="sec-body">
+            <p style="font-size:13px;color:var(--mut);margin-bottom:12px;line-height:1.6">ALC 엑셀 파일이 저장된 폴더 경로를 입력하세요. 서버가 직접 읽습니다.</p>
+            <div class="field-row">
+              <label style="width:60px">경로</label>
+              <input id="alcFolderInput" type="text" placeholder="예: C:\Users\admin\바탕 화면\ASSY ALC" style="flex:1">
+              <button class="btn" onclick="pickAlcFolder()">📁 찾아보기</button>
+              <button class="btn pri" onclick="saveAlcFolder()">저장</button>
+            </div>
+            <div id="alcFolderInfo" style="font-size:13px;color:var(--mut);margin-top:8px"></div>
+          </div>
+        </div>
+
+        <!-- 저장 경로 -->
+        <div class="sec">
+          <div class="sec-h">💾 저장 경로 설정</div>
+          <div class="sec-body">
+            <p style="font-size:13px;color:var(--mut);margin-bottom:12px;line-height:1.6">변환된 .txt 파일이 저장될 폴더 경로를 입력하세요. 서버가 직접 저장합니다.</p>
+            <div class="field-row">
+              <label style="width:60px">경로</label>
+              <input id="saveFolderInput" type="text" placeholder="예: C:\Users\admin\바탕 화면\ALC출력" style="flex:1">
+              <button class="btn" onclick="pickSaveFolder()">📁 찾아보기</button>
+              <button class="btn pri" onclick="saveSaveFolder()">저장</button>
+            </div>
+            <div id="saveFolderInfo" style="font-size:13px;color:var(--mut);margin-top:8px">※ 경로 미설정</div>
+          </div>
+        </div>
+
+        <!-- 차종 목록 -->
+        <div class="sec">
+          <div class="sec-h">📋 등록된 차종 목록</div>
+          <div class="sec-body" id="modelList"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ===== 데이터 =====
+let models = [];
+let frtData = null, rrData = null, mergedRows = [];
+let saveDirHandle = null;
+let _cfg = {};
+
+function renderAlcFolderUI(){
+  const folder = _cfg.alcFolder || '';
+  const inp = document.getElementById('alcFolderInput');
+  const info = document.getElementById('alcFolderInfo');
+  if(inp) inp.value = folder;
+  if(info) info.textContent = folder ? '현재 경로: '+folder : '※ 경로 미설정';
+}
+async function saveAlcFolder(){
+  const val = document.getElementById('alcFolderInput').value.trim();
+  if(!val){ toast('경로를 입력하세요'); return; }
+  _cfg.alcFolder = val;
+  await fetch('/api/alc-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_cfg)});
+  document.getElementById('alcFolderInfo').textContent = '현재 경로: '+val;
+  toast('✅ ALC 폴더 경로 저장 완료');
+}
+function renderSaveFolderUI(){
+  const folder = _cfg.saveFolder || '';
+  const inp = document.getElementById('saveFolderInput');
+  const info = document.getElementById('saveFolderInfo');
+  if(inp) inp.value = folder;
+  if(info) info.textContent = folder ? '현재 경로: '+folder : '※ 경로 미설정';
+}
+async function saveSaveFolder(){
+  const val = document.getElementById('saveFolderInput').value.trim();
+  if(!val){ toast('경로를 입력하세요'); return; }
+  _cfg.saveFolder = val;
+  await fetch('/api/alc-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_cfg)});
+  document.getElementById('saveFolderInfo').textContent = '현재 경로: '+val;
+  toast('✅ 저장 경로 설정 완료');
+}
+async function pickSaveFolder(){
+  const current = document.getElementById('saveFolderInput').value.trim() || (_cfg.saveFolder||'');
+  const res = await fetch('/api/pick-folder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initial:current})});
+  const j = await res.json();
+  if(!j.ok) return;
+  document.getElementById('saveFolderInput').value = j.path;
+}
+async function pickAlcFolder(){
+  const current = document.getElementById('alcFolderInput').value.trim() || (_cfg.alcFolder||'');
+  const res = await fetch('/api/pick-folder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initial:current})});
+  const j = await res.json();
+  if(!j.ok) return;
+  document.getElementById('alcFolderInput').value = j.path;
+}
+
+async function loadCfg(){
+  try{
+    // 서버가 주입한 초기 config 우선 사용 (async 타이밍 문제 방지)
+    const d = window._INIT_CFG || await (await fetch('/api/alc-config')).json();
+    Object.assign(_cfg, d);
+    models.length = 0;
+    (_cfg.models || []).forEach(m => models.push(m));
+  }catch(e){ console.error('loadCfg',e); }
+}
+async function saveModels(){
+  _cfg.models = models;
+  try{ await fetch('/api/alc-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_cfg)}); }
+  catch(e){}
+}
+
+// ===== 저장 경로 =====
+const DB_NAME = 'alc_fs', STORE = 'handles';
+function openDB(){
+  return new Promise((res,rej)=>{
+    const r = indexedDB.open(DB_NAME,1);
+    r.onupgradeneeded = e => e.target.result.createObjectStore(STORE);
+    r.onsuccess = e => res(e.target.result);
+    r.onerror   = e => rej(e);
+  });
+}
+async function loadSaveDir(){
+  try{
+    const db = await openDB();
+    const tx = db.transaction(STORE,'readonly');
+    const h  = await new Promise(r=>{ const q=tx.objectStore(STORE).get('saveDir'); q.onsuccess=()=>r(q.result); });
+    if(!h) return;
+    const perm = await h.queryPermission({mode:'readwrite'});
+    if(perm==='granted'||perm==='prompt'){ saveDirHandle=h; updateSaveDirUI(); }
+  }catch(e){}
+}
+async function selectSaveDir(){
+  if(!window.showDirectoryPicker){ toast('이 브라우저는 폴더 선택을 지원하지 않습니다 (Chrome 권장)'); return; }
+  try{
+    const h = await window.showDirectoryPicker({mode:'readwrite'});
+    saveDirHandle = h;
+    const db = await openDB();
+    const tx = db.transaction(STORE,'readwrite');
+    tx.objectStore(STORE).put(h,'saveDir');
+    updateSaveDirUI();
+    toast('✅ 저장 폴더 설정 완료: '+h.name);
+  }catch(e){ if(e.name!=='AbortError') toast('폴더 선택 실패'); }
+}
+function updateSaveDirUI(){
+  const nm = document.getElementById('saveDirName');
+  const info = document.getElementById('saveDirInfo');
+  if(saveDirHandle){
+    nm.textContent = '📁 '+saveDirHandle.name;
+    if(info) info.textContent = '저장 위치: '+saveDirHandle.name+' 폴더  ·  .txt 자동 저장됩니다';
+  }
+}
+async function saveToDir(filename, content){
+  if(!saveDirHandle) return false;
+  try{
+    const perm = await saveDirHandle.requestPermission({mode:'readwrite'});
+    if(perm!=='granted') return false;
+    const fh = await saveDirHandle.getFileHandle(filename,{create:true});
+    const w  = await fh.createWritable();
+    await w.write(content);
+    await w.close();
+    return true;
+  }catch(e){ console.error(e); return false; }
+}
+
+// ===== 뷰 전환 =====
+function showView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.getElementById('view-'+id).classList.add('on');
+  document.querySelectorAll('.nav-item').forEach((n,i)=>{
+    n.classList.toggle('active', ['dash','conv','settings'][i]===id);
+  });
+  if(id==='dash') renderDash();
+  if(id==='conv') renderConvModelSelect();
+  if(id==='settings'){ renderModelList(); renderAlcFolderUI(); renderSaveFolderUI(); }
+  closeSide();
+}
+function openSide(){ document.getElementById('side').classList.add('open'); document.getElementById('scrim').style.display='block'; }
+function closeSide(){ document.getElementById('side').classList.remove('open'); document.getElementById('scrim').style.display='none'; }
+
+// ===== 메인 대시보드 =====
+function renderDash(){
+  const grid = document.getElementById('modelGrid');
+  const sum = document.getElementById('sumCards');
+
+  const totalFrt = models.reduce((a,m)=>a+(m.frtCount||0),0);
+  const totalRr  = models.reduce((a,m)=>a+(m.rrCount||0),0);
+  const totalMerged = models.reduce((a,m)=>a+(m.mergedCount||0),0);
+  const updatedToday = models.filter(m=>m.lastMerged && m.lastMerged.startsWith(today())).length;
+
+  sum.innerHTML = `
+    <div class="sum-card"><div class="si b">🚗</div><div><div class="sv">${models.length}</div><div class="sl">등록 차종 수</div></div></div>
+    <div class="sum-card"><div class="si b">🔵</div><div><div class="sv">${totalFrt.toLocaleString()}</div><div class="sl">FRT 총 품번</div></div></div>
+    <div class="sum-card"><div class="si v">🟣</div><div><div class="sv">${totalRr.toLocaleString()}</div><div class="sl">RR 총 품번</div></div></div>
+    <div class="sum-card"><div class="si g">✅</div><div><div class="sv">${updatedToday}</div><div class="sl">오늘 업데이트</div></div></div>
+  `;
+
+  if(!models.length){
+    grid.innerHTML = `<div class="mc-empty"><div class="ec-icon">🚗</div><p>등록된 차종이 없습니다<br><small style="font-size:14px;color:#6b7280">설정에서 차종을 추가해주세요</small></p></div>`;
+    return;
+  }
+
+  grid.innerHTML = models.map(m=>{
+    const isNew = m.lastMerged && diffDays(m.lastMerged) === 0;
+    const frtAgo  = m.lastFrt   ? agoStr(m.lastFrt)   : '없음';
+    const rrAgo   = m.lastRr    ? agoStr(m.lastRr)    : '없음';
+    const mergAgo = m.lastMerged? agoStr(m.lastMerged): '없음';
+    const frtDate  = m.lastFrt   ? fmtDate(m.lastFrt)   : '-';
+    const rrDate   = m.lastRr    ? fmtDate(m.lastRr)    : '-';
+    const mergDate = m.lastMerged? fmtDate(m.lastMerged): '-';
+    return `
+    <div class="model-card">
+      ${isNew?'<div class="mc-badge-new">TODAY</div>':''}
+      <div class="mc-top">
+        <div class="mc-name">${m.name}</div>
+        <div class="mc-nq">${m.nq}</div>
+      </div>
+      <div class="mc-stats">
+        <div class="mc-stat frt"><div class="s-val">${(m.frtCount||0).toLocaleString()}</div><div class="s-lab">FRT 품번</div></div>
+        <div class="mc-stat rr"><div class="s-val">${(m.rrCount||0).toLocaleString()}</div><div class="s-lab">RR 품번</div></div>
+      </div>
+      <div class="mc-footer">
+        <div class="mc-date-box">
+          <div class="mc-date-row"><span class="dot frt"></span>FRT 업데이트&nbsp;<b>${frtDate}</b><span style="color:#6b7280;font-size:11px">&nbsp;${m.lastFrt?frtAgo:''}</span></div>
+          <div class="mc-date-row"><span class="dot rr"></span>RR 업데이트&nbsp;<b>${rrDate}</b><span style="color:#6b7280;font-size:11px">&nbsp;${m.lastRr?rrAgo:''}</span></div>
+          <div class="mc-date-row"><span class="dot merged"></span>마지막 변환&nbsp;<b>${mergDate}</b><span style="color:#6b7280;font-size:11px">&nbsp;${m.lastMerged?mergAgo:''}</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+          <span style="font-size:22px;font-weight:800;color:${m.mergedCount?'var(--ok)':'var(--mut)'}">${(m.mergedCount||0).toLocaleString()}</span>
+          <span style="font-size:11px;color:var(--mut)">총 품번</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== 설정 =====
+function renderModelList(){
+  const el = document.getElementById('modelList');
+  if(!models.length){ el.innerHTML='<div class="empty-msg">등록된 차종이 없습니다</div>'; return; }
+  el.innerHTML = '';
+  models.forEach((m,i)=>{
+    const div = document.createElement('div');
+    div.className = 'model-list-item';
+    div.innerHTML = `
+      <div class="mli-name" style="min-width:60px">${m.nq}</div>
+      <div style="display:flex;align-items:center;gap:6px;flex:1;flex-wrap:wrap">
+        <label style="font-size:12px;color:var(--mut);white-space:nowrap">출력코드</label>
+        <input id="code_${i}" type="text" value="${m.code||m.nq}" maxlength="10"
+          placeholder="${m.nq}"
+          style="width:70px;padding:5px 8px;border-radius:7px;border:1px solid var(--bd);background:var(--hd);color:#60a5fa;font-size:13px;text-align:center;font-weight:700">
+        <label style="font-size:12px;color:var(--mut);white-space:nowrap;margin-left:6px">시리즈</label>
+        <input id="series_${i}" type="text" value="${m.series||''}" maxlength="4"
+          placeholder="예: 25"
+          style="width:60px;padding:5px 8px;border-radius:7px;border:1px solid var(--bd);background:var(--hd);color:var(--ink);font-size:13px;text-align:center">
+        <button class="btn sm" onclick="saveSeries(${i})">저장</button>
+      </div>
+      <button class="btn sm dan" onclick="delModel(${i})">🗑️</button>`;
+    el.appendChild(div);
+  });
+}
+function saveSeries(i){
+  const code = document.getElementById('code_'+i).value.trim();
+  const val = document.getElementById('series_'+i).value.trim();
+  models[i].code = code || models[i].nq;
+  models[i].series = val;
+  saveModels();
+  toast(`✅ ${models[i].nq} → 출력코드: ${models[i].code}, 시리즈: ${val||'없음'}`);
+}
+function addModel(){
+  const nq = document.getElementById('newModelNQ').value.trim();
+  if(!nq){ toast('차종을 입력하세요'); return; }
+  if(models.find(m=>m.nq===nq)){ toast('이미 등록된 차종입니다'); return; }
+  models.push({name:nq, nq});
+  saveModels();
+  document.getElementById('newModelNQ').value='';
+  renderModelList();
+  toast('✅ 차종 추가 완료: '+nq);
+}
+function delModel(i){
+  if(!confirm(`'${models[i].name}' 차종을 삭제하시겠습니까?`)) return;
+  models.splice(i,1); saveModels(); renderModelList(); toast('삭제됨');
+}
+function editModel(i){
+  const newNq = prompt('차종', models[i].nq);
+  if(!newNq) return;
+  models[i].name = newNq.trim();
+  models[i].nq   = newNq.trim();
+  saveModels(); renderModelList(); toast('✅ 수정 완료');
+}
+
+// ===== 변환 =====
+function renderConvModelSelect(){
+  const sel = document.getElementById('convModel');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">-- 차종 선택 --</option>' +
+    models.map(m=>`<option value="${m.nq}">${m.nq}</option>`).join('');
+  if(cur) sel.value = cur;
+  // 폴더 경로 표시
+  const folder = _cfg.alcFolder || '';
+  const pathEl = document.getElementById('convFolderPath');
+  if(pathEl) pathEl.textContent = folder || '설정에서 경로를 입력하세요';
+  checkConvertReady();
+}
+function onModelSelect(){
+  const nq = document.getElementById('convModel').value;
+  const m = models.find(x=>x.nq===nq);
+  if(m && m.series) document.getElementById('convSeries').value = m.series;
+  checkConvertReady();
+}
+function checkConvertReady(){
+  const ok = document.getElementById('convModel').value && selectedFiles.length > 0;
+  document.getElementById('btnConvert').disabled = !ok;
+}
+
+// 선택된 파일들 {path, name, fr, rows}
+let selectedFiles = [];
+
+function detectFR(filename){
+  const u = filename.toUpperCase();
+  if(u.includes('RR')) return 'R';
+  return 'F'; // FRT or default
+}
+function detectModel(filename){
+  const u = filename.toUpperCase();
+  // 정확한 코드 먼저 (긴 것 우선: SP2/SP3 전에 SP 걸리지 않도록 정렬)
+  const sorted = [...models].sort((a,b)=>b.nq.length-a.nq.length);
+  for(const m of sorted){
+    if(u.includes(m.nq.toUpperCase())) return m.nq;
+  }
+  // 파일명 별칭 → 코드 매핑
+  const aliases = [
+    ['NQ5PE','NQ5'],['NQPE','NQ5'],['NQ5','NQ5'],['NQ','NQ5'],
+    ['SP2PE','SP2'],['SP2','SP2'],
+    ['SP3','SP3'],['1S','SP3'],
+    ['OV1','OV1'],['X9','OV1'],
+    ['JX','JX'],['AX EV','JX'],
+    ['AX','AX'],
+  ];
+  for(const [alias,nq] of aliases){
+    if(u.includes(alias)) return nq;
+  }
+  return null;
+}
+
+async function openFilePick(){
+  document.getElementById('fileList').innerHTML = '<div style="color:var(--mut);padding:20px;text-align:center">불러오는 중...</div>';
+  document.getElementById('fileModal').style.display = 'flex';
+  try{
+    const r = await fetch('/api/alc-files');
+    const files = await r.json();
+    if(!files.length){
+      document.getElementById('fileList').innerHTML = '<div style="color:var(--mut);padding:20px;text-align:center">폴더에 xlsx 파일이 없습니다<br><small>설정에서 ALC 폴더 경로를 확인하세요</small></div>';
+      return;
+    }
+    const listEl = document.getElementById('fileList');
+    listEl.innerHTML = '';
+    files.forEach(f=>{
+      const fr = detectFR(f.name);
+      const nqLabel = detectModel(f.name)||'?';
+      const already = selectedFiles.find(s=>s.path===f.path);
+      const div = document.createElement('div');
+      div.style.cssText = `padding:12px 14px;border:2px solid ${already?'var(--blue)':'var(--bd)'};border-radius:10px;margin-bottom:8px;cursor:pointer;background:${already?'#1e2a3a':'var(--hd)'};transition:.15s;display:flex;align-items:center;gap:12px`;
+      div.innerHTML = `
+        <span style="font-size:18px;width:28px;text-align:center">${fr==='F'?'🔵':'🟣'}</span>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:14px">${f.name}</div>
+          <div style="font-size:12px;color:var(--mut);margin-top:2px">자동 감지: <b style="color:#22c55e">${nqLabel}</b> &nbsp;·&nbsp; <b style="color:${fr==='F'?'#60a5fa':'#a78bfa'}">${fr==='F'?'FRT (F)':'RR (R)'}</b></div>
+        </div>
+        <span style="font-size:18px">${already?'✅':''}</span>`;
+      div.addEventListener('click', ()=>toggleFile(f.path, f.name));
+      listEl.appendChild(div);
+    });
+  }catch(e){ document.getElementById('fileList').innerHTML = '<div style="color:var(--ng);padding:20px;text-align:center">서버 오류: '+e.message+'</div>'; }
+}
+function closeFilePick(){
+  document.getElementById('fileModal').style.display='none';
+  renderSelectedFiles();
+  // 파일명에서 차종 자동감지 → 드롭다운 자동 설정
+  if(selectedFiles.length){
+    for(const f of selectedFiles){
+      const nq = detectModel(f.name);
+      if(nq){
+        const sel = document.getElementById('convModel');
+        if(sel) sel.value = nq;
+        break;
+      }
+    }
+  }
+  checkConvertReady();
+}
+
+function toggleFile(path, name){
+  const idx = selectedFiles.findIndex(s=>s.path===path);
+  if(idx>=0){ selectedFiles.splice(idx,1); }
+  else { selectedFiles.push({path, name, fr:detectFR(name), rows:null}); }
+  // 모달 내 항목 스타일 갱신
+  openFilePick();
+}
+
+function renderSelectedFiles(){
+  const el = document.getElementById('selectedFiles');
+  if(!selectedFiles.length){
+    el.innerHTML='';
+    document.getElementById('filePickLabel').textContent='클릭하여 파일 선택';
+    document.getElementById('filePickSub').textContent='ASSY ALC 폴더에서 선택';
+    checkConvertReady(); return;
+  }
+  el.innerHTML = selectedFiles.map((f,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;background:var(--hd);border:1px solid var(--bd);border-radius:8px;padding:7px 12px;font-size:13px">
+      <span style="color:${f.fr==='F'?'#60a5fa':'#a78bfa'};font-weight:700">${f.fr==='F'?'FRT':'RR'}</span>
+      <span>${f.name}</span>
+      ${f.rows?`<span style="color:var(--ok);font-size:12px">✓ ${f.rows.length}건</span>`:'<span style="color:var(--mut);font-size:12px">미파싱</span>'}
+      <button onclick="removeFile(${i})" style="background:none;border:none;color:var(--ng);cursor:pointer;font-size:15px;padding:0 2px">✕</button>
+    </div>`).join('');
+  document.getElementById('filePickLabel').textContent = `${selectedFiles.length}개 파일 선택됨`;
+  document.getElementById('filePickSub').textContent = selectedFiles.map(f=>f.fr==='F'?'FRT':'RR').join(' + ');
+  checkConvertReady();
+}
+function removeFile(i){ selectedFiles.splice(i,1); renderSelectedFiles(); }
+
+async function doConvert(){
+  document.getElementById('saveBanner').style.display = 'none';
+  const nq = document.getElementById('convModel').value;
+  if(!nq){ toast('차종을 선택하세요'); return; }
+  if(!selectedFiles.length){ toast('파일을 선택하세요'); return; }
+
+  document.getElementById('convStat').textContent = '⏳ 파싱 중...';
+  document.getElementById('btnConvert').disabled = true;
+
+  // 선택 파일들 서버에서 파싱
+  for(const f of selectedFiles){
+    if(f.rows) continue; // 이미 파싱됨
+    try{
+      const r = await fetch('/api/alc-parse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:f.path})});
+      const res = await r.json();
+      if(res.error){ toast('❌ '+f.name+': '+res.error); document.getElementById('btnConvert').disabled=false; return; }
+      f.rows = res.rows;
+    }catch(e){ toast('❌ 오류: '+e.message); document.getElementById('btnConvert').disabled=false; return; }
+  }
+  renderSelectedFiles();
+
+  mergedRows = [];
+  let seq = 1;
+  // FRT 먼저, RR 다음
+  const frtFiles = selectedFiles.filter(f=>f.fr==='F');
+  const rrFiles  = selectedFiles.filter(f=>f.fr==='R');
+  [...frtFiles, ...rrFiles].forEach(f=>{
+    const mObj = models.find(x=>x.nq===nq)||{};
+    const outputCode = mObj.code || nq;
+    const series = (document.getElementById('convSeries').value.trim()) || mObj.series||'';
+    f.rows.forEach(r=>{ mergedRows.push({seq:seq++, nq:outputCode, fr:r.fr, code:r.code, partNo:r.partNo, series}); });
+  });
+
+  // 모델 업데이트
+  const m = models.find(x=>x.nq===nq);
+  if(m){
+    const now = new Date().toISOString();
+    if(frtFiles.length){ m.lastFrt=now; m.frtCount=frtFiles.reduce((a,f)=>a+f.rows.length,0); }
+    if(rrFiles.length) { m.lastRr=now;  m.rrCount=rrFiles.reduce((a,f)=>a+f.rows.length,0); }
+    m.lastMerged=now; m.mergedCount=mergedRows.length;
+    saveModels();
+  }
+
+  // 미리보기
+  document.getElementById('previewBody').innerHTML = mergedRows.slice(0,100).map(r=>`
+    <tr>
+      <td>${r.seq}</td>
+      <td>${r.nq}</td>
+      <td><span class="tag-${r.fr==='F'?'f':'r'}">${r.fr}</span></td>
+      <td>${r.code}</td>
+      <td>${r.partNo}</td>
+      <td>${r.series||''}</td>
+    </tr>`).join('');
+  document.getElementById('previewCount').textContent = `총 ${mergedRows.length.toLocaleString()}건`;
+  document.getElementById('previewWrap').style.display='block';
+  document.getElementById('btnDown').disabled=false;
+  document.getElementById('btnConvert').disabled=false;
+  document.getElementById('convStat').textContent=`✅ 변환 완료: ${mergedRows.length}건`;
+  toast(`✅ 변환 완료! ${mergedRows.length}건`);
+}
+
+async function doDownload(){
+  if(!mergedRows.length){ toast('먼저 변환을 실행하세요'); return; }
+  const nq = document.getElementById('convModel').value;
+  const fname = 'alcup.txt';
+  const content = mergedRows.map(r=>[r.seq, r.nq, r.fr, r.code, r.partNo, r.series||''].join('\t')).join('\n');
+
+  if(_cfg.saveFolder){
+    try{
+      const res = await fetch('/api/alc-save',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({folder:_cfg.saveFolder, filename:fname, content})});
+      const j = await res.json();
+      if(j.ok){
+        document.getElementById('convStat').textContent = '';
+        const banner = document.getElementById('saveBanner');
+        document.getElementById('saveBannerPath').textContent = `${_cfg.saveFolder}\\${fname}`;
+        banner.style.display = 'flex';
+        _lastSavedPath = `${_cfg.saveFolder}\\${fname}`;
+        toast(`✅ 저장 완료: ${fname}`);
+        return;
+      }
+      toast('❌ 저장 실패: '+(j.error||''));
+    }catch(e){ toast('❌ 서버 저장 오류'); }
+    return;
+  }
+  // saveFolder 미설정 시 브라우저 다운로드
+  const blob = new Blob(['﻿'+content], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname; a.click();
+  toast(`📥 다운로드: ${fname}`);
+}
+
+let _lastSavedPath = '';
+async function openInExcel(){
+  if(!_lastSavedPath){ toast('저장된 파일 경로가 없습니다'); return; }
+  try{
+    await fetch('/api/open-file',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({path:_lastSavedPath})});
+  }catch(e){ toast('❌ 열기 실패'); }
+}
+
+// ===== 유틸 =====
+function today(){ return new Date().toISOString().slice(0,10); }
+function todayFile(){ return today().replace(/-/g,''); }
+function fmtDate(iso){
+  if(!iso) return '-';
+  const d=new Date(iso);
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+}
+function diffDays(iso){
+  if(!iso) return 999;
+  const d=new Date(iso); d.setHours(0,0,0,0);
+  const now=new Date(); now.setHours(0,0,0,0);
+  return Math.round((now-d)/86400000);
+}
+function agoStr(iso){
+  const d=diffDays(iso);
+  if(d===0) return '오늘';
+  if(d===1) return '어제';
+  if(d<7)   return `${d}일 전`;
+  if(d<30)  return `${Math.floor(d/7)}주 전`;
+  return `${Math.floor(d/30)}개월 전`;
+}
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+// 드래그앤드롭
+['boxFrt','boxRr'].forEach(id=>{
+  const box=document.getElementById(id);
+  if(!box) return;
+  box.addEventListener('dragover',e=>{e.preventDefault();box.classList.add('drag')});
+  box.addEventListener('dragleave',()=>box.classList.remove('drag'));
+  box.addEventListener('drop',e=>{
+    e.preventDefault(); box.classList.remove('drag');
+    const file=e.dataTransfer.files[0]; if(!file) return;
+    const type=id==='boxFrt'?'frt':'rr';
+    const inp=document.getElementById(type==='frt'?'fileFrt':'fileRr');
+    const dt=new DataTransfer(); dt.items.add(file); inp.files=dt.files;
+    loadFile(inp,type);
+  });
+});
+
+// 초기 렌더
+(async function init(){
+  try{ await loadCfg(); }catch(e){ console.error(e); }
+  renderDash();
+  try{ loadSaveDir(); }catch(e){ console.error(e); }
+})();
+</script>
+
+<!-- 파일 선택 모달 -->
+<div id="fileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center">
+  <div style="background:#1a1d24;border:1px solid var(--bd);border-radius:16px;width:600px;max-height:75vh;display:flex;flex-direction:column">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px;font-weight:800;font-size:16px">
+      📂 파일 선택 <span style="font-size:13px;color:var(--mut);font-weight:400">파일명에서 FRT/RR 자동 감지</span>
+      <span class="grow"></span>
+      <button class="btn sm" onclick="closeFilePick()">✕</button>
+    </div>
+    <div style="overflow-y:auto;padding:12px" id="fileList"></div>
+  </div>
+</div>
+</body>
+</html>
