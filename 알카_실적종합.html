@@ -1834,6 +1834,44 @@ applyCustomLocs();
 document.getElementById('targetIn').value=DB.targetCount||155;
 loadDefects();
 showView('main');
+
+/* ===== OneDrive 자동 백업 ===== */
+(async()=>{
+  const FILE='alka_backup.json';
+  const IDB='cams_od_v1';
+  async function _db(){return new Promise(r=>{const q=indexedDB.open(IDB,1);q.onupgradeneeded=e=>e.target.result.createObjectStore('h');q.onsuccess=e=>r(e.target.result);});}
+  async function _get(){const db=await _db();return new Promise(r=>{const t=db.transaction('h','readonly');const q=t.objectStore('h').get('dir');q.onsuccess=()=>r(q.result||null);});}
+  async function _put(h){const db=await _db();return new Promise(r=>{const t=db.transaction('h','readwrite');t.objectStore('h').put(h,'dir');t.oncomplete=r;});}
+  let dir=null;
+  async function checkPerm(){
+    dir=await _get();if(!dir)return false;
+    try{const p=await dir.queryPermission({mode:'readwrite'});if(p==='granted')return true;const r=await dir.requestPermission({mode:'readwrite'});return r==='granted';}
+    catch(e){dir=null;return false;}
+  }
+  async function odSave(){if(!dir)return;try{const fh=await dir.getFileHandle(FILE,{create:true});const w=await fh.createWritable();await w.write(JSON.stringify(DB));await w.close();}catch(e){}}
+  async function odLoad(){if(!dir)return null;try{const fh=await dir.getFileHandle(FILE);return JSON.parse(await(await fh.getFile()).text());}catch(e){return null;}}
+
+  const btn=document.createElement('button');
+  btn.style.cssText='position:fixed;bottom:12px;right:12px;z-index:9999;padding:6px 14px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;color:#fff;';
+  document.body.appendChild(btn);
+
+  const ok=await checkPerm();
+  btn.textContent=ok?'☁️ OneDrive 연결됨':'☁️ OneDrive 연결';
+  btn.style.background=ok?'#1a7f37':'#555';
+
+  btn.onclick=async()=>{
+    try{dir=await showDirectoryPicker({mode:'readwrite'});await _put(dir);btn.textContent='☁️ OneDrive 연결됨';btn.style.background='#1a7f37';await odSave();}
+    catch(e){}
+  };
+
+  if(ok){
+    const saved=await odLoad();
+    if(saved){localStorage.setItem(DB_KEY,JSON.stringify(saved));DB=saved;applyCustomLocs();document.getElementById('targetIn').value=DB.targetCount||155;loadDefects();showView('main');}
+  }
+
+  const _orig=saveDB;
+  saveDB=function(){_orig();odSave();};
+})();
 </script>
 </body>
 </html>

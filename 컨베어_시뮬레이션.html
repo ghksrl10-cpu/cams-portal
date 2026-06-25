@@ -1,0 +1,2957 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>컨베어 라인 시뮬레이션</title>
+<style>
+  :root{
+    --bd:#2a2d35;--line:#23262f;--hd:#1a1d24;--hd2:#20232b;
+    --blue:#3b82f6;--blue2:#2563eb;
+    --ok:#22c55e;--okbg:#052e16;--ng:#ef4444;--ngbg:#2d0a0a;
+    --warn:#f59e0b;--warnbg:#2d1800;
+    --mut:#9ca3af;--ink:#f1f5f9;--side:#13151c;--bg:#0f1117;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"맑은 고딕","Malgun Gothic",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
+  .app{display:flex;min-height:100vh}
+
+  /* ── 사이드바 ── */
+  .side{width:230px;background:var(--side);border-right:1px solid var(--bd);position:fixed;top:0;bottom:0;left:0;display:flex;flex-direction:column;z-index:30}
+  .brand{display:flex;align-items:center;gap:10px;padding:18px 16px;border-bottom:1px solid var(--line)}
+  .brand .logo{width:44px;height:44px;flex-shrink:0}
+  .brand b{font-size:15px;display:block}
+  .brand small{display:block;color:var(--mut);font-size:12px;margin-top:1px}
+  .nav{padding:10px;flex:1;overflow-y:auto}
+  .nav-group{font-size:11px;font-weight:700;color:var(--mut);padding:10px 10px 4px;letter-spacing:1px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:9px;cursor:pointer;color:#94a3b8;font-weight:600;font-size:14px;margin-bottom:2px;transition:background .15s}
+  .nav-item:hover{background:#20232b}
+  .nav-item.active{background:var(--blue);color:#fff}
+  .nav-item .ic{width:20px;text-align:center}
+  .side-foot{padding:14px 16px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .side-foot .av{width:32px;height:32px;border-radius:50%;background:#1e3a5f;color:#60a5fa;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0}
+  .side-foot small{display:block;color:var(--mut);font-size:12px}
+  .scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:25}
+  .scrim.show{display:block}
+
+  /* ── 메인 ── */
+  .main{flex:1;margin-left:230px;padding:20px 24px 70px}
+  .page-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 0 18px}
+  .page-h h1{font-size:22px;margin:0;font-weight:800}
+  .page-h .sub{color:var(--mut);font-size:13px;width:100%;margin-top:-4px}
+  .grow{flex:1}
+  .hamb{display:none;align-items:center;justify-content:center;width:40px;height:40px;border:1px solid var(--bd);border-radius:9px;background:#1a1d24;font-size:18px;cursor:pointer;color:var(--ink)}
+
+  /* ── 버튼 ── */
+  .btn{padding:9px 14px;border:1px solid var(--bd);border-radius:9px;background:#20232b;cursor:pointer;font-size:14px;font-weight:600;color:#e2e8f0;transition:background .15s}
+  .btn:hover{background:#2a2d35}
+  .btn.pri{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .btn.pri:hover{background:var(--blue2)}
+  .btn.grn{background:#15803d;color:#fff;border-color:#15803d}
+  .btn.warn{color:var(--ng);border-color:#7f1d1d}
+  .btn.sml{padding:6px 11px;font-size:13px}
+
+  /* ── 바 ── */
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#1a1d24;border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
+  .bar label{font-weight:700;color:#94a3b8;font-size:14px;white-space:nowrap}
+  .bar input,.bar select{padding:8px;border:1px solid var(--bd);border-radius:8px;font-size:14px;background:#0f1117;color:#f1f5f9}
+  .bar input[type=number]{width:80px;text-align:center}
+  .hint{font-size:13px;color:var(--mut);margin:0 0 12px;line-height:1.6}
+
+  /* ── 섹션 ── */
+  .sec{background:#1a1d24;border:1px solid var(--bd);border-radius:12px;margin-bottom:14px;overflow:hidden}
+  .sec-h{background:var(--hd);padding:9px 14px;font-weight:800;font-size:16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .sec-h .stat{font-size:13px;font-weight:600;color:var(--mut)}
+  .scroll{overflow-x:auto}
+
+  /* ── 통계 카드 ── */
+  .stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .stat-card{background:#1a1d24;border:1px solid var(--bd);border-radius:14px;padding:16px 18px}
+  .stat-card .sic{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:10px}
+  .stat-card .snum{font-size:28px;font-weight:800;line-height:1}
+  .stat-card .slab{color:var(--mut);font-size:13px;margin-top:6px}
+  .sic.b{background:#1e3a5f;color:#3b82f6}
+  .sic.g{background:var(--okbg);color:var(--ok)}
+  .sic.r{background:var(--ngbg);color:var(--ng)}
+  .sic.y{background:#2d1800;color:#f59e0b}
+
+  /* ── 라인 요약 카드 ── */
+  .line-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+  .line-card{background:#1a1d24;border:1px solid var(--bd);border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .2s}
+  .line-card:hover{border-color:var(--blue)}
+  .line-card .lc-name{font-size:15px;font-weight:800;margin-bottom:10px;color:#93c5fd}
+  .line-card .lc-sub{display:flex;gap:8px}
+  .line-card .lc-badge{flex:1;background:#0f1117;border:1px solid var(--bd);border-radius:8px;padding:8px;text-align:center}
+  .line-card .lc-badge .lbn{font-size:11px;color:var(--mut);margin-bottom:3px}
+  .line-card .lc-badge .lbv{font-size:16px;font-weight:800;color:var(--blue)}
+
+  /* ── 서브탭 ── */
+  .stabs{display:flex;gap:6px;margin-bottom:10px}
+  .stab{padding:9px 24px;border:1px solid var(--bd);background:#1a1d24;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;color:#94a3b8}
+  .stab:hover{background:#20232b}
+  .stab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+  /* ── 테이블 (알카 스타일) ── */
+  table{border-collapse:collapse;width:100%;min-width:900px}
+  th,td{border:1px solid var(--bd);padding:0;text-align:center;height:42px;font-size:13px;white-space:nowrap;color:var(--ink)}
+  th{background:var(--hd2);font-weight:700;padding:0 5px}
+  tr:hover td{background:#1e2128}
+  .rowlab{background:var(--hd2);font-weight:800;width:54px;position:sticky;left:0;z-index:2;font-size:16px;color:var(--blue)}
+  td input{width:100%;height:100%;border:0;text-align:center;font-size:14px;background:transparent;outline:none;font-family:inherit;padding:0 5px;color:var(--ink)}
+  td input:focus{background:#1e2a3a}
+  td input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--blue)}
+  td.off{background:#13151c}
+  td.off input{color:var(--mut);background:#13151c}
+  td.empty-c{background:#1a1040}
+  td.empty-c input{color:#a78bfa}
+  td.ok-c{background:var(--okbg)}
+  td.ok-c input{color:var(--ok);font-weight:700}
+  td.ng-c{background:var(--ngbg)}
+  td.ng-c input{color:var(--ng);font-weight:700}
+  td.warn-c{background:var(--warnbg)}
+  td.warn-c input{color:var(--warn);font-weight:700}
+  td.ltxt{text-align:left}
+  td.ltxt input{text-align:left;padding-left:8px}
+  td.val{font-weight:700}
+
+  /* ── KPI 결과 카드 ── */
+  .kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;padding:14px}
+  .kpi{background:#0f1117;border:1px solid var(--bd);border-radius:12px;padding:12px;text-align:center}
+  .kpi .kl{font-size:11px;color:var(--mut);margin-bottom:4px}
+  .kpi .kv{font-size:22px;font-weight:800;line-height:1.1}
+  .kpi .ks{font-size:11px;color:var(--mut);margin-top:3px}
+  .kpi.ok{border-color:#166534;background:var(--okbg)}.kpi.ok .kv{color:var(--ok)}
+  .kpi.ng{border-color:#7f1d1d;background:var(--ngbg)}.kpi.ng .kv{color:var(--ng)}
+  .kpi.warn{border-color:#92400e;background:var(--warnbg)}.kpi.warn .kv{color:var(--warn)}
+  .kpi.blue{border-color:#1e3a5f;background:#0d1f38}.kpi.blue .kv{color:var(--blue)}
+
+  /* ── 부하 바 ── */
+  .bar-wrap{padding:10px 14px}
+  .brow{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+  .brow .bn{width:120px;font-size:12px;font-weight:600;text-align:right;flex-shrink:0;color:#94a3b8;overflow:hidden;text-overflow:ellipsis}
+  .brow .bo{flex:1;background:#20232b;border-radius:6px;height:20px;overflow:hidden}
+  .brow .bi{height:100%;border-radius:6px;display:flex;align-items:center;padding:0 7px;font-size:11px;font-weight:700;color:#fff;transition:width .3s}
+  .brow .bi.ok{background:#16a34a}.brow .bi.warn{background:#d97706}.brow .bi.ng{background:#dc2626}
+  .brow .bv{width:66px;font-size:12px;font-weight:700;text-align:right;flex-shrink:0}
+  .brow .btag{font-size:10px;background:var(--ngbg);color:var(--ng);padding:1px 6px;border-radius:5px;font-weight:700;border:1px solid #7f1d1d}
+
+  /* ── 흐름도 ── */
+  .flow{display:flex;align-items:center;padding:14px;overflow-x:auto}
+  .fnode{border:1px solid var(--bd);border-radius:9px;padding:8px 10px;background:#0f1117;min-width:100px;text-align:center;flex-shrink:0}
+  .fnode .fn{font-size:12px;font-weight:700}
+  .fnode .fc{font-size:11px;color:var(--mut);margin-top:2px}
+  .fnode.bn{border-color:#7f1d1d;background:var(--ngbg)}.fnode.bn .fn{color:var(--ng)}
+  .fnode.gd{border-color:#166534;background:var(--okbg)}.fnode.gd .fn{color:var(--ok)}
+  .farr{font-size:18px;color:var(--mut);margin:0 3px;flex-shrink:0}
+
+  /* ── 배지 ── */
+  .badge{display:inline-block;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:700}
+  .badge.ok{background:var(--okbg);color:var(--ok);border:1px solid #166534}
+  .badge.ng{background:var(--ngbg);color:var(--ng);border:1px solid #7f1d1d}
+  .badge.warn{background:var(--warnbg);color:var(--warn);border:1px solid #92400e}
+
+  /* ── 시나리오 ── */
+  .scen-table th{background:var(--hd2);padding:0 8px}
+  .scen-table td{padding:0 8px}
+  .scen-table td.best{color:var(--ok);font-weight:700;background:var(--okbg)}
+
+  .save-note{font-size:13px;color:var(--mut)}
+  .save-note b{color:var(--ok)}
+
+  section{display:none}
+  section.active{display:block}
+
+  /* ── 배분 모달 ── */
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:center;justify-content:center}
+  .modal-bg.show{display:flex}
+  .modal{background:#1a1d24;border:1px solid var(--bd);border-radius:16px;padding:22px 26px;width:540px;max-width:96vw;max-height:85vh;overflow-y:auto}
+  .modal h2{margin:0 0 4px;font-size:18px}
+  .modal .msub{color:var(--mut);font-size:13px;margin-bottom:16px}
+  .dist-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .dist-row:last-child{border-bottom:none}
+  .dist-row .dname{flex:1;font-size:14px;font-weight:600}
+  .dist-row .dadd{width:84px;padding:6px 8px;border:1px solid var(--bd);border-radius:8px;background:#0f1117;color:var(--ink);font-size:14px;text-align:center}
+  .dist-row .dresult{width:94px;font-size:13px;font-weight:700;text-align:right;color:var(--ok)}
+  .dist-total{background:#0f1117;border-radius:10px;padding:12px;margin:14px 0;display:flex;justify-content:space-between;align-items:center;font-size:14px}
+  .dist-total b{font-size:16px}
+
+  @media(max-width:820px){
+    .side{transform:translateX(-100%);transition:.25s}
+    .side.open{transform:translateX(0)}
+    .main{margin-left:0;padding:14px 12px 70px}
+    .hamb{display:inline-flex}
+    .stat-cards{grid-template-columns:repeat(2,1fr)}
+    .line-cards{grid-template-columns:1fr}
+    .kpi-row{grid-template-columns:repeat(3,1fr)}
+  }
+  @media(max-width:560px){
+    .stat-cards{grid-template-columns:repeat(2,1fr)}
+    .kpi-row{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+<div class="scrim" id="scrim" onclick="toggleNav(false)"></div>
+<div class="app">
+
+<!-- ===== 사이드바 ===== -->
+<aside class="side" id="side">
+  <div class="brand">
+    <div class="logo">
+      <svg viewBox="0 0 100 100" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
+        <defs><clipPath id="cc"><circle cx="50" cy="50" r="49"/></clipPath></defs>
+        <circle cx="50" cy="50" r="49" fill="#111"/>
+        <rect x="0" y="36" width="100" height="28" fill="#dd0000" clip-path="url(#cc)"/>
+        <text x="91" y="58" text-anchor="end" fill="white"
+          font-family="Arial Black,Impact,sans-serif"
+          font-weight="900" font-size="24" letter-spacing="-1">AMS</text>
+        <path d="M 81 19 A 44 44 0 1 0 81 81" fill="none" stroke="#1414cc" stroke-width="15" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div><b>컨베어 시뮬레이션</b><small>주식회사 캠스</small><small>생산팀 · 김환기PM</small></div>
+  </div>
+  <nav class="nav">
+    <div class="nav-group">메뉴</div>
+    <div class="nav-item active" onclick="showView('main')"><span class="ic">🏠</span> 메인</div>
+    <div class="nav-item" onclick="showView('sim')"><span class="ic">⚙️</span> 공정 시뮬레이션</div>
+    <div class="nav-item" onclick="showView('scen')"><span class="ic">🗂</span> 시나리오 비교</div>
+    <div class="nav-item" onclick="showView('ct')"><span class="ic">🧮</span> C/T 계산기</div>
+    <div class="nav-item" id="nav2d" onclick="goto2D()"><span class="ic">📺</span> 2D 시뮬레이션</div>
+    <div class="nav-group">라인 선택</div>
+    <div class="nav-item" id="nl0" onclick="gotoSim(0)"><span class="ic">🏭</span> 조립 1라인</div>
+    <div class="nav-item" id="nl1" onclick="gotoSim(1)"><span class="ic">🏭</span> 조립 2라인</div>
+    <div class="nav-item" id="nl2" onclick="gotoSim(2)"><span class="ic">🏭</span> 조립 3라인</div>
+    <div class="nav-item" id="nl3" onclick="gotoSim(3)"><span class="ic">🏗</span> 함평</div>
+    <div class="nav-item" id="nl4" onclick="gotoSim(4)"><span class="ic">🏗</span> 전주</div>
+  </nav>
+  <div class="side-foot">
+    <div class="av">김</div>
+    <div><b style="font-size:14px">김환기</b><small>캠스 담당자</small></div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b">
+      <span id="syncDot" title="동기화 대기중" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#64748b;transition:background .4s"></span>☁
+    </div>
+  </div>
+</aside>
+
+<!-- ===== 본문 ===== -->
+<main class="main">
+
+  <!-- ─── 메인 대시보드 ─── -->
+  <section id="view-main" class="active">
+    <div class="page-h">
+      <button class="hamb btn" onclick="toggleNav(true)">☰</button>
+      <h1>메인</h1>
+      <span class="grow"></span>
+      <div class="sub">컨베어 라인 생산성 시뮬레이션 현황</div>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="sic b">🏭</div>
+        <div class="snum">5</div>
+        <div class="slab">등록 라인 수</div>
+      </div>
+      <div class="stat-card">
+        <div class="sic g">✅</div>
+        <div class="snum" id="mainSavedCnt">0</div>
+        <div class="slab">저장된 시나리오</div>
+      </div>
+      <div class="stat-card">
+        <div class="sic y">⚙️</div>
+        <div class="snum" id="mainActiveCnt">0</div>
+        <div class="slab">입력된 공정 수</div>
+      </div>
+      <div class="stat-card">
+        <div class="sic r">⚠️</div>
+        <div class="snum" id="mainBNCnt">0</div>
+        <div class="slab">병목 공정</div>
+      </div>
+    </div>
+
+    <!-- 라인별 카드 -->
+    <div class="sec">
+      <div class="sec-h">🏭 라인별 현황</div>
+      <div style="padding:14px">
+        <div class="line-cards" id="lineCards"></div>
+      </div>
+    </div>
+
+    <!-- 빠른 이동 -->
+    <div class="sec">
+      <div class="sec-h">🚀 빠른 이동</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;padding:14px">
+        <button class="btn pri" onclick="gotoSim(0)">조립 1라인 →</button>
+        <button class="btn pri" onclick="gotoSim(1)">조립 2라인 →</button>
+        <button class="btn" onclick="gotoSim(2)">조립 3라인 →</button>
+        <button class="btn" onclick="gotoSim(3)">함평 →</button>
+        <button class="btn" onclick="gotoSim(4)">전주 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── 공정 시뮬레이션 ─── -->
+  <section id="view-sim">
+    <div class="page-h">
+      <button class="hamb btn" onclick="toggleNav(true)">☰</button>
+      <h1 id="simTitle">조립 1라인 — FRT</h1>
+      <span class="grow"></span>
+      <button class="btn pri" onclick="runSim()">▶ 시뮬레이션</button>
+      <button class="btn" onclick="saveScenario()">💾 저장</button>
+      <span class="save-note" id="saveNote" style="margin-left:6px"></span>
+    </div>
+
+    <div class="stabs" id="stabs"></div>
+
+    <div class="bar">
+      <label>가동시간(분)</label>
+      <input type="number" id="workMin" value="460" min="1" oninput="calcPitch();autoSaveBar()">
+      <label>기준 생산량(대/일)</label>
+      <input type="number" id="baseProd" value="205" min="1" oninput="calcPitch();autoSaveBar()">
+      <label>공피치</label>
+      <select id="pitchRatio" onchange="calcPitch();autoSaveBar()" style="padding:8px;border:1px solid var(--bd);border-radius:8px;font-size:14px;background:#0f1117;color:#f1f5f9">
+        <option value="0">정상 (공피치 없음)</option>
+        <option value="1">1:1</option>
+        <option value="2">2:1</option>
+        <option value="3">3:1</option>
+        <option value="4">4:1</option>
+        <option value="5">5:1</option>
+        <option value="6">6:1</option>
+        <option value="7">7:1</option>
+        <option value="8">8:1</option>
+        <option value="9">9:1</option>
+      </select>
+      <label>목표 UPH</label>
+      <input type="number" id="targetUPH" value="13" min="1" style="width:70px" oninput="syncFromUPH()">
+      <label>투입 인원</label>
+      <input type="number" id="totalWorkers" value="10" min="1" style="width:70px" oninput="autoSaveBar()">
+      <span id="uphHint" style="font-size:13px;color:var(--mut)">→ 실생산 102대</span>
+      <span class="grow"></span>
+      <button class="btn sml warn" onclick="resetRows()">초기화</button>
+      <button class="btn sml pri" onclick="addRow()">+ 행 추가</button>
+      <button class="btn sml grn" onclick="saveCTData()">💾 C/T 저장</button>
+      <button class="btn sml" onclick="saveWorkers()" style="background:#1e3a5f;border-color:#1e3a5f;color:#93c5fd">👷 인원 저장</button>
+      <span id="lineSaveNote" style="font-size:12px;color:var(--ok);margin-left:4px"></span>
+    </div>
+    <div class="hint">
+      · <b>공피치</b> n:1 → 실생산 = 기준생산량 × n/(n+1). 예) 1:1 → 205 × 1/2 = 102대<br>
+      · <b>공정작업</b>에 조립 내용을 입력하세요. · <b>공백</b> 체크 시 해당 컨베어는 시뮬레이션에서 제외됩니다.<br>
+      · <b>C/T</b> 입력 시 실C/T·여유율 자동 계산. 초록=정상 / 노랑=주의(85%↑) / 빨강=병목(100%↑)
+    </div>
+
+    <div class="sec">
+      <div class="sec-h">
+        📋 공정 입력 — <span id="lineLabel" style="color:var(--blue);margin-left:4px"></span>
+        <span class="stat" id="procStat"></span>
+      </div>
+      <div class="scroll">
+        <table style="table-layout:fixed;width:100%">
+          <colgroup>
+            <col style="width:50px"><!-- 컨베어 -->
+            <col style="width:80px"><!-- 공정명 -->
+            <col style="width:44px"><!-- 그룹 -->
+            <col style="width:155px"><!-- 공정작업 -->
+            <col style="width:36px"><!-- 공백 -->
+            <col style="width:110px"><!-- C/T -->
+            <col style="width:50px"><!-- 인원 -->
+            <col style="width:90px"><!-- 실C/T -->
+            <col style="width:65px"><!-- 여유율 -->
+            <col style="width:110px"><!-- 체결수량 -->
+            <col style="width:175px"><!-- 비고 -->
+            <col style="width:90px"><!-- 삭제 -->
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="rowlab">컨베어</th>
+              <th style="position:sticky;left:54px;z-index:3;background:var(--hd2)">공정명</th>
+              <th>그룹</th>
+              <th style="text-align:left;padding-left:8px">공정작업</th>
+              <th>공백</th>
+              <th>C/T(초)</th>
+              <th>인원</th>
+              <th>실C/T(초)</th>
+              <th>여유율</th>
+              <th style="text-align:left;padding-left:6px">체결수량</th>
+              <th style="text-align:left;padding-left:6px">비고(관리항목)</th>
+              <th>삭제</th>
+            </tr>
+          </thead>
+          <tbody id="mainBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 시뮬 결과 -->
+    <div id="simResult"></div>
+  </section>
+
+  <!-- ─── 시나리오 비교 ─── -->
+  <section id="view-scen">
+    <div class="page-h">
+      <button class="hamb btn" onclick="toggleNav(true)">☰</button>
+      <h1>시나리오 비교</h1>
+      <span class="grow"></span>
+      <button class="btn sml warn" onclick="clearScen()">전체 삭제</button>
+    </div>
+    <div class="sec">
+      <div class="sec-h">🗂 저장된 시나리오</div>
+      <div class="scroll" id="scenArea"><div style="padding:30px;text-align:center;color:var(--mut)">저장된 시나리오가 없습니다.</div></div>
+    </div>
+  </section>
+
+  <!-- ─── C/T 계산기 ─── -->
+  <section id="view-ct">
+    <div class="page-h">
+      <button class="hamb btn" onclick="toggleNav(true)">☰</button>
+      <h1>🧮 C/T 계산기</h1>
+      <span class="grow"></span>
+      <button class="btn pri" onclick="applyCT()">📋 C/T 복사</button>
+      <button class="btn grn" onclick="saveCT()">💾 저장</button>
+      <button class="btn sml warn" onclick="resetCT()">초기화</button>
+    </div>
+
+    <!-- 차종명 입력 -->
+    <div class="bar" style="margin-bottom:16px">
+      <label>차종명</label>
+      <input type="text" id="ct-model" placeholder="예) EV6 FRT" style="width:180px;padding:8px;border:1px solid var(--bd);border-radius:8px;font-size:14px;background:#0f1117;color:#f1f5f9">
+      <label style="margin-left:16px">저장 불러오기</label>
+      <select id="ct-load-sel" style="padding:8px;border:1px solid var(--bd);border-radius:8px;font-size:14px;background:#0f1117;color:#f1f5f9" onchange="loadCT(this.value)">
+        <option value="">-- 선택 --</option>
+      </select>
+      <button class="btn sml warn" onclick="deleteCTSave()">삭제</button>
+    </div>
+
+    <!-- 합계 표시 -->
+    <div style="background:#0d1f38;border:1px solid #1e3a5f;border-radius:14px;padding:18px 24px;margin-bottom:18px;display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:12px;color:var(--mut);margin-bottom:4px">합계 C/T</div>
+        <div id="ct-total" style="font-size:42px;font-weight:900;color:var(--blue);line-height:1">0<span style="font-size:18px;font-weight:600;margin-left:4px">초</span></div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:12px;color:var(--mut);margin-bottom:6px">선택된 공정 수</div>
+        <div id="ct-count" style="font-size:20px;font-weight:800;color:#94a3b8">0개</div>
+      </div>
+    </div>
+
+    <!-- ① 개별공정 -->
+    <div class="sec" style="margin-bottom:14px">
+      <div class="sec-h">① 개별공정 <span class="stat" id="ct-sec1-sum">합계: 0초</span></div>
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:6px" id="ct-sec1"></div>
+    </div>
+
+    <!-- ② LINE-UP -->
+    <div class="sec" style="margin-bottom:14px">
+      <div class="sec-h">② LINE-UP <span class="stat" id="ct-sec2-sum">합계: 0초</span></div>
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:6px" id="ct-sec2"></div>
+    </div>
+  </section>
+
+  <!-- ─── 2D 컨베어 시뮬레이션 (3라인 전용) ─── -->
+  <section id="view-2d">
+    <div class="page-h">
+      <button class="hamb btn" onclick="toggleNav(true)">☰</button>
+      <h1>조립 3라인 C/PAD — 컨베어 2D 시뮬레이션</h1>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <button class="btn" style="font-size:13px;padding:6px 14px" onclick="if(_raf2d){cancelAnimationFrame(_raf2d);_raf2d=null;}loadLineData();init2D();">🔄 불러오기</button>
+        <div style="position:relative" id="scenPickWrap">
+          <button class="btn" style="font-size:13px;padding:6px 14px;background:#1e2d1e;border-color:#166534;color:#4ade80" onclick="openScenPicker();event.stopPropagation()">📋 시나리오 ▼</button>
+          <div id="scenPickMenu" style="display:none;position:absolute;left:0;top:calc(100% + 4px);background:#1a1d24;border:1px solid #2a2d35;border-radius:8px;min-width:260px;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,0.6);max-height:320px;overflow-y:auto"></div>
+        </div>
+        <div style="position:relative" id="recoverDropWrap">
+          <button class="btn" style="font-size:13px;padding:6px 14px;background:#1e3a5f" onclick="const m=document.getElementById('recoverMenu');m.style.display=m.style.display==='block'?'none':'block';event.stopPropagation()">🛠 복구 ▼</button>
+          <div id="recoverMenu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#1a1d24;border:1px solid #2a2d35;border-radius:8px;min-width:160px;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,0.5)">
+            <button class="btn" style="display:block;width:100%;text-align:left;font-size:12px;padding:8px 14px;border:none;border-radius:0;border-bottom:1px solid #2a2d35" onclick="document.getElementById('recoverMenu').style.display='none';if(typeof _simRestoreBackup==='function')_simRestoreBackup();else{const b=localStorage.getItem('conv_struct_2_0_backup');if(!b){alert('백업 없음');return;}if(confirm('백업으로 복원?')){localStorage.setItem('conv_struct_2_0',b);loadLineData();init2D();}}">↩ 백업복원</button>
+            <button class="btn" style="display:block;width:100%;text-align:left;font-size:12px;padding:8px 14px;border:none;border-radius:0;border-bottom:1px solid #2a2d35;color:#a78bfa" onclick="document.getElementById('recoverMenu').style.display='none';recoverFromScenario()">📋 시나리오 복구</button>
+            <button class="btn" style="display:block;width:100%;text-align:left;font-size:12px;padding:8px 14px;border:none;border-radius:0;border-bottom:1px solid #2a2d35;color:#f87171" onclick="document.getElementById('recoverMenu').style.display='none';recoverFromFirebase()">☁ 클라우드 복구</button>
+            <button class="btn warn" style="display:block;width:100%;text-align:left;font-size:12px;padding:8px 14px;border:none;border-radius:0;border-bottom:1px solid #2a2d35" onclick="document.getElementById('recoverMenu').style.display='none';if(confirm('현재 데이터를 백업 후 기본값으로 초기화합니다. 계속할까요?')){const cur=localStorage.getItem('conv_struct_2_0');if(cur)localStorage.setItem('conv_struct_2_0_backup',cur);localStorage.setItem('conv_struct_2_0',JSON.stringify(JSON.parse(JSON.stringify(DEF_CPAD))));loadLineData();init2D();if(typeof _simPushCloud==='function')_simPushCloud();alert('백업 저장 완료.');}">🔁 기본값 초기화</button>
+            <button class="btn" style="display:block;width:100%;text-align:left;font-size:12px;padding:8px 14px;border:none;border-radius:0;color:#f87171" onclick="document.getElementById('recoverMenu').style.display='none';if(confirm('저장된 로컬 데이터를 지우고 코드 기본값으로 복구합니다.')){localStorage.removeItem('conv_struct_2_0');loadLineData();init2D();alert('✅ 복구 완료!');}">🔄 기본값 복구</button>
+          </div>
+        </div>
+        <button class="btn" style="font-size:13px;padding:6px 14px" onclick="exportSimConfig()">💾 내보내기</button>
+        <label class="btn" style="font-size:13px;padding:6px 14px;cursor:pointer">📂 가져오기<input type="file" accept=".json" style="display:none" onchange="importSimConfig(this)"></label>
+        <button class="btn" style="font-size:13px;padding:6px 14px" onclick="gotoSim(2)">📋 공정입력</button>
+      </div>
+      <script>document.addEventListener('click',()=>{['recoverMenu','scenPickMenu'].forEach(id=>{const m=document.getElementById(id);if(m)m.style.display='none';});});</script>
+    </div>
+    <div style="padding:12px 16px 16px">
+      <canvas id="cv2d" style="display:block;width:100%;border-radius:8px;background:#0f172a"></canvas>
+      <div style="margin-top:8px;font-size:11px;color:#64748b;display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+        <span id="sim2dStatus" style="color:#f97316;font-weight:700;font-size:12px;min-width:200px"></span>
+        <span>피치: <b id="sim2dPitch" style="color:#60a5fa">-</b>초/대</span>
+        <span style="display:flex;align-items:center;gap:6px">
+          배속:
+          <input type="range" id="simSpeed" min="1" max="50" value="20" style="width:80px;cursor:pointer" oninput="document.getElementById('simSpeedVal').textContent=this.value+'×';init2D()">
+          <b id="simSpeedVal" style="color:#a78bfa;min-width:28px">20×</b>
+        </span>
+        <span style="margin-left:auto;display:flex;gap:14px;flex-wrap:wrap">
+          <span><span style="color:#f97316">●</span> 다공정(1~6공정+SUB03)</span>
+          <span><span style="color:#22c55e">●</span> 고정작업자</span>
+          <span><span style="color:#6366f1">■</span> C/P JIG</span>
+          <span><span style="color:#22c55e">■</span> 정상</span>
+          <span><span style="color:#f59e0b">■</span> 주의</span>
+          <span><span style="color:#ef4444">■</span> 병목</span>
+        </span>
+      </div>
+
+      <!-- ── 과부하 분석 패널 ── -->
+      <div id="overloadPanel" style="margin-top:12px;display:none">
+        <div style="background:#1a1d24;border:1px solid #2a2d35;border-radius:12px;overflow:hidden">
+          <div style="background:#20232b;padding:10px 14px;font-weight:800;font-size:14px;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="document.getElementById('overloadBody').style.display=document.getElementById('overloadBody').style.display==='none'?'block':'none'">
+            ⚠️ 과부하 · 납품 영향 분석
+            <span id="overloadBadge" style="font-size:12px;margin-left:auto"></span>
+          </div>
+          <div id="overloadBody">
+            <div id="overloadContent" style="padding:12px 14px;font-size:13px;line-height:1.9"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+/* ─── Firebase 자동 동기화 ─────────────────────── */
+(function(){
+  const FB_CFG={
+    apiKey:"AIzaSyDZZSI3ib_rmGz4gSMe0DgZs650IuTCvKs",
+    authDomain:"cams-torque.firebaseapp.com",
+    projectId:"cams-torque",
+    storageBucket:"cams-torque.firebasestorage.app",
+    messagingSenderId:"404254094434",
+    appId:"1:404254094434:web:b4193a15de4153b9aa0d3b"
+  };
+  const SYNC_KEYS=['conv_struct_2_0','conv_scen4'];
+  // 추가 conv_struct 키 동적 수집 포함
+  function allSyncKeys(){
+    const keys=new Set(SYNC_KEYS);
+    for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('conv_struct'))keys.add(k);}
+    return [...keys];
+  }
+
+  let db=null;
+  let _pushing=false; // 무한루프 방지
+
+  function initFB(){
+    try{
+      if(!firebase.apps.length)firebase.initializeApp(FB_CFG);
+      db=firebase.firestore();
+      // 시작 시 클라우드→로컬 동기화 (최신 데이터 받아오기)
+      db.collection('conveyor_sim').doc('config').get().then(snap=>{
+        if(!snap.exists)return;
+        const data=snap.data()||{};
+        let changed=false;
+        Object.entries(data).forEach(([k,v])=>{
+          if(v===null||v===undefined)return;
+          if(k.startsWith('conv_struct')){
+            try{
+              const arr=typeof v==='string'?JSON.parse(v):v;
+              if(!Array.isArray(arr)||arr.length<18){
+                console.warn('Firestore 초기 데이터 행 수 부족, 무시함:',k,arr?.length);
+                return;
+              }
+              const isSB=r=>r.group==='SUB'||(r.name||'').toUpperCase().startsWith('SUB')||(r.name||'').includes('서브');
+              const mn=arr.filter(r=>!isSB(r));
+              const half=Math.ceil(mn.length/2);
+              const top=mn.slice(half);
+              if(top.length>=9&&top.every(r=>!(r.ct>0))){
+                console.warn('Firestore 초기 상단 CT 전부 0, 무시함:',k);
+                return;
+              }
+            }catch(e){console.warn('Firestore 초기 파싱 실패, 무시함:',k);return;}
+          }
+          localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));changed=true;
+        });
+        if(changed&&typeof loadLineData==='function'){loadLineData();if(typeof renderScenarios==='function')renderScenarios();}
+        document.getElementById('syncDot').style.background='#22c55e';
+        document.getElementById('syncDot').title='클라우드 동기화 완료';
+      }).catch(()=>{document.getElementById('syncDot').style.background='#f59e0b';});
+
+      // 실시간 변경 감지 (다른 PC에서 수정 시 자동 반영)
+      db.collection('conveyor_sim').doc('config').onSnapshot(snap=>{
+        if(_pushing||!snap.exists)return;
+        const data=snap.data()||{};
+        let changed=false;
+        Object.entries(data).forEach(([k,v])=>{
+          // conv_struct 데이터 검증: 최소 12행 이상이어야 적용
+          if(k.startsWith('conv_struct')){
+            try{
+              const arr=typeof v==='string'?JSON.parse(v):v;
+              if(!Array.isArray(arr)||arr.length<18){
+                console.warn('Firestore 데이터 행 수 부족, 무시함:',k,arr?.length);
+                return;
+              }
+              // 상단 공정(half 이후) CT 전부 0이면 무효 데이터 → 무시
+              const isSB=r=>r.group==='SUB'||(r.name||'').toUpperCase().startsWith('SUB')||(r.name||'').includes('서브');
+              const mn=arr.filter(r=>!isSB(r));
+              const half=Math.ceil(mn.length/2);
+              const top=mn.slice(half);
+              if(top.length>=9&&top.every(r=>!(r.ct>0))){
+                console.warn('Firestore 상단 공정 CT 전부 0, 무시함:',k);
+                return;
+              }
+            }catch(e){console.warn('Firestore 파싱 실패, 무시함:',k);return;}
+          }
+          const cur=localStorage.getItem(k);
+          const nv=typeof v==='string'?v:JSON.stringify(v);
+          if(nv!==cur){localStorage.setItem(k,nv);changed=true;}
+        });
+        if(changed&&typeof loadLineData==='function'){loadLineData();if(typeof renderScenarios==='function')renderScenarios();}
+      });
+    }catch(e){console.warn('Firebase init 실패',e);}
+  }
+
+  // localStorage 변경 시 클라우드 업로드 (업로드 전 기존 데이터 백업)
+  window._simPushCloud=function(){
+    if(!db||_pushing)return;
+    _pushing=true;
+    const payload={};
+    allSyncKeys().forEach(k=>{const v=localStorage.getItem(k);if(v)payload[k]=v;});
+    // 기존 Firestore 데이터 → backup 문서로 먼저 저장 후 업로드
+    db.collection('conveyor_sim').doc('config').get().then(snap=>{
+      if(snap.exists){
+        const old=snap.data()||{};
+        old._backedUpAt=(new Date()).toISOString();
+        return db.collection('conveyor_sim').doc('backup').set(old);
+      }
+    }).then(()=>{
+      return db.collection('conveyor_sim').doc('config').set(payload,{merge:true});
+    }).then(()=>{
+      document.getElementById('syncDot').style.background='#22c55e';
+      document.getElementById('syncDot').title='저장 완료 ☁';
+    })
+    .catch(()=>{document.getElementById('syncDot').style.background='#ef4444';})
+    .finally(()=>{_pushing=false;});
+  };
+
+  // Firestore 백업에서 복원
+  window._simRestoreBackup=function(){
+    if(!db)return;
+    db.collection('conveyor_sim').doc('backup').get().then(snap=>{
+      if(!snap.exists){alert('클라우드 백업 없음');return;}
+      const data=snap.data()||{};
+      const backedAt=data._backedUpAt||'?';
+      if(!confirm('클라우드 백업('+backedAt+')으로 복원할까요?'))return;
+      Object.entries(data).forEach(([k,v])=>{
+        if(k==='_backedUpAt')return;
+        localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));
+      });
+      if(typeof loadLineData==='function')loadLineData();
+      if(typeof init2D==='function')init2D();
+      alert('복원 완료!');
+    });
+  };
+
+  // 페이지 로드 후 Firebase 초기화
+  window.addEventListener('load',()=>{if(typeof firebase!=='undefined')initFB();});
+})();
+
+/* ─── 라인 구조 ───────────────────────────────── */
+const LINE_DEF=[
+  {name:'조립 1라인',subs:['FRT','RR']},
+  {name:'조립 2라인',subs:['FRT','RR']},
+  {name:'조립 3라인',subs:['C/PAD','범퍼']},
+  {name:'함평',subs:['FRT','RR']},
+  {name:'전주',subs:['FRT','RR']},
+];
+const DEF_LINE12=[
+  {name:'101', task:'', group:'', fastener:'', note:'', empty:false},
+  {name:'102', task:'', group:'', fastener:'', note:'', empty:false},
+  {name:'103', task:'', group:'', fastener:'', note:'', empty:false},
+  {name:'111', task:'', group:'A', fastener:'', note:'', empty:false},
+  {name:'121', task:'', group:'A', fastener:'', note:'', empty:false},
+  {name:'131', task:'', group:'A', fastener:'', note:'', empty:false},
+  {name:'141', task:'', group:'A', fastener:'', note:'', empty:false},
+  {name:'151', task:'', group:'',  fastener:'', note:'', empty:false},
+  {name:'161', task:'', group:'',  fastener:'', note:'', empty:false},
+  {name:'171', task:'', group:'',  fastener:'', note:'', empty:false},
+  {name:'181', task:'', group:'',  fastener:'', note:'', empty:false},
+  {name:'191', task:'', group:'',  fastener:'', note:'', empty:false},
+];
+const _C3T='카울바, 리저브, IBU, 릴레이, 정션박스, ICU, S/BELT, 초크BRKT, 라디어 파워선, 하네스, 에탁스, 피에조 부저, 전장모듈, 하네스, PAS 유닛, TPMS, IBU, 에어택 토크 조립, C/PAD 조립, 포토센서, 오토라이트';
+const _C3F='너트 10EA, 스크류 2EA, 육각 11EA, 융각 6EA';
+const _C3N='토크 관리, 이종·누락·미체결·바코드 스캔 누락 없을 것';
+const DEF_CPAD=[
+  // ─── 하단 공정 1~9공정 (NB=9) ───
+  {name:'1공정',  task:_C3T, group:'', fastener:_C3F, note:_C3N, empty:false, taskSpan:6, workerSpan:6, ctSpan:6, workers:5, ct:701.3},
+  {name:'2공정',  task:_C3T, group:'', fastener:_C3F, note:_C3N, empty:false, taskSpan:0, workerSpan:0, ctSpan:0, workers:5, ct:0},
+  {name:'3공정',  task:_C3T, group:'', fastener:_C3F, note:_C3N, empty:false, taskSpan:0, workerSpan:0, ctSpan:0, workers:5, ct:0},
+  {name:'4공정',  task:_C3T, group:'', fastener:_C3F, note:_C3N, empty:false, taskSpan:0, workerSpan:0, ctSpan:0, workers:5, ct:0},
+  {name:'5공정',  task:_C3T, group:'', fastener:_C3F, note:_C3N, empty:false, taskSpan:0, workerSpan:0, ctSpan:0, workers:5, ct:0},
+  {name:'6공정',  task:'',   group:'', fastener:'',   note:'',   empty:false, taskSpan:0, workerSpan:0, ctSpan:0, workers:5, ct:0},
+  {name:'7공정',  task:'클러스터, 오디오',              group:'', fastener:'', note:'', empty:false, workers:1, ct:0},
+  {name:'8공정',  task:'패드부착, AVN 조립',            group:'', fastener:'', note:'', empty:false, workers:1, ct:150.9},
+  {name:'9공정',  task:'',                              group:'', fastener:'', note:'', empty:true,  workers:1, ct:0},
+  // ─── 상단 공정 10~18공정 (NT=9) ───
+  {name:'10공정', task:'',                              group:'', fastener:'', note:'', empty:true,  workers:1, ct:0},
+  {name:'11공정', task:'',                              group:'', fastener:'', note:'', empty:false, workers:1, ct:123.5},
+  {name:'12공정', task:'',                              group:'', fastener:'', note:'', empty:true,  workers:1, ct:0},
+  {name:'13공정', task:'',                              group:'', fastener:'', note:'', empty:false, workers:1, ct:94.2},
+  {name:'14공정', task:'',                              group:'', fastener:'', note:'', empty:true,  workers:1, ct:0},
+  {name:'15공정', task:'',                              group:'', fastener:'', note:'', empty:true,  workers:1, ct:0},
+  {name:'16공정', task:'',                              group:'', fastener:'', note:'', empty:false, workers:1, ct:78.6},
+  {name:'17공정', task:'',                              group:'', fastener:'', note:'', empty:false, workers:2, ct:165.2},
+  {name:'18공정', task:'',                              group:'', fastener:'', note:'', empty:true,  workers:1, ct:0},
+  // ─── SUB 공정 ───
+  {name:'SUB03 에어백',  task:'에어백 조립',                            group:'SUB', fastener:'', note:'', empty:false, workers:1, ct:0},
+  {name:'센터페시아 SUB', task:'클러스터 페시아, 스위치, 에어덕트',     group:'SUB', fastener:'', note:'', empty:false, workers:1, ct:0},
+  {name:'SUB1',          task:'에어덕트, USB 모듈',                     group:'SUB', fastener:'', note:'', empty:false, workers:1, ct:0},
+  {name:'SUB2',          task:'AVN BRKT, LTE 모듈 (AVN 사양)',          group:'SUB', fastener:'', note:'', empty:false, workers:1, ct:0},
+];
+function makeRows(li,si){
+  if(li<2) // 조립 1·2라인
+    return DEF_LINE12.map((d,i)=>({conv:i+1,...d,empty:false,ct:0,workers:1,parallel:1}));
+  if(li===2&&si===0){ // 조립 3라인 C/PAD — DEF_CPAD 값 그대로 보존
+    return DEF_CPAD.map((d,i)=>{
+      const parseF=(pat)=>{const m=(d.fastener||'').match(pat);return m?parseInt(m[1]):0;};
+      const fShex=parseF(/S육각\s*(\d+)\s*EA/i)||parseF(/(?<![B-Z])육각\s*(\d+)\s*EA/i);
+      const fBhex=parseF(/B육각\s*(\d+)\s*EA/i)||parseF(/융각\s*(\d+)\s*EA/i);
+      return {conv:i+1, parallel:1, fNut:0, fScrew:0, fShex:0, fBhex:0,
+        ...d,  // DEF_CPAD 값 우선 (group, empty, ct, workers, taskSpan 등 보존)
+        fNut:parseF(/너트\s*(\d+)\s*EA/i),
+        fScrew:parseF(/스크류\s*(\d+)\s*EA/i),
+        fShex, fBhex
+      };
+    });
+  }
+  return[];
+}
+// ── 페이지 로드 즉시 localStorage 검증 (Firebase보다 먼저 실행) ──
+(function earlyRestore(){
+  try{
+    const key='conv_struct_2_0';
+    const saved=JSON.parse(localStorage.getItem(key)||'null');
+    if(!Array.isArray(saved)||saved.length<18)return;
+    const isSB=r=>r.group==='SUB'||(r.name||'').toUpperCase().startsWith('SUB')||(r.name||'').includes('서브');
+    const mn=saved.filter(r=>!isSB(r));
+    const top=mn.slice(Math.ceil(mn.length/2));
+    if(top.length>=9&&top.every(r=>!(r.ct>0))){
+      console.log('[earlyRestore] 상단 CT 전부 0 → DEF_CPAD로 교체');
+      localStorage.setItem(key,JSON.stringify(DEF_CPAD));
+    }
+  }catch(e){}
+})();
+const state=LINE_DEF.map((l,li)=>l.subs.map((_,si)=>({rows:makeRows(li,si)})));
+let curLine=0,curSub=0;
+let scenarios=JSON.parse(localStorage.getItem('conv_scen4')||'[]');
+function G(){return state[curLine][curSub];}
+
+/* ─── 뷰 전환 ────────────────────────────────── */
+function showView(v){
+  if(v!=='2d'&&typeof _raf2d!=='undefined'&&_raf2d){cancelAnimationFrame(_raf2d);_raf2d=null;}
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    const map={'main':'메인','sim':'공정 시뮬레이션','scen':'시나리오 비교','ct':'C/T 계산기','2d':'2D 시뮬레이션'};
+    el.classList.remove('active');
+    if(el.textContent.trim()===map[v])el.classList.add('active');
+  });
+  document.getElementById('floatSave').style.display=v==='sim'?'block':'none';
+  if(v==='main')renderMain();
+  if(v==='scen')renderScen();
+  if(v==='2d')requestAnimationFrame(()=>requestAnimationFrame(()=>init2D()));
+  toggleNav(false);
+  localStorage.setItem('conv_lastView',v);
+}
+function gotoSim(li){
+  curLine=li;curSub=0;
+  localStorage.setItem('conv_lastLine',li);
+  showView('sim');
+  buildStabs();loadLineData();
+  document.getElementById('simTitle').textContent=LINE_DEF[li].name+' — '+LINE_DEF[li].subs[0];
+  document.querySelectorAll('[id^=nl]').forEach((el,i)=>el.classList.toggle('active',i===li));
+}
+function recoverFromScenario(){
+  // localStorage 또는 Firebase에서 시나리오 찾아 행 데이터 복원
+  const raw=localStorage.getItem('conv_scen4');
+  const list=raw?JSON.parse(raw):[];
+  const withRows=list.filter(s=>s.rows&&s.rows.length>0);
+  if(withRows.length===0){
+    // Firebase에서도 시도
+    if(!firebase||!firebase.apps.length){alert('시나리오 데이터 없음');return;}
+    firebase.firestore().collection('conveyor_sim').doc('config').get().then(snap=>{
+      if(!snap.exists)return alert('Firebase에도 시나리오 없음');
+      const raw2=snap.data()['conv_scen4'];
+      if(!raw2)return alert('Firebase에 시나리오 없음');
+      const list2=JSON.parse(raw2).filter(s=>s.rows&&s.rows.length>0);
+      if(!list2.length)return alert('저장된 시나리오에 공정 데이터 없음');
+      showScenRecovery(list2);
+    });
+    return;
+  }
+  showScenRecovery(withRows);
+}
+function showScenRecovery(list){
+  const opts=list.map((s,i)=>`${i+1}. [${s.at||''}] ${s.name||''} (${s.cnt||0}공정, ${s.rows.length}행)`).join('\n');
+  const pick=prompt(`복구할 시나리오 번호 선택:\n\n${opts}\n\n번호 입력:`);
+  const idx=parseInt(pick)-1;
+  if(isNaN(idx)||idx<0||idx>=list.length)return;
+  const sc=list[idx];
+  if(!confirm(`[${sc.name}] 시나리오로 조립 3라인 C/PAD 공정 데이터 복구합니다.`))return;
+  state[2][0].rows=JSON.parse(JSON.stringify(sc.rows));
+  localStorage.setItem('conv_struct_2_0',JSON.stringify(sc.rows));
+  if(typeof _simPushCloud==='function')_simPushCloud();
+  curLine=2;curSub=0;
+  loadLineData();
+  if(typeof render==='function')render();
+  alert('✅ 복구 완료! 공정입력 탭에서 확인하세요.');
+}
+function recoverFromFirebase(){
+  if(!firebase||!firebase.apps.length){alert('Firebase 연결 안됨');return;}
+  const db2=firebase.firestore();
+  db2.collection('conveyor_sim').doc('config').get().then(snap=>{
+    if(!snap.exists){alert('Firebase에 저장된 데이터가 없습니다.\n(한번도 저장 안 했거나 데이터 없음)');return;}
+    const data=snap.data()||{};
+    const keys=Object.keys(data);
+    if(keys.length===0){alert('Firebase 데이터가 비어있습니다.');return;}
+    if(!confirm(`Firebase에서 ${keys.length}개 항목 복구합니다.\n현재 로컬 데이터는 덮어씁니다. 계속?`))return;
+    keys.forEach(k=>localStorage.setItem(k,typeof data[k]==='string'?data[k]:JSON.stringify(data[k])));
+    loadLineData();
+    if(typeof renderScenarios==='function')renderScenarios();
+    if(typeof init2D==='function')init2D();
+    alert('✅ Firebase 복구 완료!');
+  }).catch(e=>alert('복구 실패: '+e.message));
+}
+function exportSimConfig(){
+  // localStorage의 conv_struct 키들 전부 수집
+  const data={};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k&&k.startsWith('conv_struct'))data[k]=JSON.parse(localStorage.getItem(k)||'null');
+  }
+  // 시나리오도 포함
+  const sc=localStorage.getItem('conv_scenarios');
+  if(sc)data['conv_scenarios']=JSON.parse(sc);
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='conveyor_config_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+function importSimConfig(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      Object.entries(data).forEach(([k,v])=>localStorage.setItem(k,JSON.stringify(v)));
+      alert('가져오기 완료! 불러오기 버튼을 눌러주세요.');
+      input.value='';
+    }catch(err){alert('파일 오류: '+err.message);}
+  };
+  reader.readAsText(file);
+}
+function goto2D(){
+  if(curLine!==2){curLine=2;curSub=0;buildStabs();loadLineData();}
+  showView('2d');
+  document.querySelectorAll('[id^=nl]').forEach((el,i)=>el.classList.toggle('active',i===2));
+  toggleNav(false);
+}
+function toggleNav(open){
+  document.getElementById('side').classList.toggle('open',open);
+  document.getElementById('scrim').classList.toggle('show',open);
+}
+
+/* ─── 메인 대시보드 ──────────────────────────── */
+function renderMain(){
+  // 통계
+  document.getElementById('mainSavedCnt').textContent=scenarios.length;
+  let activeCnt=0,bnCnt=0;
+  state.forEach(line=>line.forEach(sub=>{
+    const active=sub.rows.filter(r=>!r.empty&&r.ct>0);
+    activeCnt+=active.length;
+    const pitch=60;
+    active.forEach(r=>{const rt=r.ct/(r.parallel||1)/(r.workers||1);if(rt>pitch)bnCnt++;});
+  }));
+  document.getElementById('mainActiveCnt').textContent=activeCnt;
+  document.getElementById('mainBNCnt').textContent=bnCnt;
+
+  // 라인 카드
+  const lc=document.getElementById('lineCards');
+  lc.innerHTML='';
+  LINE_DEF.forEach((l,li)=>{
+    const div=document.createElement('div');
+    div.className='line-card';
+    div.onclick=()=>gotoSim(li);
+    let subHtml='';
+    l.subs.forEach((s,si)=>{
+      const rows=state[li][si].rows;
+      const cnt=rows.filter(r=>!r.empty&&r.ct>0).length;
+      subHtml+=`<div class="lc-badge"><div class="lbn">${s}</div><div class="lbv">${cnt}공정</div></div>`;
+    });
+    div.innerHTML=`<div class="lc-name">🏭 ${l.name}</div><div class="lc-sub">${subHtml}</div>`;
+    lc.appendChild(div);
+  });
+}
+
+/* ─── 서브탭 ─────────────────────────────────── */
+function buildStabs(){
+  const w=document.getElementById('stabs');w.innerHTML='';
+  LINE_DEF[curLine].subs.forEach((s,i)=>{
+    const el=document.createElement('div');
+    el.className='stab'+(i===curSub?' active':'');
+    el.textContent=s;el.onclick=()=>{curSub=i;buildStabs();loadLineData();document.getElementById('simTitle').textContent=LINE_DEF[curLine].name+' — '+s;};
+    w.appendChild(el);
+  });
+}
+
+/* ─── 공피치 계산 ────────────────────────────── */
+function calcPitch(){
+  const base=+document.getElementById('baseProd').value||205;
+  const n=+document.getElementById('pitchRatio').value;
+  const wm=+document.getElementById('workMin').value||460;
+  const actualProd=n===0?base:Math.round(base*n/(n+1));
+  const pitchSec=(wm*60/actualProd).toFixed(1);
+  const uph=Math.round(3600/pitchSec);
+  document.getElementById('targetUPH').value=uph;
+  const label=n===0?'공피치 없음':n+':1';
+  document.getElementById('uphHint').textContent='→ 실생산 '+actualProd+'대/일 · '+label+' · 피치 '+pitchSec+'초';
+}
+function syncFromUPH(){
+  const uph=+document.getElementById('targetUPH').value||1;
+  const wm=+document.getElementById('workMin').value||460;
+  const pitchSec=3600/uph;
+  const actualProd=Math.floor(wm*60/pitchSec);
+  document.getElementById('uphHint').textContent='→ 실생산 '+actualProd+'대/일 · 공피치 '+pitchSec.toFixed(1)+'초';
+}
+function getPitchSec(){
+  const uph=+document.getElementById('targetUPH').value||0;
+  if(uph>0) return 3600/uph;
+  const base=+document.getElementById('baseProd').value||205;
+  const n=+document.getElementById('pitchRatio').value;
+  const wm=+document.getElementById('workMin').value||460;
+  return wm*60/(n===0?base:Math.round(base*n/(n+1)));
+}
+function getActualProd(){
+  const uph=+document.getElementById('targetUPH').value||0;
+  const wm=+document.getElementById('workMin').value||460;
+  if(uph>0) return Math.floor(wm*60/(3600/uph));
+  const base=+document.getElementById('baseProd').value||205;
+  const n=+document.getElementById('pitchRatio').value;
+  return n===0?base:Math.round(base*n/(n+1));
+}
+
+/* ─── 렌더링 ─────────────────────────────────── */
+function render(){
+  const s=G();
+  const pitch=getPitchSec();
+  const lbl=LINE_DEF[curLine].name+' '+LINE_DEF[curLine].subs[curSub];
+  document.getElementById('lineLabel').textContent=lbl;
+  document.getElementById('procStat').textContent=s.rows.length+'행 · 유효 '+s.rows.filter(r=>!r.empty).length+'개';
+  const tbody=document.getElementById('mainBody');
+  tbody.innerHTML='';
+  // 표시 순서: 메인 4공정까지 → SUB에어백 → 나머지 메인 → 나머지 SUB
+  const _isSub=r=>r.group==='SUB'||(r.name||'').toUpperCase().startsWith('SUB')||(r.name||'').includes('서브');
+  const _isAir=r=>_isSub(r)&&((r.name||'').includes('에어백')||(r.task||'').includes('에어백'));
+  const _mainIdx=[],_airIdx=[],_otherSubIdx=[];
+  s.rows.forEach((r,i)=>{if(_isAir(r))_airIdx.push(i);else if(_isSub(r))_otherSubIdx.push(i);else _mainIdx.push(i);});
+  const _displayOrder=[..._mainIdx.slice(0,4),..._airIdx,..._mainIdx.slice(4),..._otherSubIdx];
+  // SUB 행이 rowspan 그룹 중간에 삽입될 때 컬럼 밀림 방지 — 동적 span 재계산
+  const _drows=_displayOrder.map(idx=>s.rows[idx]);
+  function _respan(key){
+    const eff=_drows.map(r=>r[key]!=null?r[key]:1);
+    let p=0;
+    while(p<_drows.length){
+      if(_isSub(_drows[p])){p++;continue;}
+      const orig=_drows[p][key]!=null?_drows[p][key]:1;
+      if(orig>1){
+        let sp=1;
+        for(let q=p+1;q<_drows.length;q++){
+          if(_isSub(_drows[q]))break;
+          if((_drows[q][key]||1)===0)sp++;else break;
+        }
+        eff[p]=sp;
+        for(let q=p+1;q<p+sp;q++)eff[q]=0;
+        p+=sp;
+        // SUB 이후 나머지 span-0 그룹 재시작
+        if(p<_drows.length&&_isSub(_drows[p])){
+          p++;
+          if(p<_drows.length&&!_isSub(_drows[p])&&(_drows[p][key]!=null?_drows[p][key]:1)===0){
+            let rs=0,rs0=p;
+            while(p<_drows.length&&!_isSub(_drows[p])&&(_drows[p][key]!=null?_drows[p][key]:1)===0){rs++;p++;}
+            if(rs>0){eff[rs0]=rs;for(let q=rs0+1;q<rs0+rs;q++)eff[q]=0;}
+          }
+        }
+      }else if(orig===0){eff[p]=1;p++;}
+      else p++;
+    }
+    return eff;
+  }
+  const _effTS=_respan('taskSpan');
+  const _effCS=_respan('ctSpan');
+  const _effWS=_respan('workerSpan');
+  _displayOrder.forEach((i,di)=>{
+    const r=s.rows[i];
+    const origSpan=r.taskSpan||1; // 계산용 원본
+    const span=_effTS[di]||1;     // 렌더링용 재계산
+    const isGroup=origSpan>1; // 다공정 합산 그룹 여부
+    // 다공정 그룹: 입력 C/T = 한 작업자의 총 C/T → 나누지 않음
+    // 개별 공정: 실C/T = C/T ÷ 인원
+    const groupCT=r.ct;
+    const effectivePitch=pitch*origSpan; // 작업자 허용시간 = 공피치 × 공정 수
+    const realCT=groupCT>0?(isGroup?groupCT:groupCT/(r.workers||1)):0;
+    const load=realCT>0?realCT/effectivePitch*100:0;
+    const slackPct=realCT>0?((effectivePitch-realCT)/effectivePitch*100).toFixed(1):null;
+    let ctCls='';
+    if(!r.empty&&realCT>0)ctCls=realCT>pitch?'ng-c':load>85?'warn-c':'ok-c';
+    const emC=r.empty?'empty-c':'',offC=r.empty?'off':'';
+    const slColor=slackPct===null?'':+slackPct<0?'var(--ng)':+slackPct<15?'var(--warn)':'var(--ok)';
+    const isSub=r.group==='SUB'||(r.name||'').toUpperCase().startsWith('SUB')||(r.name||'').includes('서브');
+    const tr=document.createElement('tr');
+    if(isSub)tr.style.cssText='background:linear-gradient(90deg,#1a0a2e 0%,#110d1f 100%);border-left:3px solid #7c3aed';
+    tr.innerHTML=`
+      <td class="rowlab" style="${isSub?'color:#a78bfa;font-weight:800':''}">
+        ${isSub?`<div style="font-size:9px;color:#7c3aed;font-weight:700;letter-spacing:1px">SUB</div>`:''}
+        ${r.conv}
+      </td>
+      <td class="${emC}" style="position:sticky;left:54px;z-index:1;background:${isSub?'#1a0a2e':r.empty?'var(--hd2)':'var(--bg)'}"><input value="${esc(r.name)}" oninput="upd(${i},'name',this.value)" style="font-weight:700;width:100%"></td>
+      <td class="${emC}"><input value="${esc(r.group||'')}" oninput="upd(${i},'group',this.value)" placeholder="—" style="text-align:center;font-weight:700;color:var(--warn)"></td>
+      ${_effTS[di]===0?'':`<td class="ltxt ${emC}" ${span>1?`rowspan="${span}" style="vertical-align:middle"`:''}><textarea style="width:100%;height:${span>1?span*52:52}px;max-height:${span>1?span*52:52}px;background:transparent;border:none;color:inherit;font:inherit;resize:none;padding:2px 4px;overflow-y:auto;font-size:12px" oninput="upd(${i},'task',this.value)" placeholder="${r.empty?'(공백)':'조립 내용 입력'}">${esc(r.task)}</textarea></td>`}
+      <td style="background:${r.empty?'#1a1040':'var(--hd2)'};text-align:center"><input type="checkbox" ${r.empty?'checked':''} onchange="toggleEmpty(${i},this.checked)"></td>
+      ${_effCS[di]===0?'':`<td class="${r.empty?'off':ctCls}" ${_effCS[di]>1?`rowspan="${_effCS[di]}" style="vertical-align:middle;padding:2px 4px"`:'style="padding:2px 4px"'}><div style="display:flex;align-items:center;gap:2px"><input type="number" value="${r.ct||''}" min="0" step="0.1" onchange="updNum(${i},'ct',+this.value)" ${r.empty?'disabled':''} placeholder="0" style="flex:1;width:0;min-width:0;text-align:right;font-size:13px"><button class="btn" onclick="openCTCalc(${i})" style="padding:2px 4px;font-size:14px;line-height:1;flex-shrink:0;background:transparent;border-color:#334155" ${r.empty?'disabled':''}>🧮</button></div></td>`}
+      ${_effWS[di]===0?'':`<td class="${offC}" ${_effWS[di]>1?`rowspan="${_effWS[di]}" style="vertical-align:middle;text-align:center"`:''}><input type="number" value="${r.workers}" min="0" onchange="updNum(${i},'workers',+this.value)" ${r.empty?'disabled':''}></td>`}
+      ${_effTS[di]===0?'':`<td class="val ${r.empty?'off':ctCls}" ${span>1?`rowspan="${span}" style="vertical-align:middle;text-align:center;color:${r.empty?'var(--mut)':''}"`:''}>${r.empty?'공백':realCT>0?realCT.toFixed(1)+'초':''}</td>`}
+      ${_effTS[di]===0?'':`<td class="val" ${span>1?`rowspan="${span}" style="vertical-align:middle;text-align:center;color:${slColor}"`:`style="color:${slColor}"`}>${r.empty?'—':slackPct!==null?slackPct+'%':''}</td>`}
+      ${_effTS[di]===0?'':(curLine===2?`<td class="ltxt ${emC}" ${span>1?`rowspan="${span}" style="vertical-align:middle;padding:6px 8px"`:'style="padding:6px 8px"'}><div style="display:flex;flex-direction:column;gap:5px">
+        <div style="display:flex;align-items:center;gap:2px"><span style="font-size:11px;width:30px;color:var(--mut)">너트</span><input type="number" value="${r.fNut||0}" min="0" onchange="updNum(${i},'fNut',+this.value)" style="width:38px;text-align:right;font-size:12px" ${r.empty?'disabled':''}><span style="font-size:10px;color:var(--mut)">EA</span></div>
+        <div style="display:flex;align-items:center;gap:2px"><span style="font-size:11px;width:30px;color:var(--mut)">스크류</span><input type="number" value="${r.fScrew||0}" min="0" onchange="updNum(${i},'fScrew',+this.value)" style="width:38px;text-align:right;font-size:12px" ${r.empty?'disabled':''}><span style="font-size:10px;color:var(--mut)">EA</span></div>
+        <div style="display:flex;align-items:center;gap:2px"><span style="font-size:11px;width:30px;color:var(--mut)">S육각</span><input type="number" value="${r.fShex||0}" min="0" onchange="updNum(${i},'fShex',+this.value)" style="width:38px;text-align:right;font-size:12px" ${r.empty?'disabled':''}><span style="font-size:10px;color:var(--mut)">EA</span></div>
+        <div style="display:flex;align-items:center;gap:2px"><span style="font-size:11px;width:30px;color:var(--mut)">B육각</span><input type="number" value="${r.fBhex||0}" min="0" onchange="updNum(${i},'fBhex',+this.value)" style="width:38px;text-align:right;font-size:12px" ${r.empty?'disabled':''}><span style="font-size:10px;color:var(--mut)">EA</span></div>
+      </div></td>`:`<td class="ltxt ${emC}" ${span>1?`rowspan="${span}" style="vertical-align:middle"`:''}><input value="${esc(r.fastener||'')}" oninput="upd(${i},'fastener',this.value)" placeholder="너트/스크류/육각 등"></td>`)}
+      ${_effTS[di]===0?'':`<td class="ltxt ${emC}" ${span>1?`rowspan="${span}" style="vertical-align:middle"`:''}><textarea style="width:100%;height:${span>1?span*52:52}px;max-height:${span>1?span*52:52}px;background:transparent;border:none;color:inherit;font:inherit;resize:none;padding:2px 4px;overflow-y:auto;font-size:12px" oninput="upd(${i},'note',this.value);autoSaveCT()" placeholder="관리항목">${esc(r.note)}</textarea></td>`}
+      <td style="text-align:center;white-space:nowrap;vertical-align:middle">
+        <button class="btn sml" onclick="insertRow(${i})" style="margin-bottom:3px;width:52px">+ 삽입</button><br>
+        <button class="btn sml" onclick="openDist(${i})" style="margin-bottom:3px;width:52px">🔀 배분</button><br>
+        <button class="btn sml warn" onclick="delRow(${i})" style="width:52px">삭제</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+function upd(i,k,v){G().rows[i][k]=v;saveRowStructure();}
+function updNum(i,k,v){
+  G().rows[i][k]=v!=null?v:0;
+  saveRowStructure();
+  render();
+  if(k==='ct'||k==='fNut'||k==='fScrew'||k==='fShex'||k==='fBhex') autoSaveCT();
+}
+function autoSaveWorkers(){
+  const key='conv_workers_'+curLine+'_'+curSub;
+  const raw=localStorage.getItem(key);
+  const saved=raw?JSON.parse(raw):{};
+  if(!saved.bar)saved.bar={};
+  saved.rows=G().rows.map(r=>({name:r.name,workers:r.workers,empty:r.empty,fNut:r.fNut||0,fScrew:r.fScrew||0,fShex:r.fShex||0,fBhex:r.fBhex||0}));
+  localStorage.setItem(key,JSON.stringify(saved));
+}
+
+/* ─── C/T 저장/불러오기 ─────────────────────── */
+function autoSaveBar(){
+  const key='conv_workers_'+curLine+'_'+curSub;
+  const raw=localStorage.getItem(key);
+  const saved=raw?JSON.parse(raw):{};
+  saved.bar={
+    workMin:document.getElementById('workMin').value,
+    baseProd:document.getElementById('baseProd').value,
+    pitchRatio:document.getElementById('pitchRatio').value,
+    targetUPH:document.getElementById('targetUPH').value,
+    totalWorkers:document.getElementById('totalWorkers').value
+  };
+  if(!saved.rows)saved.rows=[];
+  localStorage.setItem(key,JSON.stringify(saved));
+}
+function autoSaveCT(){
+  const key='conv_ct_'+curLine+'_'+curSub;
+  const data=G().rows.map(r=>({name:r.name,ct:r.ct,ctFormula:r.ctFormula||null,note:r.note||'',task:r.task||'',fNut:r.fNut||0,fScrew:r.fScrew||0,fShex:r.fShex||0,fBhex:r.fBhex||0}));
+  localStorage.setItem(key,JSON.stringify(data));
+}
+function saveCTData(){
+  const key='conv_ct_'+curLine+'_'+curSub;
+  const data=G().rows.map(r=>({name:r.name,ct:r.ct,ctFormula:r.ctFormula||null,note:r.note||'',task:r.task||'',fNut:r.fNut||0,fScrew:r.fScrew||0,fShex:r.fShex||0,fBhex:r.fBhex||0}));
+  localStorage.setItem(key,JSON.stringify(data));
+  const sub=LINE_DEF[curLine].subs[curSub];
+  const el=document.getElementById('lineSaveNote');
+  el.textContent='✅ ['+sub+'] C/T 저장됨 '+new Date().toLocaleTimeString('ko');
+  setTimeout(()=>el.textContent='',3000);
+}
+function loadCTData(){
+  const key='conv_ct_'+curLine+'_'+curSub;
+  const raw=localStorage.getItem(key);
+  if(!raw)return;
+  const data=JSON.parse(raw);
+  const rows=G().rows;
+  data.forEach(d=>{
+    const row=rows.find(r=>r.name===d.name);
+    if(row){row.ct=d.ct||0;if(d.ctFormula)row.ctFormula=d.ctFormula;if(d.note!=null)row.note=d.note;if(d.task!=null)row.task=d.task;if(d.fNut!=null)row.fNut=+d.fNut;if(d.fScrew!=null)row.fScrew=+d.fScrew;if(d.fShex!=null)row.fShex=+d.fShex;if(d.fBhex!=null)row.fBhex=+d.fBhex;}
+  });
+}
+/* ─── 인원 저장/불러오기 (라인 고정) ────────── */
+function saveWorkers(){
+  const key='conv_workers_'+curLine+'_'+curSub;
+  const bar={
+    workMin:document.getElementById('workMin').value,
+    baseProd:document.getElementById('baseProd').value,
+    pitchRatio:document.getElementById('pitchRatio').value,
+    targetUPH:document.getElementById('targetUPH').value,
+    totalWorkers:document.getElementById('totalWorkers').value
+  };
+  const data={bar,rows:G().rows.map(r=>({name:r.name,workers:r.workers,empty:r.empty,fNut:r.fNut||0,fScrew:r.fScrew||0,fShex:r.fShex||0,fBhex:r.fBhex||0}))};
+  localStorage.setItem(key,JSON.stringify(data));
+  const el=document.getElementById('lineSaveNote');
+  const sub=LINE_DEF[curLine].subs[curSub];
+  el.textContent='👷 ['+sub+'] 인원·공백 저장됨 '+new Date().toLocaleTimeString('ko');
+  setTimeout(()=>el.textContent='',3000);
+}
+function loadWorkers(){
+  const key='conv_workers_'+curLine+'_'+curSub;
+  const raw=localStorage.getItem(key);
+  if(!raw)return;
+  const saved=JSON.parse(raw);
+  const data=Array.isArray(saved)?saved:saved.rows||[];
+  if(!Array.isArray(saved)&&saved.bar){
+    const b=saved.bar;
+    if(b.workMin)   document.getElementById('workMin').value=b.workMin;
+    if(b.baseProd)  document.getElementById('baseProd').value=b.baseProd;
+    if(b.pitchRatio!==undefined) document.getElementById('pitchRatio').value=b.pitchRatio;
+    if(b.targetUPH) document.getElementById('targetUPH').value=b.targetUPH;
+    if(b.totalWorkers) document.getElementById('totalWorkers').value=b.totalWorkers;
+    calcPitch();
+  } else if(!Array.isArray(saved)&&saved.totalWorkers){
+    document.getElementById('totalWorkers').value=saved.totalWorkers;
+  }
+  const rows=G().rows;
+  data.forEach(d=>{
+    const row=rows.find(r=>r.name===d.name);
+    if(row){row.workers=d.workers!=null?+d.workers:1;if(d.empty!==undefined)row.empty=d.empty;if(d.fNut!=null)row.fNut=+d.fNut;if(d.fScrew!=null)row.fScrew=+d.fScrew;if(d.fShex!=null)row.fShex=+d.fShex;if(d.fBhex!=null)row.fBhex=+d.fBhex;}
+  });
+}
+function saveRowStructure(){
+  const key='conv_struct_'+curLine+'_'+curSub;
+  localStorage.setItem(key,JSON.stringify(G().rows));
+  if(typeof _simPushCloud==='function')_simPushCloud();
+}
+function saveAllRows(){
+  // 행 구조 + CT + 인원 한번에 저장
+  const key='conv_struct_'+curLine+'_'+curSub;
+  localStorage.setItem(key,JSON.stringify(G().rows));
+  saveCTData();
+  saveWorkers();
+  if(typeof _simPushCloud==='function')_simPushCloud();
+  const el=document.getElementById('lineSaveNote');
+  el.innerHTML='<span style="color:#a78bfa;font-weight:700">✅ 행 구조 저장 완료 '+new Date().toLocaleTimeString('ko')+'</span>';
+  setTimeout(()=>el.textContent='',3000);
+}
+function loadRowStructure(){
+  const key='conv_struct_'+curLine+'_'+curSub;
+  const raw=localStorage.getItem(key);
+  if(!raw)return false;
+  try{
+    const saved=JSON.parse(raw);
+    if(Array.isArray(saved)&&saved.length>0){
+      // conv 필드 없으면 자동 설정
+      saved.forEach((r,i)=>{if(r.conv===undefined||r.conv===null)r.conv=i+1;});
+      state[curLine][curSub].rows=saved;
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function loadLineData(){
+  const hasStruct=loadRowStructure();
+  if(!hasStruct){loadCTData();loadWorkers();}
+  else{
+    // 구조에 CT/인원이 모두 포함됨 — bar(상단 입력값)만 따로 복원
+    const wkey='conv_workers_'+curLine+'_'+curSub;
+    const wraw=localStorage.getItem(wkey);
+    if(wraw){try{const w=JSON.parse(wraw);if(w.bar){const b=w.bar;if(b.workMin)document.getElementById('workMin').value=b.workMin;if(b.baseProd)document.getElementById('baseProd').value=b.baseProd;if(b.pitchRatio!==undefined)document.getElementById('pitchRatio').value=b.pitchRatio;if(b.targetUPH)document.getElementById('targetUPH').value=b.targetUPH;if(b.totalWorkers)document.getElementById('totalWorkers').value=b.totalWorkers;calcPitch();}}catch(e){}}
+  }
+  render();
+}
+function saveLineData(){saveCTData();}
+function toggleEmpty(i,v){G().rows[i].empty=v;saveRowStructure();render();}
+function addRow(){const s=G();s.rows.push({conv:s.rows.length+1,name:'',task:'',empty:false,ct:0,workers:1,group:'',fastener:'',note:'',fNut:0,fScrew:0,fShex:0,fBhex:0});saveRowStructure();render();}
+function insertRow(i){const s=G();s.rows.splice(i,0,{conv:0,name:'',task:'',empty:false,ct:0,workers:1,group:'',fastener:'',note:'',fNut:0,fScrew:0,fShex:0,fBhex:0});s.rows.forEach((r,idx)=>r.conv=idx+1);saveRowStructure();render();}
+let _delUndo=null;
+function delRow(i){
+  if(!confirm('삭제하시겠습니까?'))return;
+  _delUndo={row:JSON.parse(JSON.stringify(G().rows[i])),idx:i};
+  G().rows.splice(i,1);G().rows.forEach((r,j)=>r.conv=j+1);saveRowStructure();render();
+  const n=document.getElementById('lineSaveNote');
+  n.innerHTML='<span style="color:#f97316">삭제됨 — <button class="btn sml" onclick="undoDelRow()" style="padding:2px 8px">↩ 되돌리기</button></span>';
+  setTimeout(()=>{if(n.innerHTML.includes('되돌리기'))n.textContent='';},10000);
+}
+function undoDelRow(){
+  if(!_delUndo)return;
+  G().rows.splice(_delUndo.idx,0,_delUndo.row);
+  G().rows.forEach((r,j)=>r.conv=j+1);
+  _delUndo=null;saveRowStructure();render();
+  document.getElementById('lineSaveNote').textContent='복구 완료';
+  setTimeout(()=>document.getElementById('lineSaveNote').textContent='',2000);
+}
+function resetRows(){if(!confirm('초기화하시겠습니까?'))return;state[curLine][curSub]={rows:makeRows(curLine,curSub)};render();}
+
+/* ─── 기아 인정표 C/T 계산기 ─────────────────── */
+let _ctCalcIdx=-1;
+function openCTCalc(i){
+  if(curLine===2){openCTCalc3(i);return;}
+  _ctCalcIdx=i;
+  const r=G().rows[i];
+  document.getElementById('ctcProcName').textContent=r.name||('공정 '+(i+1));
+  const f=(r.ctFormula&&r.ctFormula._type!=='line3')?r.ctFormula:{};
+  // 저장된 값 또는 초기값 복원
+  const numIds=['ctcRunner','ctcHook','ctcHW','ctcBase','ctcPasAmt',
+   'ctcUnpack','ctcWireSensor','ctcWireClip','ctcTestItem','ctcBarcode','ctcTorque','ctcPadCnt','ctcPadLen',
+   'ctcBrktCnt','ctcBrktHW','ctcMldgCnt','ctcMldgHW','ctcLipCnt','ctcLipHW'];
+  numIds.forEach(id=>{const el=document.getElementById(id);if(el)el.value=f[id]!=null?f[id]:0;});
+  document.getElementById('ctcMove').value=f.ctcMove!=null?f.ctcMove:0;
+  document.getElementById('ctcBrktType').value=f.ctcBrktType||'screw';
+  document.getElementById('ctcPadType').value=f.ctcPadType||'cnt';
+  // 체결수량 자동 파싱 → HW수 채움 (저장값 없을 때만)
+  if(r.fastener&&!r.ctFormula){
+    let hwTotal=0;
+    const matches=r.fastener.match(/(\d+)\s*EA/gi)||[];
+    matches.forEach(m=>{hwTotal+=parseInt(m);});
+    if(hwTotal>0)document.getElementById('ctcHW').value=hwTotal;
+    // 체결수량 파싱 결과 표시
+    const fn=document.getElementById('ctcFastenerNote');
+    fn.textContent='📎 체결수량 자동인식: '+r.fastener+(hwTotal?' → HW '+hwTotal+'개 반영':'');
+    fn.style.display='block';
+  }else{
+    const fn=document.getElementById('ctcFastenerNote');
+    fn.textContent='';fn.style.display='none';
+  }
+  calcCTC();
+  document.getElementById('ctcModal').classList.add('show');
+}
+function calcCTC(){
+  let t=0;
+  const v=id=>+(document.getElementById(id)?.value||0);
+  const chk=id=>document.getElementById(id)?.checked;
+
+  t+=v('ctcMove')*10;
+  t+=v('ctcUnpack')*10;
+  t+=v('ctcRunner')*2;
+  t+=v('ctcHook')*1.8;
+  t+=v('ctcHW')*4.5;
+  // 기본값
+  const base=v('ctcBase'); t+=base;
+  // PAS
+  t+=v('ctcPasAmt')*5;
+  // WIRING
+  t+=v('ctcWireSensor')*3+v('ctcWireClip')*1.8;
+  if(v('ctcWireSensor')||v('ctcWireClip')) t+=5;
+  // 바코드 스캔
+  t+=v('ctcBarcode')*3;
+  // 전장품 TEST
+  const ti=v('ctcTestItem'); if(ti) t+=3+1.5*ti;
+  // 토크/임팩 검증
+  t+=v('ctcTorque')*8;
+  // PAD
+  const padType=document.getElementById('ctcPadType')?.value;
+  const pc=v('ctcPadCnt'),pl=v('ctcPadLen');
+  if(padType==='cnt'&&pc) t+=4+3*(pc-1);
+  if(padType==='len'&&pl) t+=4+0.01*pl;
+  // BRKT/리플렉터
+  const bc=v('ctcBrktCnt'),bh=v('ctcBrktHW');
+  const btype=document.getElementById('ctcBrktType')?.value;
+  if(bc||bh) t+=(btype==='screw'?4.5*bc+4.5*bh:4.5*bc+3*bh);
+  // MLDG
+  const mc=v('ctcMldgCnt'),mh=v('ctcMldgHW');
+  if(mc||mh) t+=5*(mc+mh);
+  // LIP BPR / REINF BPR
+  const lc=v('ctcLipCnt'),lh=v('ctcLipHW');
+  if(lc||lh) t+=5*(lc+lh);
+  // H-LOGO
+  const logo=document.getElementById('ctcLogoType')?.value;
+  if(logo==='tape') t+=15;
+  if(logo==='clip') t+=20;
+
+  t=Math.round(t*10)/10;
+  document.getElementById('ctcResult').textContent=t.toFixed(1)+'초';
+  document.getElementById('ctcResultVal').value=t;
+}
+function collectFormula(){
+  const numIds=['ctcRunner','ctcHook','ctcHW','ctcBase','ctcPasAmt',
+    'ctcUnpack','ctcWireSensor','ctcWireClip','ctcTestItem','ctcBarcode','ctcTorque','ctcPadCnt','ctcPadLen',
+    'ctcBrktCnt','ctcBrktHW','ctcMldgCnt','ctcMldgHW','ctcLipCnt','ctcLipHW','ctcMove'];
+  const f={};
+  numIds.forEach(id=>{f[id]=+document.getElementById(id)?.value||0;});
+  f.ctcBrktType=document.getElementById('ctcBrktType').value;
+  f.ctcPadType=document.getElementById('ctcPadType').value;
+  return f;
+}
+function saveFormula(){
+  if(_ctCalcIdx<0)return;
+  G().rows[_ctCalcIdx].ctFormula=collectFormula();
+  autoSaveCT();
+  const el=document.getElementById('ctcSaveNote');
+  if(el){el.textContent='✅ 수식 저장됨';setTimeout(()=>el.textContent='',2000);}
+}
+function applyCTC(){
+  const val=+document.getElementById('ctcResultVal').value||0;
+  if(!val)return;
+  const row=G().rows[_ctCalcIdx];
+  row.ct=val;
+  row.ctFormula=collectFormula();
+  autoSaveCT();
+  closeCTCalc();
+  render();
+}
+function closeCTCalc(){document.getElementById('ctcModal').classList.remove('show');}
+
+/* ─── 3라인 C/T 계산기 ────────────────────────── */
+function openCTCalc3(i){
+  _ctCalcIdx=i;
+  const r=G().rows[i];
+  document.getElementById('ctcProcName3').textContent=r.name||('공정 '+(i+1));
+  const f=(r.ctFormula&&r.ctFormula._type==='line3')?r.ctFormula:{};
+  const ids=['ctcMove3','ctcUnpack3','ctcDanpum','ctcHarness','ctcHook3','ctcBarcode3',
+    'ctcDong','ctcAirbag','ctcNut','ctcScrew','ctcShex','ctcBhex',
+    'ctcWireSensor3','ctcWireClip3','ctcTestItem3','ctcTorque3',
+    'ctcPadCnt3','ctcPadLen3','ctcBrktCnt3','ctcBrktHW3','ctcMldgCnt3','ctcMldgHW3'];
+  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=f[id]!=null?f[id]:0;});
+  document.getElementById('ctcBase3').value=f.ctcBase3||'0';
+  document.getElementById('ctcBrktType3').value=f.ctcBrktType3||'screw';
+  document.getElementById('ctcPadType3').value=f.ctcPadType3||'cnt';
+  // 체결수량 → 행에 저장된 값 복원
+  document.getElementById('ctcNut').value=r.fNut||0;
+  document.getElementById('ctcScrew').value=r.fScrew||0;
+  document.getElementById('ctcShex').value=r.fShex||0;
+  document.getElementById('ctcBhex').value=r.fBhex||0;
+  document.getElementById('ctcFastenerNote3').style.display='none';
+  calcCTC3();
+  document.getElementById('ctcModal3').classList.add('show');
+}
+function calcCTC3(){
+  let t=0;
+  const v=id=>+(document.getElementById(id)?.value||0);
+  t+=v('ctcMove3')*10;
+  t+=v('ctcUnpack3')*10;
+  t+=+document.getElementById('ctcBase3').value;
+  t+=v('ctcDanpum')*6;
+  t+=v('ctcHarness')*6;
+  t+=v('ctcHook3')*1.8;
+  t+=v('ctcBarcode3')*3;
+  t+=v('ctcDong')*5;
+  t+=v('ctcAirbag')*10;
+  // 체결수량
+  t+=(v('ctcNut')+v('ctcScrew')+v('ctcShex')+v('ctcBhex'))*4.5;
+  // WIRING
+  const ws=v('ctcWireSensor3'),wc=v('ctcWireClip3');
+  if(ws||wc) t+=5+ws*3+wc*1.8;
+  // 전장품 TEST
+  const ti=v('ctcTestItem3'); if(ti) t+=3+1.5*ti;
+  // 토크/임팩
+  t+=v('ctcTorque3')*8;
+  // PAD
+  const padType=document.getElementById('ctcPadType3')?.value;
+  const pc=v('ctcPadCnt3'),pl=v('ctcPadLen3');
+  if(padType==='cnt'&&pc) t+=4+3*(pc-1);
+  if(padType==='len'&&pl) t+=4+0.01*pl;
+  // BRKT
+  const bc=v('ctcBrktCnt3'),bh=v('ctcBrktHW3');
+  const btype=document.getElementById('ctcBrktType3')?.value;
+  if(bc||bh) t+=(btype==='screw'?4.5*bc+4.5*bh:4.5*bc+3*bh);
+  // MLDG
+  const mc=v('ctcMldgCnt3'),mh=v('ctcMldgHW3');
+  if(mc||mh) t+=5*(mc+mh);
+  t=Math.round(t*10)/10;
+  document.getElementById('ctcResult3').textContent=t.toFixed(1)+'초';
+  document.getElementById('ctcResultVal3').value=t;
+}
+function collectFormula3(){
+  const ids=['ctcMove3','ctcUnpack3','ctcDanpum','ctcHarness','ctcHook3','ctcBarcode3',
+    'ctcDong','ctcAirbag','ctcNut','ctcScrew','ctcShex','ctcBhex',
+    'ctcWireSensor3','ctcWireClip3','ctcTestItem3','ctcTorque3',
+    'ctcPadCnt3','ctcPadLen3','ctcBrktCnt3','ctcBrktHW3','ctcMldgCnt3','ctcMldgHW3'];
+  const f={_type:'line3'};
+  ids.forEach(id=>{f[id]=+document.getElementById(id)?.value||0;});
+  f.ctcBase3=document.getElementById('ctcBase3').value;
+  f.ctcBrktType3=document.getElementById('ctcBrktType3').value;
+  f.ctcPadType3=document.getElementById('ctcPadType3').value;
+  return f;
+}
+function saveFormula3(){
+  if(_ctCalcIdx<0)return;
+  G().rows[_ctCalcIdx].ctFormula=collectFormula3();
+  autoSaveCT();
+  const el=document.getElementById('ctcSaveNote3');
+  if(el){el.textContent='✅ 수식 저장됨';setTimeout(()=>el.textContent='',2000);}
+}
+function applyCTC3(){
+  const val=+document.getElementById('ctcResultVal3').value||0;
+  if(!val)return;
+  const row=G().rows[_ctCalcIdx];
+  row.ct=val;
+  row.ctFormula=collectFormula3();
+  const v=id=>+(document.getElementById(id)?.value||0);
+  row.fNut=v('ctcNut');row.fScrew=v('ctcScrew');row.fShex=v('ctcShex');row.fBhex=v('ctcBhex');
+  autoSaveCT();
+  autoSaveWorkers();
+  closeCTCalc3();
+  render();
+}
+function closeCTCalc3(){document.getElementById('ctcModal3').classList.remove('show');}
+
+/* ─── 공수 배분 ───────────────────────────────── */
+let _distIdx=-1;
+function openDist(i){
+  const rows=G().rows;
+  const src=rows[i];
+  _distIdx=i;
+  const srcCT=src.ct||0;
+  document.getElementById('distSrcName').textContent=src.name||('공정 '+(i+1));
+  document.getElementById('distSrcCT').textContent=srcCT.toFixed(1)+'초';
+  const targets=rows.filter((_,j)=>j!==i&&!_.empty);
+  const list=document.getElementById('distList');
+  list.innerHTML='';
+  targets.forEach((r,ti)=>{
+    const origIdx=rows.indexOf(r);
+    const div=document.createElement('div');
+    div.className='dist-row';
+    div.dataset.origIdx=origIdx;
+    div.innerHTML=`
+      <div class="dname">${esc(r.name||'공정')}<span style="color:var(--mut);font-size:12px;margin-left:6px">현재 ${r.ct||0}초</span></div>
+      <input class="dadd" type="number" min="0" step="0.1" value="0" placeholder="0"
+        oninput="updateDistTotal()" id="dadd_${origIdx}">
+      <div class="dresult" id="dres_${origIdx}">${(r.ct||0).toFixed(1)}초</div>`;
+    list.appendChild(div);
+  });
+  updateDistTotal();
+  document.getElementById('distModal').classList.add('show');
+}
+function updateDistTotal(){
+  const rows=G().rows;
+  let sum=0;
+  document.querySelectorAll('.dadd').forEach(inp=>{
+    const v=+inp.value||0;
+    sum+=v;
+    const origIdx=+inp.id.replace('dadd_','');
+    const r=rows[origIdx];
+    const el=document.getElementById('dres_'+origIdx);
+    if(el)el.textContent=((r?r.ct:0)+v).toFixed(1)+'초';
+  });
+  const srcCT=(_distIdx>=0?rows[_distIdx]?.ct:0)||0;
+  const rem=srcCT-sum;
+  document.getElementById('distRemain').textContent=rem.toFixed(1)+'초';
+  document.getElementById('distRemain').style.color=Math.abs(rem)<0.05?'var(--ok)':rem<0?'var(--ng)':'var(--warn)';
+}
+function distEven(){
+  const rows=G().rows;
+  const src=rows[_distIdx];
+  if(!src)return;
+  const srcCT=src.ct||0;
+  const inputs=document.querySelectorAll('.dadd');
+  const each=inputs.length?+(srcCT/inputs.length).toFixed(1):0;
+  let assigned=0;
+  inputs.forEach((inp,ti)=>{
+    const v=ti<inputs.length-1?each:+((srcCT-assigned).toFixed(1));
+    inp.value=v;
+    assigned+=each;
+  });
+  updateDistTotal();
+}
+function applyDist(){
+  const rows=G().rows;
+  const src=rows[_distIdx];
+  if(!src)return;
+  const srcCT=src.ct||0;
+  let sum=0;
+  document.querySelectorAll('.dadd').forEach(inp=>{sum+=+inp.value||0;});
+  if(Math.abs(sum-srcCT)>0.1&&!confirm(`배분 합계 ${sum.toFixed(1)}초가 원래 C/T ${srcCT.toFixed(1)}초와 다릅니다. 계속하시겠습니까?`))return;
+  document.querySelectorAll('.dadd').forEach(inp=>{
+    const v=+inp.value||0;
+    if(!v)return;
+    const origIdx=+inp.id.replace('dadd_','');
+    rows[origIdx].ct=+((rows[origIdx].ct+v).toFixed(1));
+  });
+  closeDist();
+  render();
+}
+function closeDist(){document.getElementById('distModal').classList.remove('show');}
+
+/* ─── 시뮬레이션 ─────────────────────────────── */
+function runSim(){
+  const s=G();
+  const pitch=getPitchSec();
+  const wm=+document.getElementById('workMin').value||460;
+  const tU=getActualProd();
+  const n=+document.getElementById('pitchRatio').value||1;
+  const base=+document.getElementById('baseProd').value||205;
+  const lbl=LINE_DEF[curLine].name+' '+LINE_DEF[curLine].subs[curSub];
+  const active=s.rows.filter(r=>!r.empty&&r.ct>0);
+  if(!active.length){alert('C/T가 입력된 유효 공정이 없습니다.');return;}
+  const res=active.map(r=>{const sp=(r.taskSpan||1);const ep=pitch*sp;const rt=(sp>1)?r.ct:r.ct/(r.workers||1);const rpp=rt/sp;return{...r,realCT:rt,effPitch:ep,rpp,load:rt/ep*100,isBN:rt>ep};});
+  const bn=res.reduce((a,b)=>a.rpp>b.rpp?a:b); // 병목: 컨베어 위치당 점유시간 기준
+  const bnRate=Math.max(bn.rpp,pitch); // 컨베이어 피치 이상이어야 의미있음
+  const lbEff=res.reduce((a,r)=>a+r.realCT,0)/(bn.realCT*res.length)*100;
+  const actU=Math.round(3600/bnRate),daily=Math.floor(wm*60/bnRate);
+  const pOk=daily>=tU,lbC=lbEff>=85?'ok':lbEff>=70?'warn':'ng';
+  const pitchDisp=pitch.toFixed(1);
+  const totalWorkers=+document.getElementById('totalWorkers').value||1;
+  const totalCT=res.reduce((a,r)=>a+r.realCT,0);
+  const util1=totalCT/(totalWorkers*pitch)*100;
+  const utilCls=util1>=90?'ok':util1>=70?'warn':'ng';
+
+  let html=`<div class="sec"><div class="sec-h">📊 ${esc(lbl)} 결과 <span class="stat">${new Date().toLocaleString('ko')}</span></div>
+  <div class="kpi-row">
+    <div class="kpi blue"><div class="kl">공피치 비율</div><div class="kv">${n}:1</div><div class="ks">기준 ${base}대 → 목표 ${tU}대</div></div>
+    <div class="kpi blue"><div class="kl">공피치(초)</div><div class="kv">${pitchDisp}<span style="font-size:13px">초</span></div><div class="ks">UPH ${actU}</div></div>
+    <div class="kpi ${bn.realCT<=bn.effPitch?'ok':'ng'}"><div class="kl">병목 C/T</div><div class="kv">${bn.realCT.toFixed(1)}<span style="font-size:13px">초</span></div><div class="ks">${esc(bn.name)}</div></div>
+    <div class="kpi ${pOk?'ok':'ng'}"><div class="kl">일 생산량</div><div class="kv">${daily.toLocaleString()}</div><div class="ks">목표 ${tU}대 ${pOk?'✅':'❌'}</div></div>
+    <div class="kpi ${lbC}"><div class="kl">라인밸런스</div><div class="kv">${lbEff.toFixed(1)}<span style="font-size:13px">%</span></div><div class="ks">${lbEff>=85?'양호':lbEff>=70?'개선필요':'불량'}</div></div>
+    <div class="kpi ${utilCls}"><div class="kl">1차 가동율</div><div class="kv">${util1.toFixed(1)}<span style="font-size:13px">%</span></div><div class="ks">투입 ${totalWorkers}명 · ΣC/T ${totalCT.toFixed(0)}초</div></div>
+    <div class="kpi blue"><div class="kl">유효 공정</div><div class="kv">${res.length}</div><div class="ks">공백 ${s.rows.filter(r=>r.empty).length}개 제외</div></div>
+    <div class="kpi ${bn.realCT<=bn.effPitch?'ok':'ng'}"><div class="kl">공피치 정상</div><div class="kv">${bn.realCT<=bn.effPitch?'✅ 정상':'❌ 불량'}</div><div class="ks">병목 ${bn.realCT.toFixed(1)}초 ${bn.realCT<=bn.effPitch?'≤':'>'} 유효피치 ${bn.effPitch.toFixed(1)}초</div></div>
+  </div></div>`;
+
+  const maxL=Math.max(...res.map(r=>r.load),100);
+  html+=`<div class="sec"><div class="sec-h">⏱ 공정별 부하율</div><div class="bar-wrap">`;
+  res.forEach(r=>{
+    const pct=Math.min(r.load/maxL*100,100),cls=r.load>100?'ng':r.load>85?'warn':'ok';
+    html+=`<div class="brow"><div class="bn">${esc(r.name)}${r.task?' '+esc(r.task).slice(0,8):''}</div><div class="bo"><div class="bi ${cls}" style="width:${pct}%">${r.load.toFixed(0)}%</div></div><div class="bv">${r.realCT.toFixed(1)}초</div>${r.isBN?'<div class="btag">병목</div>':''}</div>`;
+  });
+  html+=`</div></div>`;
+
+  html+=`<div class="sec"><div class="sec-h">📋 공정 상세</div><div class="scroll"><table><thead><tr>
+    <th>컨베어</th><th>공정명</th><th style="text-align:left;padding-left:8px">공정작업</th>
+    <th>C/T</th><th>인원</th><th>실C/T</th><th>부하율</th><th>여유시간</th><th>상태</th>
+  </tr></thead><tbody>`;
+  res.forEach(r=>{
+    const slk=(r.effPitch-r.realCT).toFixed(1),sc=r.isBN?'ng-c':r.load>85?'warn-c':'ok-c';
+    html+=`<tr>
+      <td style="font-weight:800;color:var(--blue)">${r.conv}</td><td style="font-weight:700">${esc(r.name)}</td>
+      <td style="text-align:left;padding:0 8px">${esc(r.task||'')}</td>
+      <td>${r.ct}초</td><td>${r.workers}명</td>
+      <td style="font-weight:700">${r.realCT.toFixed(1)}초</td>
+      <td class="${sc}" style="font-weight:700;padding:0 6px">${r.load.toFixed(1)}%</td>
+      <td style="font-weight:700;color:${+slk>=0?'var(--ok)':'var(--ng)'}">${slk}초</td>
+      <td class="${sc}" style="padding:0 8px"><span class="badge ${r.isBN?'ng':r.load>85?'warn':'ok'}">${r.isBN?'⚠ 병목':r.load>85?'△ 주의':'✅ 정상'}</span></td>
+    </tr>`;
+  });
+  html+=`</tbody></table></div></div>`;
+
+  html+=`<div class="sec"><div class="sec-h">🔄 흐름도</div><div class="flow">`;
+  res.forEach((r,i)=>{
+    const cls=r.isBN?'bn':r.load<85?'gd':'';
+    html+=`<div class="fnode ${cls}"><div class="fn">${esc(r.name)}</div><div class="fc">${esc((r.task||'').slice(0,10))}</div><div class="fc">${r.realCT.toFixed(1)}초${r.isBN?' ⚠':''}</div></div>${i<res.length-1?'<div class="farr">→</div>':''}`;
+  });
+  html+=`</div></div>`;
+
+  const sg=[];
+  res.filter(r=>r.isBN).forEach(r=>sg.push(`🔴 <b>${esc(r.name)}</b>${r.task?' ('+esc(r.task)+')':''} — 실C/T ${r.realCT.toFixed(1)}초 > 유효피치 ${r.effPitch.toFixed(1)}초. 인원 추가 또는 설비 증설 검토`));
+  res.filter(r=>!r.isBN&&(r.effPitch-r.realCT)/r.effPitch*100>30).forEach(r=>sg.push(`💡 <b>${esc(r.name)}</b> — 여유율 ${((r.effPitch-r.realCT)/r.effPitch*100).toFixed(0)}%. 인원 재배치 또는 공정 통합 검토`));
+  if(lbEff<85)sg.push(`📊 라인밸런스 ${lbEff.toFixed(1)}% (목표 85%) — 공정 재편성 필요`);
+  // 그룹별 분석 (다공정 담당 작업자)
+  const grpMap={};
+  res.forEach(r=>{
+    const g=(r.group||'').trim();
+    if(!g)return;
+    if(!grpMap[g])grpMap[g]={rows:[],totalCT:0,count:0};
+    grpMap[g].rows.push(r);
+    grpMap[g].totalCT+=r.ct; // 원래 C/T 합산 (작업자가 순서대로 수행)
+    grpMap[g].count++;
+  });
+  const grpKeys=Object.keys(grpMap);
+  if(grpKeys.length){
+    html+=`<div class="sec"><div class="sec-h">👷 작업자 그룹 분석 <span class="stat">다공정 담당</span></div>
+    <div class="scroll"><table><thead><tr>
+      <th>그룹</th><th style="text-align:left;padding-left:8px">담당 공정</th><th>공정 수</th>
+      <th>합산 C/T</th><th>공피치</th><th>부하율</th><th>상태</th>
+    </tr></thead><tbody>`;
+    grpKeys.forEach(g=>{
+      const gd=grpMap[g];
+      const load=gd.totalCT/pitch*100;
+      const sc=load>100?'ng-c':load>85?'warn-c':'ok-c';
+      const st=load>100?'⚠ 초과':'ok-c'===sc?'✅ 정상':'△ 주의';
+      const badge=load>100?'ng':load>85?'warn':'ok';
+      html+=`<tr>
+        <td style="font-weight:800;color:var(--warn)">${esc(g)}</td>
+        <td style="text-align:left;padding:0 8px">${gd.rows.map(r=>esc(r.name)).join(' → ')}</td>
+        <td>${gd.count}개</td>
+        <td style="font-weight:700">${gd.totalCT.toFixed(1)}초</td>
+        <td>${pitch.toFixed(1)}초</td>
+        <td class="${sc}" style="font-weight:700;padding:0 6px">${load.toFixed(1)}%</td>
+        <td class="${sc}" style="padding:0 8px"><span class="badge ${badge}">${st}</span></td>
+      </tr>`;
+    });
+    html+=`</tbody></table></div>
+    <div style="padding:8px 14px;font-size:12px;color:var(--mut)">※ 그룹 부하율 = 담당 공정 C/T 합계 ÷ 공피치 × 100%　|　100% 초과 시 작업자가 공피치를 따라가지 못함</div>
+    </div>`;
+  }
+
+  if(sg.length){
+    html+=`<div class="sec"><div class="sec-h">💡 개선 제안</div><div style="padding:10px 14px">`;
+    sg.forEach(s=>{html+=`<div style="padding:7px 0;border-bottom:1px solid var(--bd);font-size:13px">${s}</div>`;});
+    html+=`</div></div>`;
+  }
+  document.getElementById('simResult').innerHTML=html;
+  document.getElementById('simResult').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ─── 시나리오 ───────────────────────────────── */
+function saveScenario(){
+  const name=prompt('시나리오 이름:','시나리오 '+(scenarios.length+1));
+  if(!name)return;
+  const s=G(),pitch=getPitchSec(),wm=+document.getElementById('workMin').value||460,tU=getActualProd();
+  const n=+document.getElementById('pitchRatio').value||1,base=+document.getElementById('baseProd').value||205;
+  const lbl=LINE_DEF[curLine].name+' '+LINE_DEF[curLine].subs[curSub];
+  const active=s.rows.filter(r=>!r.empty&&r.ct>0);
+  let bnCT=0;const pc=active.map(r=>{const sp=(r.taskSpan||1);const ep=pitch*sp;const rt=(sp>1)?r.ct:r.ct/(r.parallel||1)/(r.workers||1);if(rt>bnCT)bnCT=rt;return rt;});
+  const uph=bnCT>0?Math.round(3600/bnCT):0,daily=bnCT>0?Math.floor(wm*60/bnCT):0;
+  const lb=active.length>0?pc.reduce((a,v)=>a+v,0)/(bnCT*active.length)*100:0;
+  const rowsSnap=JSON.parse(JSON.stringify(s.rows));
+  scenarios.push({id:Date.now(),name,lbl,ratio:n+':1',base,pitch:pitch.toFixed(1),cnt:active.length,uph,daily,lb:lb.toFixed(1),bnCT:bnCT.toFixed(1),at:new Date().toLocaleString('ko'),rows:rowsSnap,line:curLine,sub:curSub});
+  localStorage.setItem('conv_scen4',JSON.stringify(scenarios));
+  if(typeof _simPushCloud==='function')_simPushCloud();
+  document.getElementById('saveNote').innerHTML='<b>저장됨</b> · '+name;
+}
+function renderScen(){
+  if(!scenarios.length){document.getElementById('scenArea').innerHTML='<div style="padding:30px;text-align:center;color:var(--mut)">저장된 시나리오가 없습니다.</div>';return;}
+  const mU=Math.max(...scenarios.map(s=>s.uph)),mD=Math.max(...scenarios.map(s=>s.daily)),mL=Math.max(...scenarios.map(s=>+s.lb));
+  let html=`<table class="scen-table"><thead><tr>
+    <th>시나리오</th><th>라인</th><th>저장일시</th><th>공피치</th><th>기준생산</th><th>공정수</th>
+    <th>실UPH</th><th>병목C/T</th><th>일생산량</th><th>밸런스</th><th>삭제</th>
+  </tr></thead><tbody>`;
+  scenarios.forEach(s=>{
+    html+=`<tr>
+      <td style="font-weight:700">${esc(s.name)}</td><td style="color:var(--blue)">${esc(s.lbl)}</td>
+      <td style="font-size:11px;color:var(--mut)">${s.at}</td><td>${s.ratio||''} (${s.pitch}초)</td><td>${s.base||'-'}대</td><td>${s.cnt}</td>
+      <td class="${s.uph===mU?'best':''}">${s.uph}</td><td>${s.bnCT}초</td>
+      <td class="${s.daily===mD?'best':''}">${s.daily.toLocaleString()}</td>
+      <td class="${+s.lb===mL?'best':''}">${s.lb}%</td>
+      <td style="text-align:center;white-space:nowrap">
+        <button class="btn sml" style="background:#1e3a5f;color:#60a5fa;margin-right:4px" onclick="apply2DScen(${s.id})">📺 2D</button>
+        <button class="btn sml warn" onclick="delScen(${s.id})">삭제</button>
+      </td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  document.getElementById('scenArea').innerHTML=html;
+}
+function delScen(id){scenarios=scenarios.filter(s=>s.id!==id);localStorage.setItem('conv_scen4',JSON.stringify(scenarios));renderScen();}
+function clearScen(){if(!confirm('모두 삭제?'))return;scenarios=[];localStorage.setItem('conv_scen4','[]');renderScen();}
+function openScenPicker(){
+  const menu=document.getElementById('scenPickMenu');
+  if(menu.style.display==='block'){menu.style.display='none';return;}
+  const list=scenarios.filter(s=>s.rows);
+  if(!list.length){menu.innerHTML='<div style="padding:12px 14px;color:#64748b;font-size:12px">저장된 2D 시나리오 없음</div>';menu.style.display='block';return;}
+  let html='';
+  list.slice().reverse().forEach(s=>{
+    html+=`<div style="padding:10px 14px;border-bottom:1px solid #2a2d35;cursor:pointer;transition:background 0.15s"
+      onmouseover="this.style.background='#1e2d3d'" onmouseout="this.style.background=''"
+      onclick="document.getElementById('scenPickMenu').style.display='none';apply2DScen(${s.id})">
+      <div style="font-weight:700;color:#e2e8f0;font-size:13px">${esc(s.name)}</div>
+      <div style="font-size:11px;color:#64748b;margin-top:2px">${s.at} &nbsp;|&nbsp; 공피치 ${s.ratio||'-'} &nbsp;|&nbsp; 일 ${s.daily}대</div>
+    </div>`;
+  });
+  menu.innerHTML=html;
+  menu.style.display='block';
+}
+function apply2DScen(id){
+  const sc=scenarios.find(s=>s.id===id);
+  if(!sc){return;}
+  if(!sc.rows){alert('이 시나리오는 공정 데이터 없이 저장됐습니다.\n다시 저장하면 2D로 볼 수 있습니다.');return;}
+  state[sc.line||2][sc.sub||0].rows=JSON.parse(JSON.stringify(sc.rows));
+  localStorage.setItem('conv_struct_'+(sc.line||2)+'_'+(sc.sub||0),JSON.stringify(sc.rows));
+  curLine=sc.line||2;curSub=sc.sub||0;
+  goto2D();
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+/* ─── C/T 계산기 ──────────────────────────────── */
+const CT_SEC1=[
+  {id:'s1_1', name:'포장 해체', vars:[], formula:()=>10},
+  {id:'s1_2a',name:'PAS류 펀칭 (4점이하)', vars:[], formula:()=>20},
+  {id:'s1_2b',name:'PAS류 홀더용착 (4점이하)', vars:[], formula:()=>52},
+  {id:'s1_2c',name:'PAS류 펀칭+홀더용착 (4점, 차중내6점 無)', vars:[], formula:()=>49},
+  {id:'s1_2d',name:'PAS류 펀칭+홀더용착 (4점, 차중내6점 有)', vars:[], formula:()=>49},
+  {id:'s1_2e',name:'PAS류 펀칭+홀더용착 (6점)', vars:[], formula:()=>84},
+  {id:'s1_3', name:'펀칭 (PAS류外)', vars:[], formula:()=>45},
+  {id:'s1_4', name:'가압 지그 이용 조립', vars:[], formula:()=>20},
+  {id:'s1_5', name:'B/BEAM SUB 조립', vars:[], formula:()=>30},
+  {id:'s1_6', name:'PIC 조립', vars:[], formula:()=>10},
+];
+const CT_SEC2=[
+  {id:'s2_1', name:'조립공정간 이동', vars:[], formula:()=>10},
+  {id:'s2_2', name:'RUNNER 제거', vars:[{key:'n',label:'RUNNER수',min:1}], formula:(v)=>2*v.n},
+  {id:'s2_3', name:'HOOK 조립', vars:[{key:'n',label:'HOOK수',min:1}], formula:(v)=>1.8*v.n},
+  {id:'s2_4', name:'TOWING CAP 조립', vars:[], formula:()=>5},
+  {id:'s2_5', name:'BLANK CVR 조립', vars:[], formula:()=>32},
+  {id:'s2_6', name:'R/GRILL, UPR GRILL 조립', vars:[{key:'hw',label:'HW수',min:0}], formula:(v)=>5+v.hw*4.5},
+  {id:'s2_7', name:'AIR INTAKE', vars:[{key:'hw',label:'HW수',min:0}], formula:(v)=>5+v.hw*4.5},
+  {id:'s2_8', name:'E/ABS', vars:[{key:'hw',label:'HW수',min:0}], formula:(v)=>5+v.hw*4.5},
+  {id:'s2_9', name:'L/PLATE 조립', vars:[{key:'hw',label:'HW수',min:0}], formula:(v)=>5+v.hw*4.5},
+  {id:'s2_10',name:'TAIL TRIM', vars:[{key:'hw',label:'HW수',min:0}], formula:(v)=>5+v.hw*4.5},
+  {id:'s2_11',name:'UNDER CVR', vars:[{key:'hw',label:'HW수',min:0}], formula:(v)=>5+v.hw*4.5},
+  {id:'s2_12',name:'FOG LAMP 조립 (L/R포함)', vars:[{key:'hw',label:'HW수',min:0}], formula:(v)=>10+v.hw*4.5},
+  {id:'s2_13',name:'B/BEAM 조립', vars:[{key:'hw',label:'HW수',min:0}], formula:(v)=>10+v.hw*4.5},
+  {id:'s2_14',name:'MUD GUARD', vars:[{key:'hw',label:'HW수',min:0}], formula:(v)=>10+v.hw*4.5},
+  {id:'s2_15',name:'STEP 조립', vars:[{key:'hw',label:'HW수',min:0}], formula:(v)=>20+v.hw*4.5},
+  {id:'s2_16',name:'BPR CVR (2피스)', vars:[{key:'hw',label:'HW수',min:0}], formula:(v)=>20+v.hw*4.5},
+  {id:'s2_17',name:'LIP BPR, REINF BPR', vars:[{key:'lip',label:'LIP수',min:0},{key:'hw',label:'HW수',min:0}], formula:(v)=>5*(v.lip+v.hw)},
+  {id:'s2_18',name:'MLDG 조립', vars:[{key:'mldg',label:'MLDG수',min:0},{key:'hw',label:'HW수',min:0}], formula:(v)=>5*(v.mldg+v.hw)},
+  {id:'s2_19a',name:'PAD 부착 (100mm이하)', vars:[{key:'n',label:'PAD수',min:1}], formula:(v)=>4+3*(v.n-1)},
+  {id:'s2_19b',name:'PAD 부착 (100mm초과)', vars:[{key:'len',label:'PAD길이(mm)',min:1}], formula:(v)=>4+0.01*v.len},
+  {id:'s2_20a',name:'BRKT/리플렉터 조립 (T/SCREW)', vars:[{key:'brkt',label:'BRKT수',min:0},{key:'hw',label:'HW수',min:0}], formula:(v)=>4.5*v.brkt+4.5*v.hw},
+  {id:'s2_20b',name:'BRKT/리플렉터 조립 (RIBET)', vars:[{key:'brkt',label:'BRKT수',min:0},{key:'hw',label:'HW수',min:0}], formula:(v)=>4.5*v.brkt+3*v.hw},
+  {id:'s2_21a',name:'H-LOGO (양면TAPE)', vars:[], formula:()=>15},
+  {id:'s2_21b',name:'H-LOGO (CLIP조립)', vars:[], formula:()=>20},
+  {id:'s2_22',name:'PAS류(BSW) 조립', vars:[{key:'n',label:'PAS개수',min:1}], formula:(v)=>5*v.n},
+  {id:'s2_23',name:'WIRING 조립', vars:[{key:'sensor',label:'센서수',min:0},{key:'clip',label:'CLIP수',min:0}], formula:(v)=>5+3*v.sensor+1.8*v.clip},
+  {id:'s2_24',name:'전장품 TEST', vars:[{key:'n',label:'항목수',min:1}], formula:(v)=>3+1.5*v.n},
+  {id:'s2_25',name:'이종방지 바코드라벨 부착', vars:[], formula:()=>3},
+  {id:'s2_26',name:'이종방지 검사', vars:[], formula:()=>15},
+  {id:'s2_27',name:'검사/적재', vars:[], formula:()=>45},
+];
+
+function ctRowVal(id){
+  const row=CT_SEC1.concat(CT_SEC2).find(r=>r.id===id);
+  if(!row)return 0;
+  const chk=document.getElementById('chk_'+id);
+  if(!chk||!chk.checked)return 0;
+  const vals={};
+  row.vars.forEach(v=>{
+    const el=document.getElementById('var_'+id+'_'+v.key);
+    vals[v.key]=el?parseFloat(el.value)||0:0;
+  });
+  return row.formula(vals);
+}
+
+function calcCT(){
+  let total=0,count=0;
+  let sum1=0,sum2=0;
+  CT_SEC1.forEach(r=>{const v=ctRowVal(r.id);if(v>0){total+=v;sum1+=v;count++;}
+    // 체크되었지만 0인 경우도 count
+    const chk=document.getElementById('chk_'+r.id);
+    if(chk&&chk.checked&&v===0){count++;}
+  });
+  CT_SEC2.forEach(r=>{const v=ctRowVal(r.id);if(v>0){total+=v;sum2+=v;count++;}
+    const chk=document.getElementById('chk_'+r.id);
+    if(chk&&chk.checked&&v===0){count++;}
+  });
+  document.getElementById('ct-total').innerHTML=Math.round(total*10)/10+'<span style="font-size:18px;font-weight:600;margin-left:4px">초</span>';
+  document.getElementById('ct-count').textContent=count+'개';
+  document.getElementById('ct-sec1-sum').textContent='합계: '+Math.round(sum1*10)/10+'초';
+  document.getElementById('ct-sec2-sum').textContent='합계: '+Math.round(sum2*10)/10+'초';
+  // 개별 행 C/T 표시 업데이트
+  CT_SEC1.concat(CT_SEC2).forEach(r=>{
+    const el=document.getElementById('ct_val_'+r.id);
+    if(!el)return;
+    const chk=document.getElementById('chk_'+r.id);
+    if(chk&&chk.checked){
+      const v=ctRowVal(r.id);
+      el.textContent=Math.round(v*10)/10+'초';
+      el.style.color='var(--blue)';
+    } else {
+      el.textContent='—';
+      el.style.color='var(--mut)';
+    }
+  });
+}
+
+function buildCTRow(r){
+  const hasVars=r.vars.length>0;
+  let varHtml='';
+  if(hasVars){
+    r.vars.forEach(v=>{
+      varHtml+=`<label style="font-size:12px;color:var(--mut);margin-left:10px">${v.label}</label>
+      <input type="number" id="var_${r.id}_${v.key}" value="${v.min||0}" min="${v.min||0}" step="1"
+        style="width:64px;padding:5px 6px;border:1px solid var(--bd);border-radius:7px;font-size:13px;background:#0f1117;color:#f1f5f9;text-align:center"
+        oninput="calcCT()">`;
+    });
+  }
+  return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 10px;background:#13151c;border-radius:9px;border:1px solid var(--bd)">
+    <input type="checkbox" id="chk_${r.id}" style="width:17px;height:17px;accent-color:var(--blue);cursor:pointer;flex-shrink:0" onchange="calcCT()">
+    <span style="font-size:14px;font-weight:600;flex:1;min-width:180px">${r.name}</span>
+    ${varHtml}
+    <span id="ct_val_${r.id}" style="font-size:15px;font-weight:800;color:var(--mut);min-width:58px;text-align:right">—</span>
+  </div>`;
+}
+
+function renderCT(){
+  document.getElementById('ct-sec1').innerHTML=CT_SEC1.map(buildCTRow).join('');
+  document.getElementById('ct-sec2').innerHTML=CT_SEC2.map(buildCTRow).join('');
+  calcCT();
+  refreshCTLoadSel();
+}
+
+function applyCT(){
+  const total=CT_SEC1.concat(CT_SEC2).reduce((s,r)=>s+ctRowVal(r.id),0);
+  const val=Math.round(total*10)/10;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(String(val)).then(()=>alert('C/T '+val+'초 — 클립보드에 복사되었습니다.'));
+  } else {
+    alert('합계 C/T: '+val+'초');
+  }
+}
+
+function resetCT(){
+  if(!confirm('선택 및 입력값을 모두 초기화할까요?'))return;
+  CT_SEC1.concat(CT_SEC2).forEach(r=>{
+    const chk=document.getElementById('chk_'+r.id);
+    if(chk)chk.checked=false;
+    r.vars.forEach(v=>{
+      const el=document.getElementById('var_'+r.id+'_'+v.key);
+      if(el)el.value=v.min||0;
+    });
+  });
+  document.getElementById('ct-model').value='';
+  calcCT();
+}
+
+function saveCT(){
+  const model=document.getElementById('ct-model').value.trim()||'(미입력)';
+  const state={model, items:{}};
+  CT_SEC1.concat(CT_SEC2).forEach(r=>{
+    const chk=document.getElementById('chk_'+r.id);
+    const checked=chk&&chk.checked;
+    const vars={};
+    r.vars.forEach(v=>{
+      const el=document.getElementById('var_'+r.id+'_'+v.key);
+      vars[v.key]=el?el.value:'0';
+    });
+    state.items[r.id]={checked,vars};
+  });
+  state.total=Math.round(CT_SEC1.concat(CT_SEC2).reduce((s,r)=>s+ctRowVal(r.id),0)*10)/10;
+  const saves=JSON.parse(localStorage.getItem('conv_ct_saves')||'[]');
+  state.savedAt=Date.now();
+  saves.unshift(state);
+  localStorage.setItem('conv_ct_saves',JSON.stringify(saves.slice(0,20)));
+  refreshCTLoadSel();
+  alert('저장 완료: '+model+' (C/T '+state.total+'초)');
+}
+
+function refreshCTLoadSel(){
+  const saves=JSON.parse(localStorage.getItem('conv_ct_saves')||'[]');
+  const sel=document.getElementById('ct-load-sel');
+  sel.innerHTML='<option value="">-- 선택 --</option>';
+  saves.forEach((s,i)=>{
+    const d=new Date(s.savedAt);
+    const label=s.model+' ('+s.total+'초) '+d.toLocaleDateString('ko-KR');
+    sel.innerHTML+=`<option value="${i}">${esc(label)}</option>`;
+  });
+}
+
+function loadCT(idx){
+  if(idx==='')return;
+  const saves=JSON.parse(localStorage.getItem('conv_ct_saves')||'[]');
+  const state=saves[parseInt(idx)];
+  if(!state)return;
+  document.getElementById('ct-model').value=state.model==='(미입력)'?'':state.model;
+  CT_SEC1.concat(CT_SEC2).forEach(r=>{
+    const item=state.items[r.id];
+    if(!item)return;
+    const chk=document.getElementById('chk_'+r.id);
+    if(chk)chk.checked=item.checked;
+    r.vars.forEach(v=>{
+      const el=document.getElementById('var_'+r.id+'_'+v.key);
+      if(el&&item.vars)el.value=item.vars[v.key]||v.min||0;
+    });
+  });
+  calcCT();
+}
+
+function deleteCTSave(){
+  const sel=document.getElementById('ct-load-sel');
+  const idx=parseInt(sel.value);
+  if(isNaN(idx))return;
+  const saves=JSON.parse(localStorage.getItem('conv_ct_saves')||'[]');
+  if(!confirm(saves[idx].model+' 저장 항목을 삭제할까요?'))return;
+  saves.splice(idx,1);
+  localStorage.setItem('conv_ct_saves',JSON.stringify(saves));
+  sel.value='';
+  refreshCTLoadSel();
+}
+
+/* ─── 2D 컨베어 시뮬레이션 (3라인 전용) ─────────── */
+let _raf2d=null;
+
+function easeIO(t){return t<0.5?2*t*t:-1+(4-2*t)*t;}
+
+function renderOverloadPanel(){
+  const base=+document.getElementById('baseProd').value||205;
+  const curPn=+document.getElementById('pitchRatio').value||0;
+  const wm=+document.getElementById('workMin').value||460;
+  const allRows=G().rows;
+  const isSUB=r=>r.group==='SUB'||(r.name||'').toUpperCase().startsWith('SUB')||(r.name||'').includes('서브');
+  const mainRows=allRows.filter(r=>!isSUB(r));
+  const subRows=allRows.filter(r=>isSUB(r)&&((r.name||'').includes('에어백')||(r.task||'').includes('에어백')));
+  let multiSpan=1;
+  if(mainRows.length>0&&mainRows[0].taskSpan>1)multiSpan=mainRows[0].taskSpan;
+  else{let cnt=0;for(const r of mainRows){if(r.taskSpan===0)cnt++;else break;}multiSpan=1+cnt;}
+  const MN=Math.min(multiSpan,Math.ceil(mainRows.length/2));
+  const grpCTTotal=mainRows.slice(0,MN).reduce((s,r)=>s+(r.ct||0),0)+subRows.reduce((s,r)=>s+(r.ct||0),0);
+
+  const panel=document.getElementById('overloadPanel');
+  const content=document.getElementById('overloadContent');
+  const badge=document.getElementById('overloadBadge');
+  panel.style.display='block';
+
+  if(grpCTTotal<=0){
+    badge.innerHTML='<span style="color:#64748b">C/T 데이터 없음</span>';
+    content.innerHTML='<span style="color:#64748b">C/T 데이터가 없습니다.</span>';
+    return;
+  }
+
+  // 공피치 시나리오: pn=0 ~ 10
+  const pitchFull=wm*60/base;
+  const scenarios=[];
+  for(let pn=0;pn<=10;pn++){
+    const prod=pn===0?base:Math.round(base*pn/(pn+1));
+    const pitchEff=pn===0?pitchFull:pitchFull*(pn+1)/pn;
+    const minW=Math.ceil(grpCTTotal/pitchEff);
+    const load=grpCTTotal/(minW*pitchEff)*100;
+    const diff=prod-base;
+    scenarios.push({pn,prod,pitchEff,minW,load,diff});
+  }
+
+  // 캠스 UPH: 1인 평균 생산량 기준
+  const perPerson=+(document.getElementById('perPersonProd')||{}).value||35;
+  const camsSc=scenarios.map(sc=>({
+    ...sc,
+    camsMinW:Math.ceil(sc.prod/perPerson),
+    camsProd:Math.ceil(sc.prod/perPerson)*perPerson,
+    camsDiff:Math.ceil(sc.prod/perPerson)*perPerson-base
+  }));
+
+  const curScen=scenarios[Math.min(curPn,10)]||scenarios[0];
+  const ok=curScen.diff>=0;
+  badge.innerHTML=ok
+    ?`<span style="color:#22c55e;font-weight:700">✅ 납품 가능 (여유 ${curScen.diff}대/일)</span>`
+    :`<span style="color:#ef4444;font-weight:700">❌ 납품 부족 ${Math.abs(curScen.diff)}대/일</span>`;
+
+  // 6명이 필요해지는 첫 pn 찾기
+  const firstSix=scenarios.find(sc=>sc.minW>=6);
+
+  const fixedW=fixedWSaved>0?fixedWSaved:0;
+  function renderTable(scList,title,color,isCtBased){
+    const showFixed=fixedW>0;
+    let t=`<div style="margin:0 0 6px;font-size:12px;font-weight:700;color:${color}">${title}</div>`;
+    t+=`<table style="width:100%;border-collapse:collapse;font-size:12px">
+      <tr style="background:#20232b;color:#94a3b8">
+        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">공피치<br><span style="font-weight:400;font-size:10px">공:실제</span></th>
+        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">UPH</th>
+        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">피치<br><span style="font-weight:400;font-size:10px">유효주기</span></th>
+        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">최소<br>작업자</th>
+        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">부하율</th>
+        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">일 생산량</th>
+        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">인당<br><span style="font-weight:400;font-size:10px">대/인/일</span></th>
+        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">고객사 대비</th>
+        ${showFixed?`<th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35;border-left:2px solid #fb923c;color:#fb923c">${fixedW}명<br><span style="font-weight:400;font-size:10px">생산량</span></th>
+        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35;color:#fb923c">${fixedW}명<br><span style="font-weight:400;font-size:10px">부하율</span></th>`:''}
+      </tr>`;
+    let prevW=null;
+    scList.forEach(sc=>{
+      const isCur=sc.pn===curPn;
+      const w=isCtBased?sc.minW:sc.camsMinW;
+      const prod=sc.prod;
+      const diff=sc.diff;
+      const uph=Math.round(sc.prod*60/wm);
+      const perHead=w>0?Math.round(prod/w):0;
+      const workerChanged=prevW!==null&&w!==prevW;
+      prevW=w;
+      const is6boundary=isCtBased&&sc.pn===firstSix?.pn;
+      const loadColor=sc.load>=95?'#ef4444':sc.load>=85?'#f59e0b':'#22c55e';
+      const diffStr=diff>=0
+        ?`<span style="color:#22c55e;font-weight:700">+${diff}대</span>`
+        :`<span style="color:#ef4444;font-weight:700">${diff}대</span>`;
+      const rowBg=isCur?'background:#0f2940;':(diff<0?'background:#160808;':'');
+      const leftBorder=isCur?'border-left:3px solid #0284c7;':is6boundary?'border-left:3px solid #ef4444;':'border-left:3px solid transparent;';
+      const topBorder=workerChanged?'border-top:2px solid #334155;':'';
+      let fixedCell='';
+      if(showFixed){
+        const fProd=fixedW>=w?prod:Math.floor(wm*60*fixedW/grpCTTotal);
+        const fLoad=fixedW>0?Math.round(grpCTTotal/(fixedW*sc.pitchEff)*100):0;
+        const fDiff=fProd-base;
+        const fDiffStr=fDiff>=0?`<span style="color:#22c55e;font-weight:600">+${fDiff}</span>`:`<span style="color:#ef4444;font-weight:600">${fDiff}</span>`;
+        const fLoadColor=fLoad>=100?'#ef4444':fLoad>=85?'#f59e0b':'#22c55e';
+        const fProdColor=fixedW<w?'#f97316':'#e2e8f0';
+        fixedCell=`<td style="padding:5px 8px;text-align:center;border-left:2px solid #431407;font-weight:700;color:${fProdColor}">${fProd}대 <span style="font-size:10px;font-weight:400">${fDiffStr}</span></td>
+        <td style="padding:5px 8px;text-align:center;font-weight:700;color:${fLoadColor}">${fLoad}%</td>`;
+      }
+      t+=`<tr style="${rowBg}${leftBorder}${topBorder}border-bottom:1px solid #1e2128;">
+        <td style="padding:5px 8px;text-align:center;color:${isCur?'#38bdf8':is6boundary?'#fca5a5':'#cbd5e1'};font-weight:${isCur||is6boundary?'700':'400'}">${sc.pn===0?'없음':`1:${sc.pn}`}${isCur?' ◀':''}${is6boundary?' ⚠️':''}</td>
+        <td style="padding:5px 8px;text-align:center;color:#fbbf24;font-weight:700">${uph}</td>
+        <td style="padding:5px 8px;text-align:center;color:#60a5fa">${sc.pitchEff.toFixed(1)}초</td>
+        <td style="padding:5px 8px;text-align:center;font-weight:700;color:${w>=6?'#ef4444':w>=5?'#f59e0b':'#4ade80'}">${w}명</td>
+        <td style="padding:5px 8px;text-align:center;font-weight:700;color:${loadColor}">${sc.load.toFixed(0)}%</td>
+        <td style="padding:5px 8px;text-align:center;font-weight:700;color:#e2e8f0">${prod}대</td>
+        <td style="padding:5px 8px;text-align:center;color:#a78bfa;font-weight:700">${perHead}대</td>
+        <td style="padding:5px 8px;text-align:center">${diffStr}</td>
+        ${fixedCell}
+      </tr>`;
+    });
+    t+='</table>';
+    return t;
+  }
+
+  const perPersonSaved=+(document.getElementById('perPersonProd')||{}).value||35;
+  const fixedWSaved=+(document.getElementById('fixedWorkers')||{}).value||0;
+  const infoBar=`<div style="margin:12px 0 8px;font-size:11px;color:#94a3b8;display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+    <span>고객사 목표: <b style="color:#f8fafc">${base}대/일</b></span>
+    <span>총 C/T: <b style="color:#60a5fa">${grpCTTotal.toFixed(1)}초</b></span>
+    <span>가동: <b style="color:#f8fafc">${wm}분/일</b></span>
+    <span style="display:flex;align-items:center;gap:4px">1인 평균:
+      <input type="number" id="perPersonProd" value="${perPersonSaved}" min="1" max="300" step="1"
+        style="width:52px;padding:2px 4px;background:#1e293b;border:1px solid #334155;border-radius:4px;color:#fbbf24;font-weight:700;text-align:center;font-size:12px"
+        onchange="renderOverloadPanel()">
+      <span>대/인/일</span>
+    </span>
+    <span style="display:flex;align-items:center;gap:4px;border-left:1px solid #334155;padding-left:12px">지정 인원:
+      <input type="number" id="fixedWorkers" value="${fixedWSaved||''}" min="1" max="20" step="1" placeholder="–"
+        style="width:40px;padding:2px 4px;background:#1e293b;border:1px solid #475569;border-radius:4px;color:#fb923c;font-weight:700;text-align:center;font-size:12px"
+        onchange="renderOverloadPanel()">
+      <span>명</span>
+    </span>
+  </div>`;
+
+  let html=renderTable(scenarios,`📐 C/T 기반 분석 (1~${MN}공정+SUB에어백 총 ${grpCTTotal.toFixed(1)}초)`,'#60a5fa',true);
+  if(firstSix){
+    html+=`<div style="margin:8px 0;padding:6px 12px;background:#2d0a0a;border:1px solid #7f1d1d;border-radius:6px;font-size:12px;color:#fca5a5">
+      ⚠️ <b>공피치 1:${firstSix.pn} 이상</b>부터 최소 작업자 <b style="color:#ef4444">6명</b> 필요 (현재 5명 → 1명 증원 필요)
+    </div>`;
+  }
+  html+=infoBar;
+  html+=renderTable(camsSc,`🏭 캠스 UPH 기반 분석 (1인 평균 ${perPersonSaved}대/일 기준)`,'#a78bfa',false);
+
+  content.innerHTML=html;
+}
+
+function init2D(){
+  if(_raf2d){cancelAnimationFrame(_raf2d);_raf2d=null;}
+  renderOverloadPanel();
+  const cv=document.getElementById('cv2d');
+  if(!cv)return;
+  const W=cv.parentElement?Math.max(760,cv.parentElement.clientWidth-32):760, H=640;
+  cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+
+  // ── 피치 ──
+  const base=+document.getElementById('baseProd').value||205;
+  const pn=+document.getElementById('pitchRatio').value||0;
+  const wm=+document.getElementById('workMin').value||460;
+  const prod=pn===0?base:Math.round(base*pn/(pn+1));
+  const pitch=wm*60/prod;
+  document.getElementById('sim2dPitch').textContent=pitch.toFixed(1);
+
+  // ── 행 분류: 모든 비-SUB 행 포함 (taskSpan:0도 각각 스테이션) ──
+  const isSUB=r=>r.group==='SUB'||(r.name||'').toUpperCase().startsWith('SUB')||(r.name||'').includes('서브');
+  // 데이터 이상 시 자동 복구 (행수 부족 OR 상단 공정 CT 전부 0)
+  (function autoRestore(){
+    if(!G().rows||G().rows.length<6){return _doRestore();}
+    const mn=G().rows.filter(r=>!isSUB(r));
+    const half=Math.ceil(mn.length/2);
+    const top=mn.slice(half);
+    // 상단 공정이 9개 이상인데 CT가 하나도 없으면 복구
+    if(top.length>=9&&top.every(r=>!(r.ct>0))){_doRestore();}
+  })();
+  function _doRestore(){
+    const key='conv_struct_2_0';
+    localStorage.setItem(key,JSON.stringify(JSON.parse(JSON.stringify(DEF_CPAD))));
+    loadLineData();
+    if(typeof _simPushCloud==='function')setTimeout(_simPushCloud,500);
+  }
+  const allRows=G().rows;
+  const mainRows=allRows.filter(r=>!isSUB(r));
+  const subRows=allRows.filter(r=>isSUB(r)&&((r.name||'').includes('에어백')||(r.task||'').includes('에어백')));
+
+  // 다공정 범위: 연속된 taskSpan>1 + taskSpan:0 그룹 크기
+  let multiSpan=1;
+  if(mainRows.length>0&&mainRows[0].taskSpan>1) multiSpan=mainRows[0].taskSpan;
+  else{ let cnt=0; for(const r of mainRows){if(r.taskSpan===0)cnt++;else break;} multiSpan=1+cnt; }
+
+  const half=Math.ceil(mainRows.length/2);
+  const botRows=mainRows.slice(0,half);       // 1~N/2 공정 (좌→우)
+  const topRows=mainRows.slice(half);          // N/2+1~N 공정 (우→좌, 역순 없음: [0]=11공정=우측)
+  const NB=Math.max(1,botRows.length), NT=Math.max(1,topRows.length);
+  const MN=Math.min(multiSpan,NB);
+  const multiWorkers=botRows[0]?Math.max(1,botRows[0].workers||1):1;
+
+  // ── 레이아웃 ──
+  const PAD=50, TY=82, BY=490;
+  const LX=PAD, RX=W-PAD;
+  const BW=RX-LX, BH=BY-TY;
+  const CR=42, TW=34;
+  const BBOXH=110, BPADY=24, TBOXH=110, TPADY=10;
+  const BTOP=BY-TW/2-BBOXH-BPADY;  // 박스 위쪽 Y (벨트와 간격 확보)
+  const TTOP=TY+TW/2+TPADY;
+  const WY_BOT=BY+TW/2+22;      // 하단 작업자 Y (레일 아래)
+  const WY_TOP=TY-TW/2-38;      // 상단 작업자 Y (레일 위쪽 바깥)
+  const bx=i=>LX+(i+0.5)*BW/NB;
+  const tx_=i=>RX-(i+0.5)*BW/NT;
+
+  // ── 색상 ──
+  const loadFill=ct=>{if(!pitch||!ct)return'#1e293b';const r=ct/pitch*100;return r>100?'#7f1d1d':r>85?'#78350f':'#14532d';};
+  const loadStk=ct=>{if(!pitch||!ct)return'#475569';const r=ct/pitch*100;return r>100?'#ef4444':r>85?'#f59e0b':'#22c55e';};
+
+  // ── ㅁ 둘레 경로 ──
+  const L_BOT=BW,L_RIGHT=BH,L_TOP=BW,L_LEFT=BH,L_TOTAL=L_BOT+L_RIGHT+L_TOP+L_LEFT;
+  function jigXY(frac){
+    const p=((frac%1+1)%1)*L_TOTAL;
+    if(p<L_BOT)return{x:LX+p,y:BY};
+    let q=p-L_BOT;
+    if(q<L_RIGHT)return{x:RX,y:BY-q};
+    q-=L_RIGHT;
+    if(q<L_TOP)return{x:RX-q,y:TY};
+    return{x:LX,y:TY+(p-L_BOT-L_RIGHT-L_TOP)};
+  }
+
+  // ── 지그 슬롯 (동기화 컨베어): 하단NB + 우코너1 + 상단NT + 좌코너1 ──
+  const NSLOT=NB+NT+2;
+  function slotFrac(s){
+    if(s<NB) return((s+0.5)/NB*L_BOT)/L_TOTAL;
+    if(s===NB) return(L_BOT+L_RIGHT*0.5)/L_TOTAL;
+    if(s<NB+1+NT){const ti=s-NB-1;return(L_BOT+L_RIGHT+(ti+0.5)/NT*L_TOP)/L_TOTAL;}
+    return(L_BOT+L_RIGHT+L_TOP+L_LEFT*0.5)/L_TOTAL;
+  }
+  function slotLabel(s){
+    if(s<NB){const r=botRows[s];return(r&&r.name?r.name:`${s+1}공`).slice(0,5);}
+    if(s===NB||s===NSLOT-1)return'↻';
+    const ti=s-NB-1,r=topRows[ti];
+    return(r&&r.name?r.name:`${half+ti+1}공`).slice(0,5);
+  }
+  function slotJigW(s){
+    if(s<NB)return Math.max(20,BW/NB*0.80);
+    if(s===NB||s===NSLOT-1)return TW*1.3;
+    return Math.max(20,BW/NT*0.80);
+  }
+
+  // ── 피치 기반 애니메이션 타이밍 ──
+  const simSpeedX=+document.getElementById('simSpeed').value||20;
+  // 병목 C/T = 입력된 값 중 최대값 기준 (다공정 그룹은 합계÷인원)
+  const grpCTTotal=botRows.slice(0,MN).reduce((s,r)=>s+(r.ct||0),0)
+                  +subRows.reduce((s,r)=>s+(r.ct||0),0);
+  const grpEffCT=MN>0&&multiWorkers>0?grpCTTotal/multiWorkers:0;
+  const singleMaxCT=Math.max(
+    ...botRows.slice(MN).map(r=>r.ct||0),
+    ...topRows.map(r=>r.ct||0)
+  );
+  const bottleneckCT=Math.max(grpEffCT, singleMaxCT);
+  // 애니메이션 기준: 피치(컨베어 이송 주기) 기반 — 각 공정 C/T vs 피치로 완료대기/과부하 표시
+  const animBase=pitch>0?pitch:(bottleneckCT>0?bottleneckCT:10);
+  const PANIM=Math.max(0.5, animBase/simSpeedX);
+  const TR_F=0.18; // transit 비율
+
+
+  // ── 드로우 헬퍼 ──
+  function rr(x,y,w,h,r){
+    ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+    ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+    ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);
+    ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();
+  }
+  function drawW(x,y,color,lbl,rad){
+    rad=rad||10;
+    ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,rad,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.45)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font=`bold ${Math.min(rad+2,11)}px Malgun Gothic`;ctx.textAlign='center';ctx.fillText(lbl,x,y+3.5);
+  }
+
+  // ── SUB 부모 공정 위치 계산 ──
+  function subParentBotX(subR){
+    // 에어백 SUB: 4공정(141)과 5공정(142) 사이 고정
+    if((subR.name||'').includes('에어백')||(subR.task||'').includes('에어백')){
+      const i4=botRows.findIndex(r=>/^4공정$|^141$/.test(r.name||''));
+      const i5=botRows.findIndex(r=>/^5공정$|^142$/.test(r.name||''));
+      if(i4>=0&&i5>i4)return(bx(i4)+bx(i5))/2;
+      if(i4>=0)return(bx(i4)+bx(Math.min(i4+1,NB-1)))/2;
+      if(NB>4)return(bx(3)+bx(4))/2;
+      return bx(Math.min(3,NB-1));
+    }
+    const si=allRows.indexOf(subR);
+    for(let k=si-1;k>=0;k--){
+      const mr=allRows[k];
+      if(!isSUB(mr)){
+        const bi=botRows.indexOf(mr);
+        if(bi>=0)return bx(bi);
+      }
+    }
+    return bx(Math.min(3,NB-1));
+  }
+
+  // ── 작업자 경로: 1공정 왼쪽 대기 → 1~6공정(+SUB경유) → 복귀 로테이션 ──
+  const slotW=BW/NB;
+  const SY_W=BY+TW/2+55+28;
+  const subAirX=subRows.length>0?subParentBotX(subRows[0]):null;
+  const waypoints=[];
+  // 대기 waypoint: 캔버스 안쪽 (좌측 스키드 근처)
+  const queueX=Math.max(20, bx(0)-slotW*0.8);
+  waypoints.push({x:queueX,y:WY_BOT,bIdx:-1,isSub:false,isQueue:true});
+  for(let i=0;i<MN;i++){
+    waypoints.push({x:bx(i),y:WY_BOT,bIdx:i,isSub:false,isQueue:false});
+    // 4공정(bIdx=3) 다음에 SUB에어백 경유
+    if(i===3&&subAirX!==null){
+      waypoints.push({x:subAirX,y:SY_W,bIdx:-2,isSub:true,isQueue:false});
+    }
+  }
+  const NWP=waypoints.length; // 대기1 + 공정MN + SUB(있으면)
+
+  let t0=null;
+  function frame(ts){
+    if(!t0)t0=ts;
+    const el=(ts-t0)/1000;
+    const cycleEl=(el%PANIM)/PANIM;
+    const isTransit=cycleEl>(1-TR_F);
+    const trP=isTransit?(cycleEl-(1-TR_F))/TR_F:0;
+    const advN=Math.floor(el/PANIM);
+
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0f172a';ctx.fillRect(0,0,W,H);
+
+    ctx.textAlign='center';
+
+    // ── 벨트 트랙 ──
+    function drawTrack(col,lw){
+      ctx.strokeStyle=col;ctx.lineWidth=lw;
+      ctx.beginPath();
+      ctx.moveTo(LX+CR,BY);ctx.lineTo(RX-CR,BY);ctx.arcTo(RX,BY,RX,BY-CR,CR);
+      ctx.lineTo(RX,TY+CR);ctx.arcTo(RX,TY,RX-CR,TY,CR);
+      ctx.lineTo(LX+CR,TY);ctx.arcTo(LX,TY,LX,TY+CR,CR);
+      ctx.lineTo(LX,BY-CR);ctx.arcTo(LX,BY,LX+CR,BY,CR);
+      ctx.closePath();ctx.stroke();
+    }
+    drawTrack('#1e3a5f',TW+6);drawTrack('#243553',TW);drawTrack('#0f274488',TW-6);
+
+    // 방향 표시
+    ctx.fillStyle='#1e3a5f99';ctx.font='9px Malgun Gothic';ctx.textAlign='center';
+    ctx.fillText('→  →  →  →  →',W/2,BY+7);
+    ctx.fillText('←  ←  ←  ←  ←',W/2,TY-4);
+    ['우측↑','좌측↓'].forEach((t,k)=>{
+      ctx.save();ctx.translate(k===0?RX+16:LX-16,(TY+BY)/2);ctx.rotate(k===0?-Math.PI/2:Math.PI/2);
+      ctx.fillStyle='#0369a1';ctx.font='8px Malgun Gothic';ctx.textAlign='center';ctx.fillText(t,0,0);ctx.restore();
+    });
+    // ── 스키드 회전 스테이션 (양쪽 코너) ──
+    const SKID_CT=62.4, SKID_W=42, SKID_H=62, midY=(TY+BY)/2;
+    [{cx:RX,s:'우→상'},{cx:LX,s:'하→우'}].forEach(({cx,s})=>{
+      const skLoad=pitch>0?SKID_CT/pitch*100:0;
+      rr(cx-SKID_W/2,midY-SKID_H/2,SKID_W,SKID_H,4);
+      ctx.fillStyle=skLoad>100?'#7f1d1d':skLoad>85?'#78350f':'#0c2340';ctx.fill();
+      ctx.strokeStyle=skLoad>100?'#ef4444':skLoad>85?'#f59e0b':'#0284c7';ctx.lineWidth=2;ctx.stroke();
+      ctx.fillStyle='#67e8f9';ctx.font='bold 7px Malgun Gothic';ctx.textAlign='center';
+      ctx.fillText('스키드',cx,midY-18);ctx.fillText('회전',cx,midY-8);
+      ctx.fillStyle='#0ea5e9';ctx.font='bold 7px Malgun Gothic';ctx.fillText(SKID_CT+'초',cx,midY+4);
+      ctx.fillStyle='#38bdf8';ctx.font='12px Malgun Gothic';ctx.fillText('↻',cx,midY+18);
+    });
+
+    // ── 하단 공정 박스 (6공정=2칸 너비) ──
+    const fs=NB>15?11:NB>11?12:NB>8?13:14;
+    const slotW=BW/NB; // 기본 1칸 너비
+    const topWQ=[],subWQ=[],botWQ=[]; // 작업자 지연 큐
+    for(let i=0;i<botRows.length;i++){
+      const r=botRows[i];
+      const ct=r.ct||0,isM=i<MN,w=r.workers||0;
+      const procNum=i+1;
+      const isDaegi=r.empty||r.name==='대기'||(r.name===''&&!r.task&&!ct);
+      const bx2=LX+i*slotW+1.5;
+      const bw2=slotW-3;
+      const cx=bx2+bw2/2;
+      // 다공정(isM)이면 이름이 "대기"여도 공정 박스로 표시
+      const showDaegi=isDaegi&&!isM;
+      const dispName=showDaegi?`${procNum}공정`:(r.name&&r.name!=='대기'?r.name:`${procNum}공정`).slice(0,6);
+      rr(bx2,BTOP,bw2,BBOXH,3);
+      ctx.fillStyle=showDaegi?'#0f1f33':loadFill(ct);ctx.fill();
+      ctx.strokeStyle=isM?'#f97316':(showDaegi?'#1e3a5f':loadStk(ct));ctx.lineWidth=isM?2:1.5;ctx.stroke();
+      ctx.fillStyle=isM?'#93c5fd':(showDaegi?'#94a3b8':'#e2e8f0');ctx.font=`bold ${fs}px Malgun Gothic`;ctx.textAlign='center';
+      ctx.fillText(dispName,cx,BTOP+17);
+      if(showDaegi){
+        ctx.fillStyle='#64748b';ctx.font=`${Math.max(10,fs-1)}px Malgun Gothic`;ctx.fillText('대기',cx,BTOP+34);
+      } else {
+        const tk=(r.task||'').split(/[,、\s]/)[0].trim().slice(0,6);
+        if(tk){ctx.fillStyle='#cbd5e1';ctx.font=`${Math.max(10,fs-1)}px Malgun Gothic`;ctx.fillText(tk,cx,BTOP+34);}
+        if(ct>0&&!isM){ctx.fillStyle=loadStk(ct);ctx.font=`bold ${fs}px Malgun Gothic`;ctx.fillText(ct+'초',cx,BTOP+53);}
+        if(isM){
+          rr(cx-15,BTOP+74,30,16,4);ctx.fillStyle='rgba(249,115,22,0.25)';ctx.fill();
+          ctx.fillStyle='#f97316';ctx.font='bold 11px Malgun Gothic';ctx.fillText(multiWorkers+'인',cx,BTOP+87);
+        } else if(w>0){
+          rr(cx-15,BTOP+74,30,16,4);ctx.fillStyle='rgba(22,163,74,0.2)';ctx.fill();
+          ctx.fillStyle='#4ade80';ctx.font='bold 11px Malgun Gothic';ctx.fillText(w+'인',cx,BTOP+87);
+          botWQ.push({cx,w});
+        }
+      }
+      // ── 실시간 작업상태: 박스 하단 컬러 바 ──
+      if(!showDaegi){
+        const jAt=((i-advN%NSLOT)+NSLOT*100)%NSLOT;
+        const onKong=pn>0&&(jAt%(pn+1))===pn;
+        const effCT=isM?grpEffCT:ct;
+        const workFrac=pitch>0&&effCT>0?effCT/pitch:0;
+        const workDone=cycleEl/(1-TR_F)>=workFrac;
+        let stColor,stBg,stLabel;
+        if(isTransit){stColor='#fff';stBg='#d97706';stLabel='이동중';}
+        else if(onKong){stColor='#fff';stBg='#334155';stLabel='대기중';}
+        else if(effCT===0){stColor='#94a3b8';stBg='#1e293b';stLabel='미설정';}
+        else if(workFrac>1){stColor='#fff';stBg='#dc2626';stLabel='⚡ 과부하';}
+        else if(workDone){stColor='#fff';stBg='#2563eb';stLabel='완료대기';}
+        else{stColor='#fff';stBg='#16a34a';stLabel='작업중';}
+        const barH=16,barY=BTOP+BBOXH-barH;
+        rr(bx2+1,barY,bw2-2,barH,3);
+        ctx.fillStyle=stBg;ctx.fill();
+        ctx.fillStyle=stColor;ctx.font='bold 10px Malgun Gothic';ctx.textAlign='center';
+        ctx.fillText(stLabel,cx,barY+12);
+      }
+    }
+    if(MN>0){
+      const grpCT=botRows.slice(0,MN).reduce((s,r)=>s+(r.ct||0),0)
+                 +subRows.reduce((s,r)=>s+(r.ct||0),0);
+      ctx.strokeStyle='rgba(249,115,22,0.4)';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+      ctx.strokeRect(LX+1,BTOP-4,slotW*MN-2,BBOXH+8);ctx.setLineDash([]);
+      ctx.fillStyle='#f97316';ctx.font='bold 9px Malgun Gothic';ctx.textAlign='center';
+      const grpLabel=grpCT>0
+        ?`▼ ${multiWorkers}인 다공정 (1~${MN}공정+SUB) 합계: ${grpCT.toFixed(1)}초 ▼`
+        :`▼ ${multiWorkers}인 다공정 (1~${MN}공정) ▼`;
+      ctx.fillText(grpLabel,LX+slotW*MN/2,BTOP-6);
+    }
+
+    // ── 상단 공정 박스 ──
+    const fst=NT>15?11:NT>11?12:NT>8?13:14;
+    topRows.forEach((r,i)=>{
+      const cx=tx_(i),tw2=BW/NT-3,tx2=RX-i*BW/NT-BW/NT+1.5;
+      const ct=r.ct||0;
+      const isDaegiT=!ct&&(r.empty||r.name==='대기'||(r.name===''&&!r.task));
+      const procNumT=half+i+1;
+      const dispNameT=isDaegiT?`${procNumT}공정`:(r.name||`${procNumT}공정`).slice(0,6);
+      rr(tx2,TTOP,tw2,TBOXH,3);
+      ctx.fillStyle=isDaegiT?'#0f1f33':loadFill(ct);ctx.fill();
+      ctx.strokeStyle=isDaegiT?'#1e3a5f':loadStk(ct);ctx.lineWidth=1.5;ctx.stroke();
+      ctx.fillStyle=isDaegiT?'#94a3b8':'#e2e8f0';ctx.font=`bold ${fst}px Malgun Gothic`;ctx.textAlign='center';
+      ctx.fillText(dispNameT,cx,TTOP+17);
+      if(isDaegiT){
+        ctx.fillStyle='#1e3a5f';ctx.font=`${Math.max(10,fst-1)}px Malgun Gothic`;ctx.fillText('대기',cx,TTOP+34);
+      } else {
+        const tk=(r.task||'').split(/[,、\s]/)[0].trim().slice(0,6);
+        if(tk){ctx.fillStyle='#cbd5e1';ctx.font=`${Math.max(10,fst-1)}px Malgun Gothic`;ctx.fillText(tk,cx,TTOP+34);}
+        if(ct>0){ctx.fillStyle=loadStk(ct);ctx.font=`bold ${fst}px Malgun Gothic`;ctx.fillText(ct+'초',cx,TTOP+53);}
+        const w=r.workers||0;
+        if(w>0){
+          rr(cx-15,TTOP+74,30,16,4);ctx.fillStyle='rgba(22,163,74,0.2)';ctx.fill();
+          ctx.fillStyle='#4ade80';ctx.font='bold 11px Malgun Gothic';ctx.fillText(w+'인',cx,TTOP+87);
+          topWQ.push({cx,w});
+        }
+        const topSlot=NB+1+i;
+        const jAtT=((topSlot-advN%NSLOT)+NSLOT*100)%NSLOT;
+        const onKongT=pn>0&&(jAtT%(pn+1))===pn;
+        const workFracT=pitch>0&&ct>0?ct/pitch:0;
+        const workDoneT=cycleEl/(1-TR_F)>=workFracT;
+        let stColorT,stBgT,stLabelT;
+        if(isTransit){stColorT='#fff';stBgT='#d97706';stLabelT='이동중';}
+        else if(onKongT){stColorT='#fff';stBgT='#334155';stLabelT='대기중';}
+        else if(ct===0){stColorT='#94a3b8';stBgT='#1e293b';stLabelT='미설정';}
+        else if(workFracT>1){stColorT='#fff';stBgT='#dc2626';stLabelT='⚡ 과부하';}
+        else if(workDoneT){stColorT='#fff';stBgT='#2563eb';stLabelT='완료대기';}
+        else{stColorT='#fff';stBgT='#16a34a';stLabelT='작업중';}
+        const barHT=16,barYT=TTOP+TBOXH-barHT;
+        rr(tx2+1,barYT,tw2-2,barHT,3);
+        ctx.fillStyle=stBgT;ctx.fill();
+        ctx.fillStyle=stColorT;ctx.font='bold 10px Malgun Gothic';ctx.textAlign='center';
+        ctx.fillText(stLabelT,cx,barYT+12);
+      }
+    });
+
+    // ── SUB 공정: 항상 하단 벨트 아래에 표시 ──
+    const subSW=Math.min(BW/Math.max(NB,subRows.length+1)*0.9,92);
+    const SY=BY+TW/2+55; // 작업자(WY_BOT) 아래로 SUB 박스 이동
+    const usedSubX=[];
+    subRows.forEach(r=>{
+      let sx=subParentBotX(r);
+      // 겹침 방지
+      let tries=0;
+      while(usedSubX.some(ux=>Math.abs(ux-sx)<subSW+6)&&tries<20){sx+=subSW+8;tries++;}
+      sx=Math.min(Math.max(sx,LX+subSW/2+2),RX-subSW/2-2);
+      usedSubX.push(sx);
+      const ct=r.ct||0;
+      // 부모 공정과 연결선
+      ctx.strokeStyle='#7c3aed66';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+      ctx.beginPath();ctx.moveTo(sx,BY+TW/2+1);ctx.lineTo(sx,SY);ctx.stroke();ctx.setLineDash([]);
+      // SUB 박스
+      rr(sx-subSW/2,SY,subSW,68,4);
+      ctx.fillStyle='#1a0a2e';ctx.fill();ctx.strokeStyle='#7c3aed';ctx.lineWidth=1.5;ctx.stroke();
+      ctx.fillStyle='#a78bfa';ctx.font='bold 11px Malgun Gothic';ctx.textAlign='center';
+      ctx.fillText((r.name||'SUB').slice(0,10),sx,SY+16);
+      const tk=(r.task||'').split(/[,、\s]/)[0].trim().slice(0,10);
+      if(tk){ctx.fillStyle='#7c3aed';ctx.font='9px Malgun Gothic';ctx.fillText(tk,sx,SY+30);}
+      if(ct>0){ctx.fillStyle='#c4b5fd';ctx.font='bold 11px Malgun Gothic';ctx.fillText(ct+'초',sx,SY+48);}
+      if(!ct){ctx.fillStyle='#4c1d95';ctx.font='9px Malgun Gothic';ctx.fillText('C/T 미입력',sx,SY+48);}
+      subWQ.push({sx}); // SUB 작업자 지연 큐
+    });
+
+    // ── 지그: NSLOT개, 공피치비율에 따라 'C/PAD 스키드 지그' / '공피치' 라벨 ──
+    for(let j=0;j<NSLOT;j++){
+      const curS=(j+advN)%NSLOT;
+      const nxtS=(curS+1)%NSLOT;
+      const f0=slotFrac(curS);
+      let f1=slotFrac(nxtS);
+      if(f1<f0)f1+=1;
+      const frac=isTransit?f0+(f1-f0)*easeIO(trP):f0;
+      const pos=jigXY(frac);
+      const jw=slotJigW(curS);
+      const jh=TW-2;
+      const isCorner=curS===NB||curS===NSLOT-1;
+      // 공피치 지그 판별: pn>0이면 (j%(pn+1))===pn 번째 지그가 공피치
+      const isKong=!isCorner&&pn>0&&(j%(pn+1))===pn;
+      const jw2=isCorner?TW*1.4:jw, jh2=isCorner?TW*1.4:jh;
+      const rotA=isCorner&&!isTransit?(Math.PI*cycleEl/(1-TR_F)):isCorner&&isTransit?Math.PI:0;
+      ctx.save();
+      ctx.translate(pos.x,pos.y);
+      ctx.rotate(rotA);
+      rr(-jw2/2,-jh2/2,jw2,jh2,3);
+      ctx.fillStyle=isCorner?'#1e3a5f':isKong?'#1e293b':'#1d4ed8';ctx.fill();
+      ctx.strokeStyle=isCorner?'#0ea5e9':isKong?'#475569':'#60a5fa';ctx.lineWidth=1.5;ctx.stroke();
+      ctx.fillStyle=isCorner?'#67e8f9':isKong?'#64748b':'#bfdbfe';ctx.font=`bold ${isCorner?8:10}px Malgun Gothic`;ctx.textAlign='center';
+      const jlbl=isCorner?'↻':isKong?'공피치':'C/PAD지그';
+      ctx.fillText(jlbl,0,isKong?3:0);
+      if(!isCorner&&!isKong){ctx.font='bold 7px Malgun Gothic';ctx.fillText('스키드',0,9);}
+      // 지그 번호 표시 (옆에)
+      if(!isCorner){
+        const isTop=curS>NB&&curS<NSLOT-1;
+        ctx.fillStyle=isKong?'#64748b':'#93c5fd';
+        ctx.font=`bold 11px Malgun Gothic`;
+        if(isTop){ctx.textAlign='right';ctx.fillText(`#${j+1}`,-jw2/2-2,0);}
+        else{ctx.textAlign='left';ctx.fillText(`#${j+1}`,jw2/2+2,0);}
+        ctx.textAlign='center';
+      }
+      ctx.restore();
+    }
+
+    // ── 단공정 인원: 다공정 작업자 번호 이어서 W원으로 표시 ──
+    let singleWIdx=multiWorkers; // 다공정 다음 번호부터
+    // 단공정 인원 순번: 하단(공정번호 오름차순) → 상단(공정번호 오름차순)
+    botWQ.forEach(({cx,w})=>{
+      for(let k=0;k<w;k++){
+        const wc=`hsl(${20+(singleWIdx)*30},85%,58%)`;
+        drawW(cx+(k-(w-1)/2)*44,WY_BOT,wc,`W${singleWIdx+1}`,20);
+        singleWIdx++;
+      }
+    });
+    topWQ.forEach(({cx,w})=>{
+      for(let k=0;k<w;k++){
+        const wc=`hsl(${20+(singleWIdx)*30},85%,58%)`;
+        drawW(cx+(k-(w-1)/2)*44,WY_TOP,wc,`W${singleWIdx+1}`,20);
+        singleWIdx++;
+      }
+    });
+
+    // ── 병목 앞 대기(queue) 표시 ──
+    if(pitch>0){
+      // 하단 병목
+      let bnBot=-1,bnCT=0;
+      botRows.forEach((r,i)=>{if((r.ct||0)>bnCT){bnCT=r.ct||0;bnBot=i;}});
+      const qLenB=bnBot>0&&bnCT>pitch?Math.min(Math.ceil(bnCT/pitch)-1,5):0;
+      if(qLenB>0){
+        const slotW=BW/NB;
+        for(let q=1;q<=qLenB;q++){
+          const qx=bx(bnBot)-slotW*q+slotW*0.5;
+          if(qx<LX+slotW*0.3)break;
+          const alpha=Math.max(0.15,0.7-q*0.12);
+          rr(qx-slotW*0.35,BY-TW/2-6,slotW*0.7,6,2);
+          ctx.fillStyle=`rgba(239,68,68,${alpha})`;ctx.fill();
+          ctx.strokeStyle=`rgba(248,113,113,${alpha})`;ctx.lineWidth=1;ctx.stroke();
+        }
+        ctx.fillStyle='#f87171';ctx.font='bold 7px Malgun Gothic';ctx.textAlign='center';
+        ctx.fillText(`⏸ 대기 ${qLenB}대`,bx(bnBot)-BW/NB*0.5,BY+TW/2+8);
+      }
+      // 상단 병목
+      let bnTop=-1,bnCTT=0;
+      topRows.forEach((r,i)=>{if((r.ct||0)>bnCTT){bnCTT=r.ct||0;bnTop=i;}});
+      const qLenT=bnTop>=0&&bnTop<NT-1&&bnCTT>pitch?Math.min(Math.ceil(bnCTT/pitch)-1,5):0;
+      if(qLenT>0){
+        const slotW=BW/NT;
+        for(let q=1;q<=qLenT;q++){
+          const qx=tx_(bnTop)+slotW*q-slotW*0.5;
+          if(qx>RX-slotW*0.3)break;
+          const alpha=Math.max(0.15,0.7-q*0.12);
+          rr(qx-slotW*0.35,TY-TW/2,slotW*0.7,6,2);
+          ctx.fillStyle=`rgba(239,68,68,${alpha})`;ctx.fill();
+          ctx.strokeStyle=`rgba(248,113,113,${alpha})`;ctx.lineWidth=1;ctx.stroke();
+        }
+        ctx.fillStyle='#f87171';ctx.font='bold 7px Malgun Gothic';ctx.textAlign='center';
+        ctx.fillText(`⏸ 대기 ${qLenT}대`,tx_(bnTop)+BW/NT*0.5,TY-TW/2-4);
+      }
+    }
+
+    // ── 대기 구역 표시 (1공정 왼쪽) ──
+    {const qWP=waypoints[0];
+    rr(qWP.x-20,qWP.y-18,40,36,4);
+    ctx.fillStyle='rgba(8,47,73,0.85)';ctx.fill();
+    ctx.strokeStyle='#0284c7';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#38bdf8';ctx.font='bold 8px Malgun Gothic';ctx.textAlign='center';
+    ctx.fillText('대기',qWP.x,qWP.y-4);ctx.fillText('구역',qWP.x,qWP.y+7);}
+
+    // ── 다공정 작업자: 실제 지그 슬롯 기반 배치 ──
+    // 각 슬롯의 실제 지그 여부 파악 → 작업자를 실제 지그 위치에만 배치
+    const curJigIsKong=pn>0&&(advN%(pn+1))===pn;
+    // 다공정 범위(0~MN-1) 슬롯별 실제지그 여부
+    const realSlots=[]; // bIdx 오름차순
+    for(let s=0;s<MN;s++){
+      const j=((s-advN%NSLOT)+NSLOT*100)%NSLOT;
+      if(pn>0&&j%(pn+1)===pn) continue; // 공피치 제외
+      realSlots.push(s);
+    }
+    // 첫 번째 실제 지그의 realIdx를 기준으로 순차 배정 (충돌 방지)
+    const workerSlot=new Array(multiWorkers).fill(-1);
+    if(realSlots.length>0){
+      const j0=((realSlots[0]-advN%NSLOT)+NSLOT*100)%NSLOT;
+      const ri0=pn>0?j0-Math.floor(j0/(pn+1)):j0;
+      const startWi=ri0%multiWorkers;
+      realSlots.forEach((s,idx)=>{
+        const wi=(startWi+idx)%multiWorkers;
+        workerSlot[wi]=s;
+      });
+    }
+    let qOff=0;
+    for(let wi=0;wi<multiWorkers;wi++){
+      let wx,wy,lbl=`W${wi+1}`;
+      const wcolor=`hsl(${20+wi*30},85%,58%)`;
+      const s=workerSlot[wi];
+      if(s!==-1){
+        // SUB에어백: 4공정(slot3) transit 중 SUB 경유 후 5공정으로 복귀
+        // 동선: 4공정 체류 → (transit) SUB들렀다가 → 5공정 도착 → 5공정 체류 → 6공정...
+        const subSlot=subAirX!==null?3:-1;
+        if(!isTransit){
+          wx=bx(s);wy=WY_BOT; // 모든 공정 체류 시 해당 공정 위치
+        } else {
+          if(s===subSlot&&subAirX!==null){
+            // trP 0→0.25: 4공정→SUB 이동, 0.25→0.75: SUB 체류 작업, 0.75→1: SUB→5공정 이동
+            if(trP<0.25){const t2=trP/0.25;wx=bx(s)+(subAirX-bx(s))*easeIO(t2);wy=WY_BOT+(SY_W-WY_BOT)*easeIO(t2);}
+            else if(trP<0.75){wx=subAirX;wy=SY_W;}
+            else{const t2=(trP-0.75)/0.25;wx=subAirX+(bx(s+1)-subAirX)*easeIO(t2);wy=SY_W+(WY_BOT-SY_W)*easeIO(t2);}
+          }
+          else if(s===MN-1){wx=bx(s)+(queueX-bx(s))*easeIO(trP);wy=WY_BOT;} // 6공정→큐
+          else{wx=bx(s)+(bx(s+1)-bx(s))*easeIO(trP);wy=WY_BOT;}
+        }
+      } else {
+        // 큐 대기
+        wx=queueX+qOff*16;wy=WY_BOT;qOff++;
+        lbl=curJigIsKong?`W${wi+1}⏸`:`W${wi+1}`;
+      }
+      drawW(wx,wy,wcolor,lbl,20);
+    }
+    // 현재 작업 공정 하이라이트 (W1 기준)
+    {const si=advN%NWP;const wp=waypoints[si];
+    if(!wp.isSub&&wp.bIdx>=0){
+      const bx2=LX+wp.bIdx*BW/NB+1.5,bw2=BW/NB-3;
+      ctx.strokeStyle='rgba(234,88,12,0.45)';ctx.lineWidth=2;
+      rr(bx2-1,BTOP-1,bw2+2,BBOXH+2,4);ctx.stroke();}}
+
+    // 피치 구분선
+    ctx.strokeStyle='rgba(99,102,241,0.18)';ctx.lineWidth=1;ctx.setLineDash([3,4]);
+    for(let i=1;i<NB;i++){const x=LX+i*BW/NB;ctx.beginPath();ctx.moveTo(x,BTOP-1);ctx.lineTo(x,BY-1);ctx.stroke();}
+    for(let i=1;i<NT;i++){const x=RX-i*BW/NT;ctx.beginPath();ctx.moveTo(x,TY+1);ctx.lineTo(x,TTOP+TBOXH+1);ctx.stroke();}
+    ctx.setLineDash([]);
+
+    const stEl=document.getElementById('sim2dStatus');
+    if(stEl){
+      if(advN%MN>=0){const r=botRows[advN%MN];const ld=r&&pitch>0&&r.ct>0?(r.ct/pitch*100).toFixed(0)+'%':'—';stEl.textContent=`다공정: ${r?r.name:''}공정 작업중 · 부하 ${ld}`;}
+    }
+
+    _raf2d=requestAnimationFrame(frame);
+  }
+  _raf2d=requestAnimationFrame(frame);
+}
+
+/* ─── 조립3라인 이름 마이그레이션 (111/121/131… → 1공정/2공정/3공정…) ──── */
+(function migrateC3Names(){
+  const key='conv_struct_2_0';
+  const raw=localStorage.getItem(key);
+  if(!raw)return;
+  try{
+    const map={'111':'1공정','121':'2공정','131':'3공정','141':'4공정','142':'5공정','143':'6공정',
+      '151':'7공정','152':'8공정','161':'9공정','171':'10공정','181':'11공정','191':'12공정',
+      '에어백 서브1':'SUB03 에어백','센터페시아 서브1':'센터페시아 SUB'};
+    const rows=JSON.parse(raw);
+    let changed=false;
+    rows.forEach(r=>{if(map[r.name]){r.name=map[r.name];changed=true;}});
+    if(changed)localStorage.setItem(key,JSON.stringify(rows));
+  }catch(e){}
+})();
+
+/* ─── 초기화 ──────────────────────────────────── */
+buildStabs();render();loadLineData();renderMain();renderScen();calcPitch();renderCT();
+// 마지막 페이지 복원
+(function(){
+  const lv=localStorage.getItem('conv_lastView');
+  const ll=parseInt(localStorage.getItem('conv_lastLine')||'-1');
+  if(!lv||lv==='main')return;
+  if(lv==='sim'&&ll>=0){gotoSim(ll);}
+  else if(lv==='2d'){showView('2d');}
+  else{showView(lv);}
+})();
+</script>
+
+<!-- ===== 기아 인정표 C/T 계산기 모달 ===== -->
+<div class="modal-bg" id="ctcModal" onclick="if(event.target===this)closeCTCalc()">
+  <div class="modal" style="width:580px">
+    <h2>🧮 C/T 계산기 (기아 인정표)</h2>
+    <div class="msub">공정: <b id="ctcProcName"></b></div>
+    <div id="ctcFastenerNote" style="font-size:12px;color:var(--ok);background:#052e16;border:1px solid #166534;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:none"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px">
+
+      <!-- 기본 항목 -->
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">조립공정간 이동 <span style="color:var(--mut);font-size:12px">×10초</span></div>
+        <input class="dadd" type="number" id="ctcMove" min="0" value="0" oninput="calcCTC()">
+      </div>
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">포장 해체 <span style="color:var(--mut);font-size:12px">×10초</span></div>
+        <input class="dadd" type="number" id="ctcUnpack" min="0" value="0" oninput="calcCTC()">
+      </div>
+
+      <!-- 기본값 선택 -->
+      <div style="display:flex;align-items:center;gap:8px;font-size:14px">
+        <span>기본값</span>
+        <select id="ctcBase" onchange="calcCTC()" style="background:#0f1117;border:1px solid var(--bd);border-radius:6px;color:var(--ink);padding:4px 8px;font-size:13px">
+          <option value="0">없음</option>
+          <option value="5">5초 (조립류)</option>
+          <option value="10">10초 (B/BEAM 류)</option>
+          <option value="20">20초 (STEP 류)</option>
+          <option value="3">3초 (바코드)</option>
+          <option value="15">15초 (이중방지검사)</option>
+          <option value="45">45초 (검사/적재)</option>
+          <option value="10">10초 (포장해체)</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="height:1px;background:var(--bd);margin:14px 0"></div>
+
+    <!-- 수량 입력 항목 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">RUNNER수 <span style="color:var(--mut);font-size:12px">×2초</span></div>
+        <input class="dadd" type="number" id="ctcRunner" min="0" value="0" oninput="calcCTC()">
+      </div>
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">HOOK수 <span style="color:var(--mut);font-size:12px">×1.8초</span></div>
+        <input class="dadd" type="number" id="ctcHook" min="0" value="0" oninput="calcCTC()">
+      </div>
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">HW수 (너트/볼트/육각) <span style="color:var(--mut);font-size:12px">×4.5초</span></div>
+        <input class="dadd" type="number" id="ctcHW" min="0" value="0" oninput="calcCTC()">
+      </div>
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">바코드 스캔 <span style="color:var(--mut);font-size:12px">×3초</span></div>
+        <input class="dadd" type="number" id="ctcBarcode" min="0" value="0" oninput="calcCTC()">
+      </div>
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">PAS수 (BSW) <span style="color:var(--mut);font-size:12px">×5초</span></div>
+        <input class="dadd" type="number" id="ctcPasAmt" min="0" value="0" oninput="calcCTC()">
+      </div>
+
+      <!-- LIP BPR / REINF BPR -->
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">LIP수+HW수 <span style="color:var(--mut);font-size:12px">×5초</span></div>
+        <input class="dadd" type="number" id="ctcLipCnt" min="0" value="0" oninput="calcCTC()" placeholder="LIP">
+        <input class="dadd" type="number" id="ctcLipHW" min="0" value="0" oninput="calcCTC()" placeholder="HW">
+      </div>
+
+      <!-- MLDG -->
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">MLDG수+HW수 <span style="color:var(--mut);font-size:12px">×5초</span></div>
+        <input class="dadd" type="number" id="ctcMldgCnt" min="0" value="0" oninput="calcCTC()" placeholder="MLDG">
+        <input class="dadd" type="number" id="ctcMldgHW" min="0" value="0" oninput="calcCTC()" placeholder="HW">
+      </div>
+
+      <!-- WIRING -->
+      <div class="dist-row" style="border:none;padding:4px 0;flex-wrap:wrap;gap:6px">
+        <div class="dname">WIRING<br><span style="color:var(--mut);font-size:11px">5+센서×3+CLIP×1.8</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+          <span style="font-size:11px;color:var(--mut)">센서수</span>
+          <input class="dadd" type="number" id="ctcWireSensor" min="0" value="0" oninput="calcCTC()">
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+          <span style="font-size:11px;color:var(--mut)">CLIP수</span>
+          <input class="dadd" type="number" id="ctcWireClip" min="0" value="0" oninput="calcCTC()">
+        </div>
+      </div>
+
+      <!-- 전장품 TEST -->
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">전장품 TEST<br><span style="color:var(--mut);font-size:11px">3+항목×1.5초</span></div>
+        <input class="dadd" type="number" id="ctcTestItem" min="0" value="0" oninput="calcCTC()" placeholder="항목수">
+      </div>
+      <!-- 토크/임팩 검증 -->
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">토크/임팩 검증 <span style="color:var(--mut);font-size:12px">×8초</span></div>
+        <input class="dadd" type="number" id="ctcTorque" min="0" value="0" oninput="calcCTC()">
+      </div>
+    </div>
+
+    <div style="height:1px;background:var(--bd);margin:14px 0"></div>
+
+    <!-- PAD / BRKT / H-LOGO -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+
+      <div>
+        <div style="font-size:12px;color:var(--mut);margin-bottom:6px">PAD 부착</div>
+        <select id="ctcPadType" onchange="calcCTC()" style="background:#0f1117;border:1px solid var(--bd);border-radius:6px;color:var(--ink);padding:4px 8px;font-size:13px;width:100%;margin-bottom:6px">
+          <option value="cnt">개수 기준 (4+3×(PAD수-1))</option>
+          <option value="len">길이 기준 (4+0.01×길이mm)</option>
+        </select>
+        <input class="dadd" type="number" id="ctcPadCnt" min="0" value="0" oninput="calcCTC()" placeholder="PAD 개수" style="width:48%">
+        <input class="dadd" type="number" id="ctcPadLen" min="0" value="0" oninput="calcCTC()" placeholder="PAD 길이(mm)" style="width:48%">
+      </div>
+
+      <div>
+        <div style="font-size:12px;color:var(--mut);margin-bottom:6px">BRKT/리플렉터 조립</div>
+        <select id="ctcBrktType" onchange="calcCTC()" style="background:#0f1117;border:1px solid var(--bd);border-radius:6px;color:var(--ink);padding:4px 8px;font-size:13px;width:100%;margin-bottom:6px">
+          <option value="screw">T/SCREW (4.5×BRKT+4.5×HW)</option>
+          <option value="ribet">RIBET (4.5×BRKT+3×HW)</option>
+        </select>
+        <input class="dadd" type="number" id="ctcBrktCnt" min="0" value="0" oninput="calcCTC()" placeholder="BRKT수" style="width:48%">
+        <input class="dadd" type="number" id="ctcBrktHW" min="0" value="0" oninput="calcCTC()" placeholder="HW수" style="width:48%">
+      </div>
+
+    </div>
+
+    <!-- 결과 -->
+    <div class="dist-total" style="margin-top:18px">
+      <span style="font-size:15px;font-weight:700">계산 결과</span>
+      <b id="ctcResult" style="font-size:24px;color:var(--ok)">0.0초</b>
+    </div>
+    <input type="hidden" id="ctcResultVal" value="0">
+
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn sml" onclick="saveFormula()" style="background:#1e3a5f;border-color:#1e3a5f;color:#93c5fd">💾 수식 저장</button>
+      <span id="ctcSaveNote" style="font-size:12px;color:var(--ok)"></span>
+      <button class="btn sml pri" onclick="applyCTC()">✅ C/T 적용</button>
+      <button class="btn sml warn" onclick="closeCTCalc()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 3라인 C/T 계산기 모달 ===== -->
+<div class="modal-bg" id="ctcModal3" onclick="if(event.target===this)closeCTCalc3()">
+  <div class="modal" style="width:600px">
+    <h2>🧮 C/T 계산기 (조립 3라인)</h2>
+    <div class="msub">공정: <b id="ctcProcName3"></b></div>
+    <div id="ctcFastenerNote3" style="font-size:12px;color:var(--ok);background:#052e16;border:1px solid #166534;border-radius:8px;padding:6px 10px;margin-bottom:10px;display:none"></div>
+
+    <!-- 공통 기본 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px">
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">조립공정간 이동 <span style="color:var(--mut);font-size:12px">×10초</span></div>
+        <input class="dadd" type="number" id="ctcMove3" min="0" value="0" oninput="calcCTC3()">
+      </div>
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">포장 해체 <span style="color:var(--mut);font-size:12px">×10초</span></div>
+        <input class="dadd" type="number" id="ctcUnpack3" min="0" value="0" oninput="calcCTC3()">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:14px">
+        <span>기본값</span>
+        <select id="ctcBase3" onchange="calcCTC3()" style="background:#0f1117;border:1px solid var(--bd);border-radius:6px;color:var(--ink);padding:4px 8px;font-size:13px">
+          <option value="0">없음</option>
+          <option value="5">5초 (조립류)</option>
+          <option value="10">10초 (B/BEAM 류)</option>
+          <option value="20">20초 (STEP 류)</option>
+          <option value="3">3초 (바코드)</option>
+          <option value="15">15초 (이중방지검사)</option>
+          <option value="45">45초 (검사/적재)</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="height:1px;background:var(--bd);margin:12px 0"></div>
+
+    <!-- 수량 항목 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">단품 갯수 <span style="color:var(--mut);font-size:12px">×6초</span></div>
+        <input class="dadd" type="number" id="ctcDanpum" min="0" value="0" oninput="calcCTC3()">
+      </div>
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">하네스 <span style="color:var(--mut);font-size:12px">×6초</span></div>
+        <input class="dadd" type="number" id="ctcHarness" min="0" value="0" oninput="calcCTC3()">
+      </div>
+
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">HOOK수 <span style="color:var(--mut);font-size:12px">×1.8초</span></div>
+        <input class="dadd" type="number" id="ctcHook3" min="0" value="0" oninput="calcCTC3()">
+      </div>
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">바코드 스캔 <span style="color:var(--mut);font-size:12px">×3초</span></div>
+        <input class="dadd" type="number" id="ctcBarcode3" min="0" value="0" oninput="calcCTC3()">
+      </div>
+
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">동선 <span style="color:var(--mut);font-size:12px">×5초</span></div>
+        <input class="dadd" type="number" id="ctcDong" min="0" value="0" oninput="calcCTC3()">
+      </div>
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">에어백/C-PAD 작업 <span style="color:var(--mut);font-size:12px">×10초</span></div>
+        <input class="dadd" type="number" id="ctcAirbag" min="0" value="0" oninput="calcCTC3()">
+      </div>
+
+      <!-- WIRING -->
+      <div class="dist-row" style="border:none;padding:4px 0;flex-wrap:wrap;gap:6px">
+        <div class="dname">WIRING<br><span style="color:var(--mut);font-size:11px">5+센서×3+CLIP×1.8</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+          <span style="font-size:11px;color:var(--mut)">센서수</span>
+          <input class="dadd" type="number" id="ctcWireSensor3" min="0" value="0" oninput="calcCTC3()">
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+          <span style="font-size:11px;color:var(--mut)">CLIP수</span>
+          <input class="dadd" type="number" id="ctcWireClip3" min="0" value="0" oninput="calcCTC3()">
+        </div>
+      </div>
+
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">전장품 TEST<br><span style="color:var(--mut);font-size:11px">3+항목×1.5초</span></div>
+        <input class="dadd" type="number" id="ctcTestItem3" min="0" value="0" oninput="calcCTC3()" placeholder="항목수">
+      </div>
+      <div class="dist-row" style="border:none;padding:4px 0">
+        <div class="dname">토크/임팩 검증 <span style="color:var(--mut);font-size:12px">×8초</span></div>
+        <input class="dadd" type="number" id="ctcTorque3" min="0" value="0" oninput="calcCTC3()">
+      </div>
+    </div>
+
+    <div style="height:1px;background:var(--bd);margin:12px 0"></div>
+
+    <!-- 체결수량 -->
+    <div style="font-size:12px;color:var(--mut);margin-bottom:8px">체결수량 <span style="color:var(--mut);font-size:11px">×4.5초/개</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:14px;width:60px">너트</span>
+        <input class="dadd" type="number" id="ctcNut" min="0" value="0" oninput="calcCTC3()" style="width:100px;text-align:right">
+        <span style="font-size:13px;color:var(--mut)">EA</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:14px;width:60px">스크류</span>
+        <input class="dadd" type="number" id="ctcScrew" min="0" value="0" oninput="calcCTC3()" style="width:100px;text-align:right">
+        <span style="font-size:13px;color:var(--mut)">EA</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:14px;width:60px">S육각</span>
+        <input class="dadd" type="number" id="ctcShex" min="0" value="0" oninput="calcCTC3()" style="width:100px;text-align:right">
+        <span style="font-size:13px;color:var(--mut)">EA</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:14px;width:60px">B육각</span>
+        <input class="dadd" type="number" id="ctcBhex" min="0" value="0" oninput="calcCTC3()" style="width:100px;text-align:right">
+        <span style="font-size:13px;color:var(--mut)">EA</span>
+      </div>
+    </div>
+
+    <div style="height:1px;background:var(--bd);margin:12px 0"></div>
+
+    <!-- PAD / BRKT / MLDG -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div>
+        <div style="font-size:12px;color:var(--mut);margin-bottom:6px">PAD 부착</div>
+        <select id="ctcPadType3" onchange="calcCTC3()" style="background:#0f1117;border:1px solid var(--bd);border-radius:6px;color:var(--ink);padding:4px 8px;font-size:12px;width:100%;margin-bottom:6px">
+          <option value="cnt">개수 기준 (4+3×(PAD수-1))</option>
+          <option value="len">길이 기준 (4+0.01×길이mm)</option>
+        </select>
+        <input class="dadd" type="number" id="ctcPadCnt3" min="0" value="0" oninput="calcCTC3()" placeholder="PAD 개수" style="width:48%">
+        <input class="dadd" type="number" id="ctcPadLen3" min="0" value="0" oninput="calcCTC3()" placeholder="길이(mm)" style="width:48%">
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--mut);margin-bottom:6px">BRKT/리플렉터 조립</div>
+        <select id="ctcBrktType3" onchange="calcCTC3()" style="background:#0f1117;border:1px solid var(--bd);border-radius:6px;color:var(--ink);padding:4px 8px;font-size:12px;width:100%;margin-bottom:6px">
+          <option value="screw">T/SCREW (4.5×BRKT+4.5×HW)</option>
+          <option value="ribet">RIBET (4.5×BRKT+3×HW)</option>
+        </select>
+        <input class="dadd" type="number" id="ctcBrktCnt3" min="0" value="0" oninput="calcCTC3()" placeholder="BRKT수" style="width:48%">
+        <input class="dadd" type="number" id="ctcBrktHW3" min="0" value="0" oninput="calcCTC3()" placeholder="HW수" style="width:48%">
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--mut);margin-bottom:6px">MLDG수+HW수 <span style="color:var(--mut);font-size:11px">×5초</span></div>
+        <input class="dadd" type="number" id="ctcMldgCnt3" min="0" value="0" oninput="calcCTC3()" placeholder="MLDG" style="width:48%">
+        <input class="dadd" type="number" id="ctcMldgHW3" min="0" value="0" oninput="calcCTC3()" placeholder="HW" style="width:48%">
+      </div>
+    </div>
+
+    <!-- 결과 -->
+    <div class="dist-total" style="margin-top:18px">
+      <span style="font-size:15px;font-weight:700">계산 결과</span>
+      <b id="ctcResult3" style="font-size:24px;color:var(--ok)">0.0초</b>
+    </div>
+    <input type="hidden" id="ctcResultVal3" value="0">
+
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn sml" onclick="saveFormula3()" style="background:#1e3a5f;border-color:#1e3a5f;color:#93c5fd">💾 수식 저장</button>
+      <span id="ctcSaveNote3" style="font-size:12px;color:var(--ok)"></span>
+      <button class="btn sml pri" onclick="applyCTC3()">✅ C/T 적용</button>
+      <button class="btn sml warn" onclick="closeCTCalc3()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 공수 배분 모달 ===== -->
+<div class="modal-bg" id="distModal" onclick="if(event.target===this)closeDist()">
+  <div class="modal">
+    <h2>🔀 공수 재배분</h2>
+    <div class="msub">
+      <b id="distSrcName"></b> 공정의 C/T
+      <b id="distSrcCT" style="color:var(--ok)"></b>를 다른 공정에 배분합니다.
+    </div>
+    <div class="dist-total">
+      <span>배분 잔여</span>
+      <b id="distRemain" style="color:var(--warn)">0.0초</b>
+    </div>
+    <div id="distList"></div>
+    <div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end">
+      <button class="btn sml" onclick="distEven()">균등 배분</button>
+      <button class="btn sml pri" onclick="applyDist()">적용</button>
+      <button class="btn sml warn" onclick="closeDist()">취소</button>
+    </div>
+  </div>
+</div>
+<div id="floatSave" style="display:none;position:fixed;bottom:24px;right:24px;z-index:9999">
+  <button onclick="saveAllRows()" style="background:#7c3aed;border:2px solid #a855f7;color:#fff;font-weight:700;font-size:15px;padding:12px 22px;border-radius:12px;cursor:pointer;box-shadow:0 4px 20px rgba(124,58,237,0.6)">💾 행 저장</button>
+</div>
+<script>
+/* ===== OneDrive 자동 백업 ===== */
+(async()=>{
+  const FILE='conveyor_backup.json';
+  const IDB='cams_od_v1';
+  const CONV_KEYS=()=>{const r={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('conv_'))r[k]=localStorage.getItem(k);}return r;};
+  async function _db(){return new Promise(r=>{const q=indexedDB.open(IDB,1);q.onupgradeneeded=e=>e.target.result.createObjectStore('h');q.onsuccess=e=>r(e.target.result);});}
+  async function _get(){const db=await _db();return new Promise(r=>{const t=db.transaction('h','readonly');const q=t.objectStore('h').get('dir');q.onsuccess=()=>r(q.result||null);});}
+  async function _put(h){const db=await _db();return new Promise(r=>{const t=db.transaction('h','readwrite');t.objectStore('h').put(h,'dir');t.oncomplete=r;});}
+  let dir=null;
+  async function checkPerm(){
+    dir=await _get();if(!dir)return false;
+    try{const p=await dir.queryPermission({mode:'readwrite'});if(p==='granted')return true;const r=await dir.requestPermission({mode:'readwrite'});return r==='granted';}
+    catch(e){dir=null;return false;}
+  }
+  let _saving=false;
+  async function odSave(){
+    if(!dir||_saving)return;_saving=true;
+    try{const fh=await dir.getFileHandle(FILE,{create:true});const w=await fh.createWritable();await w.write(JSON.stringify(CONV_KEYS()));await w.close();}catch(e){}
+    _saving=false;
+  }
+  async function odLoad(){if(!dir)return null;try{const fh=await dir.getFileHandle(FILE);return JSON.parse(await(await fh.getFile()).text());}catch(e){return null;}}
+
+  const btn=document.createElement('button');
+  btn.style.cssText='position:fixed;bottom:64px;right:24px;z-index:9999;padding:6px 14px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;color:#fff;';
+  document.body.appendChild(btn);
+
+  const ok=await checkPerm();
+  btn.textContent=ok?'☁️ OneDrive 연결됨':'☁️ OneDrive 연결';
+  btn.style.background=ok?'#1a7f37':'#555';
+
+  btn.onclick=async()=>{
+    try{dir=await showDirectoryPicker({mode:'readwrite'});await _put(dir);btn.textContent='☁️ OneDrive 연결됨';btn.style.background='#1a7f37';await odSave();}
+    catch(e){}
+  };
+
+  if(ok){
+    const saved=await odLoad();
+    if(saved){
+      Object.entries(saved).forEach(([k,v])=>localStorage.setItem(k,v));
+      if(typeof loadLineData==='function')loadLineData();
+      if(typeof render==='function')render();
+      if(typeof renderScenarios==='function')renderScenarios();
+    }
+  }
+
+  const _origSet=localStorage.setItem.bind(localStorage);
+  localStorage.setItem=function(k,v){_origSet(k,v);if(k&&k.startsWith('conv_'))odSave();};
+})();
+</script>
+</body>
+</html>
