@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>범퍼 조립 토크 측정</title>
+<style>
+  :root{
+    --bd:#b9c0cc; --hd:#e9edf3; --hd2:#dfe5ee; --blue:#1d4ed8;
+    --ok:#15803d; --okbg:#dcfce7; --ng:#b91c1c; --ngbg:#fee2e2;
+    --mut:#6b7280;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"맑은 고딕","Malgun Gothic",system-ui,sans-serif;background:#f3f4f6;color:#111;font-size:15px}
+  .wrap{max-width:1400px;margin:0 auto;padding:10px 10px 60px}
+  h1{font-size:20px;margin:6px 0 12px;display:flex;align-items:center;gap:8px}
+  h1::before{content:"■";color:#111}
+
+  /* 탭 */
+  .tabs{display:flex;gap:6px;margin-bottom:10px}
+  .tab{flex:1;padding:12px;border:1px solid var(--bd);background:#fff;border-radius:10px;
+       font-size:17px;font-weight:700;cursor:pointer;text-align:center;color:#374151}
+  .tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+  /* 상단 바 */
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#fff;border:1px solid var(--bd);
+       border-radius:10px;padding:10px;margin-bottom:10px}
+  .bar label{font-weight:700;color:#374151}
+  .bar input,.bar select{padding:8px;border:1px solid var(--bd);border-radius:8px;font-size:15px}
+  .date-in{width:64px;text-align:center}
+  .grow{flex:1}
+  .btn{padding:9px 14px;border:1px solid var(--bd);border-radius:8px;background:#fff;cursor:pointer;
+       font-size:14px;font-weight:600;color:#374151}
+  .btn.pri{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .btn.warn{background:#fff;color:var(--ng);border-color:#f3b4b4}
+
+  .hint{font-size:13px;color:var(--mut);margin:2px 0 10px;line-height:1.5}
+
+  /* 섹션 */
+  .sec{background:#fff;border:1px solid var(--bd);border-radius:10px;margin-bottom:12px;overflow:hidden}
+  .sec-h{background:var(--hd);padding:8px 12px;font-weight:800;font-size:16px;border-bottom:1px solid var(--bd);
+         display:flex;align-items:center;gap:10px}
+  .sec-h .stat{font-size:13px;font-weight:600;color:var(--mut)}
+  .scroll{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;min-width:760px}
+  th,td{border:1px solid var(--bd);padding:0;text-align:center;height:46px}
+  .rowlab{background:var(--hd2);font-weight:700;width:62px;position:sticky;left:0;z-index:2}
+  th{background:var(--hd2);font-weight:700;font-size:15px}
+  td input{width:100%;height:100%;border:0;text-align:center;font-size:15px;background:transparent;outline:none}
+  td input:focus{background:#eef4ff}
+  .base-in{color:#374151}
+  .meas-in{font-weight:700;font-size:16px}
+  td.has{background:#fff}
+  td.off{background:#f1f3f6}
+  td.off input{background:#f1f3f6}
+  td.ok{background:var(--okbg)} td.ok .meas-in{color:var(--ok)}
+  td.ng{background:var(--ngbg)} td.ng .meas-in{color:var(--ng)}
+  .unit{font-size:12px;color:var(--mut)}
+
+  .save-note{font-size:13px;color:var(--mut)}
+  .save-note b{color:var(--ok)}
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:60;align-items:flex-start;justify-content:center;padding:18px;overflow:auto}
+  .modal-box{background:#fff;border-radius:12px;max-width:1200px;width:100%;padding:14px}
+  .modal-head{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:800;margin-bottom:10px}
+  .hist-line{font-weight:800;margin:14px 0 6px;color:var(--blue);font-size:16px}
+  .hist-item{display:flex;align-items:center;gap:8px;padding:13px;border:1px solid var(--bd);border-radius:8px;margin-bottom:6px;cursor:pointer}
+  .hist-item:hover{background:#eef4ff}
+  .rep-head{font-size:16px;font-weight:700;margin:10px 0}
+  .rep-sec{margin-bottom:10px}
+  .rep-sech{background:var(--hd);font-weight:800;padding:6px 10px;border:1px solid var(--bd);border-bottom:0}
+  .rep-area td.ok{background:var(--okbg);color:var(--ok);font-weight:700}
+  .rep-area td.ng{background:var(--ngbg);color:var(--ng);font-weight:700}
+  .rep-tools{display:flex;gap:8px;margin-bottom:10px}
+  @media (max-width:560px){
+    body{font-size:14px}
+    .bar{gap:6px}
+    h1{font-size:17px}
+  }
+  @media print{
+    body *{visibility:hidden}
+    #repArea,#repArea *{visibility:visible}
+    #repArea{position:absolute;left:0;top:0;width:100%}
+    .rep-tools,.btn{display:none}
+    table{min-width:0!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="title">25년 범퍼 조립 토크 측정</h1>
+
+  <div class="tabs">
+    <div class="tab active" data-line="1LINE" onclick="switchLine('1LINE')">◎ 조립 1LINE</div>
+    <div class="tab" data-line="2LINE" onclick="switchLine('2LINE')">◎ 조립 2LINE</div>
+  </div>
+
+  <div class="bar">
+    <label>측정일</label>
+    <input class="date-in" id="dy" type="number" inputmode="numeric"> 년
+    <input class="date-in" id="dm" type="number" inputmode="numeric"> 월
+    <input class="date-in" id="dd" type="number" inputmode="numeric"> 일
+    <span class="grow"></span>
+    <label>기록</label>
+    <select id="recSel" onchange="loadRecord(this.value)"></select>
+    <button class="btn" onclick="newRecord()">＋ 새 기록</button>
+  </div>
+  <div class="bar">
+    <button class="btn pri" onclick="saveNow()">💾 저장</button>
+    <button class="btn" onclick="exportCSV()">엑셀(CSV) 내보내기</button>
+    <button class="btn" onclick="exportJSON()">백업 저장</button>
+    <button class="btn" onclick="document.getElementById('imp').click()">백업 불러오기</button>
+    <input id="imp" type="file" accept=".json" style="display:none" onchange="importJSON(this.files[0])">
+    <button class="btn" onclick="openHistory()">📋 이력 보기</button>
+    <span class="grow"></span>
+    <span class="save-note" id="saveNote"></span>
+  </div>
+  <div class="hint">
+    · <b>기준값</b> 칸을 직접 고치면 됩니다(예: 13~20). 비워두면 그 위치는 측정 안 함 처리(회색).<br>
+    · <b>실측</b> 칸엔 숫자만 적으세요. kgf 단위는 자동입니다. 기준 범위 안이면 초록(OK), 벗어나면 빨강(NG).<br>
+    · 고친 내용은 자동 저장되고, <b>년/월별</b>로 따로 보관됩니다. 사진 기준 기준값은 임시값이니 실제와 맞게 수정하세요.
+  </div>
+
+  <div id="sections"></div>
+</div>
+
+<!-- 이력 보기 모달 -->
+<div id="histModal" class="modal">
+  <div class="modal-box">
+    <div class="modal-head">📋 측정 이력 <span class="grow"></span>
+      <button class="btn" onclick="closeHistory()">닫기 ✕</button></div>
+    <div id="histList"></div>
+    <div id="histDetail"></div>
+  </div>
+</div>
+
+<script>
+/* ===== 설정: 구분(측정 위치) ===== */
+const COLS = ['101','102','103','111','121','131','141','151','161','171','181','191'];
+const SUBCOLS = ['서브1','서브2','서브3','서브4'];
+
+/* ===== 사진 기준 기본 기준값(임시값, 수정 가능) ===== */
+const DEFAULT_BASE = {
+  '1LINE':{
+    FRT:{'103':'13~20','111':'13~20','121':'13~20','131':'13~20','141':'13~20','151':'13~20'},
+    SUB:{'서브1':'20~25'},
+    RR :{'102':'13~20','111':'13~20','121':'13~20','131':'13~20','161':'13~20'}
+  },
+  '2LINE':{
+    FRT:{'102':'13~20','103':'35~51','111':'13~20','121':'13~20','141':'13~20','151':'13~20','171':'13~20'},
+    SUB:{'서브1':'13~20'},
+    RR :{'102':'13~20','103':'13~20','111':'35~51','131':'13~20','141':'13~20','171':'13~20'}
+  }
+};
+
+const SECTIONS = [
+  {key:'FRT', label:'FRT', cols:COLS},
+  {key:'SUB', label:'서브', cols:SUBCOLS},
+  {key:'RR',  label:'RR',  cols:COLS},
+];
+
+const STORE_KEY = 'torque_data_v2';
+let curLine = '1LINE';
+let curRecId = '';      // 'YYYY-MM'
+let DB = load();
+
+/* ===== 저장소 ===== */
+function load(){
+  try{ const d = JSON.parse(localStorage.getItem(STORE_KEY)); if(d) return d; }catch(e){}
+  return { '1LINE':{records:{}}, '2LINE':{records:{}} };
+}
+function persist(){
+  localStorage.setItem(STORE_KEY, JSON.stringify(DB));
+  const n = document.getElementById('saveNote');
+  const t = new Date();
+  n.innerHTML = '<b>저장됨</b> · '+t.getHours()+':'+String(t.getMinutes()).padStart(2,'0');
+}
+
+function blankRecord(line){
+  // 기본 기준값 복사 + 빈 실측
+  const base = JSON.parse(JSON.stringify(DEFAULT_BASE[line]));
+  return { date:{y:'',m:'',d:''}, base, meas:{FRT:{},SUB:{},RR:{}} };
+}
+function latestRecord(line){
+  const ids = Object.keys(DB[line].records).sort();
+  return ids.length ? DB[line].records[ids[ids.length-1]] : null;
+}
+
+/* ===== 화면 전환 ===== */
+function switchLine(line){
+  curLine = line;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.line===line));
+  refreshRecSelect();
+  // 가장 최근 기록 또는 새 기록
+  const ids = Object.keys(DB[line].records).sort();
+  if(ids.length) loadRecord(ids[ids.length-1]);
+  else newRecord(true);
+}
+
+function refreshRecSelect(){
+  const sel = document.getElementById('recSel');
+  const ids = Object.keys(DB[curLine].records).sort().reverse();
+  sel.innerHTML = ids.map(id=>`<option value="${id}">${id.replace('-','년 ')}월</option>`).join('')
+                  || '<option value="">(기록 없음)</option>';
+}
+
+function newRecord(silent){
+  const t = new Date();
+  let y = t.getFullYear(), m = t.getMonth()+1;
+  if(!silent){
+    const inp = prompt('새 기록 (년-월) 입력  예: '+y+'-'+String(m).padStart(2,'0'), y+'-'+String(m).padStart(2,'0'));
+    if(!inp) return;
+    const mt = inp.match(/(\d{4})\D+(\d{1,2})/);
+    if(!mt){ alert('형식: 2025-01'); return; }
+    y = +mt[1]; m = +mt[2];
+  }
+  const id = y+'-'+String(m).padStart(2,'0');
+  if(!DB[curLine].records[id]){
+    const rec = blankRecord(curLine);
+    // 직전 달 기준값 이어받기
+    const prev = latestRecord(curLine);
+    if(prev) rec.base = JSON.parse(JSON.stringify(prev.base));
+    rec.date = {y:String(y), m:String(m), d:''};
+    DB[curLine].records[id] = rec;
+    persist();
+  }
+  refreshRecSelect();
+  loadRecord(id);
+}
+
+function loadRecord(id){
+  if(!id || !DB[curLine].records[id]) return;
+  curRecId = id;
+  document.getElementById('recSel').value = id;
+  const rec = DB[curLine].records[id];
+  document.getElementById('dy').value = rec.date.y || id.split('-')[0];
+  document.getElementById('dm').value = rec.date.m || (+id.split('-')[1]);
+  document.getElementById('dd').value = rec.date.d || '';
+  render();
+}
+
+function cur(){ return DB[curLine].records[curRecId]; }
+
+/* ===== 렌더링 ===== */
+function render(){
+  document.getElementById('title').textContent =
+    (document.getElementById('dy').value||'').slice(2) + '년 범퍼 조립 토크 측정';
+  const rec = cur(); if(!rec) return;
+  const root = document.getElementById('sections');
+  root.innerHTML = '';
+  SECTIONS.forEach(sec=>{
+    // 서브는 기준값 있는 칸만 보이도록(보통 1개), 없으면 서브1만
+    let cols = sec.cols;
+    if(sec.key==='SUB'){
+      cols = SUBCOLS.filter(c=> (rec.base.SUB[c]!==undefined) );
+      if(!cols.length) cols = ['서브1'];
+    }
+    const div = document.createElement('div');
+    div.className='sec';
+    let okc=0, ngc=0, cnt=0;
+    let cells = cols.map(c=>{
+      const base = rec.base[sec.key][c] ?? '';
+      const meas = rec.meas[sec.key][c] ?? '';
+      const st = judge(base, meas); // '', 'ok', 'ng'
+      if(base!=='') cnt++;
+      if(st==='ok') okc++; if(st==='ng') ngc++;
+      const cls = base==='' ? 'off' : (st? st : 'has');
+      return {c, base, meas, cls};
+    });
+    div.innerHTML = `
+      <div class="sec-h">${sec.label}
+        <span class="stat">기준 ${cnt}곳 · OK ${okc} · NG ${ngc}</span></div>
+      <div class="scroll"><table>
+        <tr><td class="rowlab">구분</td>${cells.map(x=>`<th>${x.c}</th>`).join('')}</tr>
+        <tr><td class="rowlab">기준값</td>${cells.map(x=>`
+          <td class="${x.cls}"><input class="base-in" data-sec="${sec.key}" data-col="${x.c}" data-kind="base"
+              value="${x.base}" placeholder="13~20" onchange="onBase(this)"></td>`).join('')}</tr>
+        <tr><td class="rowlab">실측</td>${cells.map(x=>`
+          <td class="${x.cls}"><input class="meas-in" data-sec="${sec.key}" data-col="${x.c}" data-kind="meas"
+              type="number" inputmode="decimal" value="${x.meas}"
+              ${x.base===''?'disabled':''} onchange="onMeas(this)"></td>`).join('')}</tr>
+      </table></div>`;
+    root.appendChild(div);
+  });
+}
+
+function judge(base, meas){
+  if(base==='' || meas==='' || meas===null) return '';
+  const m = String(base).replace(/kgf/gi,'').match(/(-?\d+(?:\.\d+)?)\s*[~\-]\s*(-?\d+(?:\.\d+)?)/);
+  const v = parseFloat(meas);
+  if(isNaN(v)) return '';
+  if(!m){ // 단일 기준값이면 ±0 비교 불가 → 판정 안함
+    const single = parseFloat(String(base));
+    return isNaN(single) ? '' : (v===single?'ok':'ng');
+  }
+  const lo = Math.min(+m[1],+m[2]), hi = Math.max(+m[1],+m[2]);
+  return (v>=lo && v<=hi) ? 'ok' : 'ng';
+}
+
+/* ===== 입력 이벤트 ===== */
+function onBase(el){
+  const rec=cur(); const v=el.value.trim();
+  if(v==='') delete rec.base[el.dataset.sec][el.dataset.col];
+  else rec.base[el.dataset.sec][el.dataset.col]=v;
+  persist(); render();
+}
+function onMeas(el){
+  const rec=cur(); const v=el.value.trim();
+  if(v==='') delete rec.meas[el.dataset.sec][el.dataset.col];
+  else rec.meas[el.dataset.sec][el.dataset.col]=v;
+  persist(); render();
+}
+['dy','dm','dd'].forEach(id=>{
+  document.getElementById(id).addEventListener('change',()=>{
+    const rec=cur(); if(!rec) return;
+    rec.date={y:document.getElementById('dy').value, m:document.getElementById('dm').value, d:document.getElementById('dd').value};
+    persist(); if(id==='dy') render();
+  });
+});
+
+function saveNow(){ persist(); alert('저장되었습니다.'); }
+
+/* ===== 내보내기 ===== */
+function exportCSV(){
+  const rec=cur(); if(!rec){alert('기록 없음');return;}
+  let rows=[['라인',curLine],['측정일', `${rec.date.y}-${rec.date.m}-${rec.date.d}`],['단위','kgf'],[]];
+  SECTIONS.forEach(sec=>{
+    const cols = sec.cols.filter(c=>rec.base[sec.key][c]!==undefined);
+    if(!cols.length) return;
+    rows.push([sec.label]);
+    rows.push(['구분',...cols]);
+    rows.push(['기준값(kgf)',...cols.map(c=>rec.base[sec.key][c]||'')]);
+    rows.push(['실측(kgf)',...cols.map(c=>rec.meas[sec.key][c]||'')]);
+    rows.push(['판정',...cols.map(c=>{const s=judge(rec.base[sec.key][c],rec.meas[sec.key][c]);return s==='ok'?'OK':s==='ng'?'NG':'';})]);
+    rows.push([]);
+  });
+  const csv='﻿'+rows.map(r=>r.map(x=>`"${String(x??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  download(csv, `토크측정_${curLine}_${curRecId}.csv`, 'text/csv');
+}
+function exportJSON(){ download(JSON.stringify(DB,null,2), `토크측정_백업_${stamp()}.json`,'application/json'); }
+function importJSON(file){
+  if(!file) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ DB=JSON.parse(r.result); persist(); switchLine(curLine); alert('불러오기 완료'); }catch(e){ alert('파일 오류'); } };
+  r.readAsText(file);
+}
+function download(text,name,type){
+  const b=new Blob([text],{type}); const a=document.createElement('a');
+  a.href=URL.createObjectURL(b); a.download=name; a.click(); URL.revokeObjectURL(a.href);
+}
+function stamp(){ const t=new Date(); return t.getFullYear()+''+String(t.getMonth()+1).padStart(2,'0')+String(t.getDate()).padStart(2,'0'); }
+
+/* ===== 이력 보기 (사이트에서 과거 기록 열람) ===== */
+function countRec(rec){
+  let ok=0,ng=0,cnt=0;
+  SECTIONS.forEach(s=>Object.keys(rec.base[s.key]||{}).forEach(c=>{
+    cnt++; const st=judge(rec.base[s.key][c],rec.meas[s.key][c]); if(st==='ok')ok++; if(st==='ng')ng++;
+  }));
+  return {ok,ng,cnt};
+}
+function openHistory(){
+  let html='';
+  ['1LINE','2LINE'].forEach(line=>{
+    const ids=Object.keys(DB[line].records).sort().reverse();
+    if(!ids.length) return;
+    html+=`<div class="hist-line">◎ 조립 ${line}</div>`;
+    ids.forEach(id=>{
+      const rec=DB[line].records[id], n=countRec(rec);
+      html+=`<div class="hist-item" onclick="viewRecord('${line}','${id}')">
+        <b>${id.replace('-','년 ')}월</b>
+        <span class="unit">측정일 ${rec.date.m||'-'}/${rec.date.d||'-'}</span>
+        <span class="grow"></span>
+        <span style="color:var(--ok)">OK ${n.ok}</span> / <span style="color:var(--ng)">NG ${n.ng}</span>
+        <span class="unit">(기준 ${n.cnt}곳)</span> ›</div>`;
+    });
+  });
+  document.getElementById('histList').innerHTML = html || '<div class="hint">아직 저장된 기록이 없습니다.</div>';
+  document.getElementById('histDetail').innerHTML='';
+  document.getElementById('histList').style.display='block';
+  document.getElementById('histModal').style.display='flex';
+}
+function viewRecord(line,id){
+  document.getElementById('histList').style.display='none';
+  document.getElementById('histDetail').innerHTML=
+    `<div class="rep-tools">
+       <button class="btn" onclick="backToList()">‹ 목록</button>
+       <button class="btn pri" onclick="window.print()">🖨 인쇄 / PDF 저장</button>
+     </div>
+     <div id="repArea" class="rep-area">${buildStatic(line,id)}</div>`;
+}
+function backToList(){ document.getElementById('histDetail').innerHTML=''; document.getElementById('histList').style.display='block'; }
+function closeHistory(){ document.getElementById('histModal').style.display='none'; }
+function buildStatic(line,id){
+  const rec=DB[line].records[id]; if(!rec) return '';
+  let html=`<div class="rep-head">■ ${(rec.date.y||id.split('-')[0]).toString().slice(2)}년 범퍼 조립 토크 측정 · 조립 ${line}<br>
+    측정일 : ${rec.date.y||id.split('-')[0]}년 ${rec.date.m||(+id.split('-')[1])}월 ${rec.date.d||''}일 &nbsp;<span class="unit">(단위: kgf)</span></div>`;
+  SECTIONS.forEach(sec=>{
+    const cols=sec.cols.filter(c=>rec.base[sec.key][c]!==undefined);
+    if(!cols.length) return;
+    const cells=cols.map(c=>{ const base=rec.base[sec.key][c]||'', meas=rec.meas[sec.key][c]??'', st=judge(base,meas); return {c,base,meas,st}; });
+    html+=`<div class="rep-sec"><div class="rep-sech">${sec.label}</div><div class="scroll"><table>
+      <tr><td class="rowlab">구분</td>${cells.map(x=>`<th>${x.c}</th>`).join('')}</tr>
+      <tr><td class="rowlab">기준값</td>${cells.map(x=>`<td>${x.base?x.base+' <span class="unit">kgf</span>':''}</td>`).join('')}</tr>
+      <tr><td class="rowlab">실측</td>${cells.map(x=>`<td class="${x.st}">${x.meas!==''?x.meas+' <span class="unit">kgf</span>':''}</td>`).join('')}</tr>
+      <tr><td class="rowlab">판정</td>${cells.map(x=>`<td class="${x.st}">${x.st==='ok'?'OK':x.st==='ng'?'NG':''}</td>`).join('')}</tr>
+    </table></div></div>`;
+  });
+  return html;
+}
+
+/* ===== 시작 ===== */
+switchLine('1LINE');
+
+/* ===== OneDrive 자동 백업 ===== */
+(async()=>{
+  const FILE='torque_backup.json';
+  const IDB='cams_od_v1';
+  async function _db(){return new Promise(r=>{const q=indexedDB.open(IDB,1);q.onupgradeneeded=e=>e.target.result.createObjectStore('h');q.onsuccess=e=>r(e.target.result);});}
+  async function _get(){const db=await _db();return new Promise(r=>{const t=db.transaction('h','readonly');const q=t.objectStore('h').get('dir');q.onsuccess=()=>r(q.result||null);});}
+  async function _put(h){const db=await _db();return new Promise(r=>{const t=db.transaction('h','readwrite');t.objectStore('h').put(h,'dir');t.oncomplete=r;});}
+  let dir=null;
+  async function checkPerm(){
+    dir=await _get();if(!dir)return false;
+    try{const p=await dir.queryPermission({mode:'readwrite'});if(p==='granted')return true;const r=await dir.requestPermission({mode:'readwrite'});return r==='granted';}
+    catch(e){dir=null;return false;}
+  }
+  async function odSave(){if(!dir)return;try{const fh=await dir.getFileHandle(FILE,{create:true});const w=await fh.createWritable();await w.write(JSON.stringify(DB));await w.close();}catch(e){}}
+  async function odLoad(){if(!dir)return null;try{const fh=await dir.getFileHandle(FILE);return JSON.parse(await(await fh.getFile()).text());}catch(e){return null;}}
+
+  const btn=document.createElement('button');
+  btn.style.cssText='position:fixed;bottom:12px;right:12px;z-index:9999;padding:6px 14px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;color:#fff;';
+  document.body.appendChild(btn);
+
+  const ok=await checkPerm();
+  btn.textContent=ok?'☁️ OneDrive 연결됨':'☁️ OneDrive 연결';
+  btn.style.background=ok?'#1a7f37':'#555';
+
+  btn.onclick=async()=>{
+    try{dir=await showDirectoryPicker({mode:'readwrite'});await _put(dir);btn.textContent='☁️ OneDrive 연결됨';btn.style.background='#1a7f37';await odSave();}
+    catch(e){}
+  };
+
+  if(ok){
+    const saved=await odLoad();
+    if(saved){localStorage.setItem(STORE_KEY,JSON.stringify(saved));DB=saved;switchLine(curLine);}
+  }
+
+  const _orig=persist;
+  persist=function(){_orig();odSave();};
+})();
+
+window.addEventListener('message', e => {
+  if (!e.data || e.data.type !== 'cams_request_stat') return;
+  try {
+    const now = new Date();
+    const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    let thisMonth = 0, total = 0;
+    for (const line of Object.values(DB)) {
+      if (!line.records) continue;
+      total += Object.keys(line.records).length;
+      thisMonth += Object.keys(line.records).filter(k => k.startsWith(ym)).length;
+    }
+    window.parent.postMessage({ type: 'cams_torque_stat', thisMonth, total }, '*');
+  } catch(e) {}
+});
+</script>
+</body>
+</html>

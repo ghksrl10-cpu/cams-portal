@@ -117,6 +117,7 @@ iframe.active { display: block; }
 const BASE = 'https://ghksrl10-cpu.github.io';
 
 const TOOLS = [
+  { name: '홈',        src: 'dashboard.html', home: true },
   { name: '토크 측정',  src: BASE + '/cams-torque/' },
   { name: '토크 관리',  src: '토크관리/index.html' },
   { name: '대차 관리',  src: BASE + '/cams-cart-mgmt/' },
@@ -198,6 +199,21 @@ function activate(idx) {
   }
   doActivate(idx);
 }
+
+window.addEventListener('message', e => {
+  if (!e.data) return;
+  if (e.data.type === 'cams_goto') doActivate(e.data.idx + 1);
+  if (e.data.type === 'cams_torque_stat') {
+    const frames = content.querySelectorAll('iframe');
+    frames[0].contentWindow && frames[0].contentWindow.postMessage(e.data, '*');
+  }
+  if (e.data.type === 'cams_request_stat') {
+    const torqueFrame = content.querySelectorAll('iframe')[1];
+    if (torqueFrame && torqueFrame.src) {
+      torqueFrame.contentWindow && torqueFrame.contentWindow.postMessage({ type: 'cams_request_stat' }, '*');
+    }
+  }
+});
 
 function doActivate(idx) {
   const tabs = tabBar.querySelectorAll('.tab');
