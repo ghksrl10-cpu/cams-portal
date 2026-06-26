@@ -78,6 +78,31 @@ iframe {
 }
 
 iframe.active { display: block; }
+
+.pin-overlay {
+  position: absolute;
+  inset: 0;
+  background: #111;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  z-index: 100;
+}
+.pin-overlay h2 { color: #fff; font-size: 16px; font-weight: 500; }
+.pin-dots { display: flex; gap: 14px; }
+.pin-dot { width: 14px; height: 14px; border-radius: 50%; background: #3a3a3c; transition: background 0.15s; }
+.pin-dot.filled { background: #0a84ff; }
+.pin-pad { display: grid; grid-template-columns: repeat(3, 72px); gap: 12px; }
+.pin-btn {
+  height: 72px; border-radius: 50%; background: #2c2c2e; border: none;
+  color: #fff; font-size: 22px; font-weight: 400; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.pin-btn:active { background: #48484a; }
+.pin-btn.del { font-size: 18px; }
+.pin-err { color: #ff453a; font-size: 13px; min-height: 18px; }
 </style>
 </head>
 <body>
@@ -99,9 +124,12 @@ const TOOLS = [
   { name: '알카 KPI',  src: '알카_실적종합.html' },
   { name: 'ALC 정리',  src: 'ALC정리.html' },
   { name: '컨베어',    src: BASE + '/cams-conveyor-sim/' },
-  { name: 'PPTX 캡처', src: 'pptx캡처/index.html' },
+  { name: '업무일지',  src: '업무일지_웹.html', pin: true },
+  { name: 'PPTX 캡처', src: 'pptx캡처/index.html', pin: true },
 ];
 
+const PIN = '5270';
+const SESSION_KEY = 'cams_pin_ok';
 const tabBar = document.getElementById('tabBar');
 const content = document.getElementById('content');
 let activeIdx = 0;
@@ -120,8 +148,58 @@ TOOLS.forEach((tool, i) => {
   content.appendChild(frame);
 });
 
+function showPin(onSuccess) {
+  const ov = document.createElement('div');
+  ov.className = 'pin-overlay';
+  let entered = '';
+
+  ov.innerHTML = `
+    <h2>🔒 본인 확인</h2>
+    <div class="pin-dots">
+      ${[0,1,2,3].map(()=>`<div class="pin-dot"></div>`).join('')}
+    </div>
+    <div class="pin-err" id="pinErr"></div>
+    <div class="pin-pad">
+      ${[1,2,3,4,5,6,7,8,9,'','0','⌫'].map(k=>`<button class="pin-btn${k==='⌫'?' del':''}" data-k="${k}">${k}</button>`).join('')}
+    </div>`;
+
+  content.appendChild(ov);
+
+  function updateDots() {
+    ov.querySelectorAll('.pin-dot').forEach((d,i) => d.classList.toggle('filled', i < entered.length));
+  }
+
+  ov.addEventListener('click', e => {
+    const k = e.target.dataset.k;
+    if (k === undefined) return;
+    if (k === '⌫') { entered = entered.slice(0,-1); }
+    else if (k !== '' && entered.length < 4) { entered += k; }
+    updateDots();
+    if (entered.length === 4) {
+      if (entered === PIN) {
+        sessionStorage.setItem(SESSION_KEY, '1');
+        ov.remove();
+        onSuccess();
+      } else {
+        ov.querySelector('#pinErr').textContent = '비밀번호가 틀렸어요';
+        entered = '';
+        updateDots();
+      }
+    }
+  });
+}
+
 function activate(idx) {
   if (idx === activeIdx) return;
+  const tool = TOOLS[idx];
+  if (tool.pin && sessionStorage.getItem(SESSION_KEY) !== '1') {
+    showPin(() => doActivate(idx));
+    return;
+  }
+  doActivate(idx);
+}
+
+function doActivate(idx) {
   const tabs = tabBar.querySelectorAll('.tab');
   const frames = content.querySelectorAll('iframe');
   tabs[activeIdx].classList.remove('active');
