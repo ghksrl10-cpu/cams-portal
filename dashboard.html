@@ -5,141 +5,288 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CAMS 대시보드</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; background: #0d0d0d; font-family: 'Apple SD Gothic Neo','Noto Sans KR',-apple-system,sans-serif; color: #fff; }
-body { overflow-y: auto; }
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:#1a1c2e;font-family:'Apple SD Gothic Neo','Noto Sans KR',-apple-system,sans-serif;color:#e2e4f0;font-size:14px;}
 
-.page { max-width: 960px; margin: 0 auto; padding: 40px 32px 60px; }
-@media(max-width:600px){ .page{ padding:28px 18px 48px; } }
+/* 헤더 배너 */
+.banner{background:linear-gradient(135deg,#1e3a8a 0%,#1e40af 50%,#2563eb 100%);padding:20px 28px 22px;}
+.banner-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+.banner-title{font-size:22px;font-weight:600;color:#fff;letter-spacing:-0.5px;}
+.banner-sub{font-size:12px;color:#93c5fd;margin-top:3px;}
+.banner-date{font-size:12px;color:#93c5fd;text-align:right;}
+.banner-time{font-size:11px;color:#60a5fa;margin-top:2px;}
+.banner-stats{display:flex;gap:32px;}
+.bstat{text-align:center;}
+.bstat-num{font-size:28px;font-weight:300;color:#fff;letter-spacing:-1px;line-height:1;}
+.bstat-label{font-size:11px;color:#93c5fd;margin-top:4px;}
+.bstat-num.orange{color:#fb923c;}
+.bstat-num.green{color:#4ade80;}
+.bstat-num.red{color:#f87171;}
+@media(max-width:600px){
+  .banner-stats{gap:16px;}
+  .bstat-num{font-size:22px;}
+  .banner-title{font-size:18px;}
+}
 
-.top { margin-bottom: 36px; }
-.eyebrow { font-size:11px; color:#666; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; }
-.title { font-size:36px; font-weight:300; letter-spacing:-1.5px; line-height:1.1; }
-.date { font-size:13px; color:#555; margin-top:8px; }
-@media(max-width:600px){ .title{ font-size:28px; } }
+/* 빠른 작업 */
+.section{padding:20px 24px;}
+.sec-title{font-size:12px;font-weight:600;color:#94a3b8;letter-spacing:0.5px;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.sec-title::before{content:'';display:inline-block;width:3px;height:13px;background:#3b82f6;border-radius:2px;}
 
-.grid { display:grid; grid-template-columns:repeat(4,1fr); gap:2px; background:#1c1c1c; border-radius:20px; overflow:hidden; margin-bottom:14px; }
-@media(max-width:700px){ .grid{ grid-template-columns:repeat(2,1fr); } }
+.quick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;}
+.quick-btn{background:#252840;border:1px solid #2e3350;border-radius:10px;padding:14px 14px;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;}
+.quick-btn:hover{background:#2e3350;border-color:#3b82f6;}
+.quick-btn:active{transform:scale(0.98);}
+.quick-icon{font-size:20px;margin-bottom:8px;}
+.quick-name{font-size:13px;font-weight:500;color:#e2e4f0;}
+.quick-desc{font-size:11px;color:#64748b;margin-top:2px;}
 
-.card { background:#0d0d0d; padding:26px 22px; }
-.clabel { font-size:11px; color:#666; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:16px; }
-.cnum { font-size:52px; font-weight:200; letter-spacing:-3px; line-height:1; color:#fff; }
-.cunit { font-size:18px; color:#444; }
-.csub { font-size:12px; margin-top:12px; display:flex; align-items:center; gap:6px; }
-.dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+/* 현황 카드 */
+.status-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+@media(max-width:700px){.status-grid{grid-template-columns:repeat(2,1fr);}}
+.status-card{background:#252840;border:1px solid #2e3350;border-radius:10px;padding:16px;display:flex;justify-content:space-between;align-items:center;}
+.status-card.active{border-color:#3b82f6;}
+.sc-left{}
+.sc-label{font-size:11px;color:#64748b;margin-bottom:6px;}
+.sc-num{font-size:28px;font-weight:300;color:#fff;letter-spacing:-1px;line-height:1;}
+.sc-num span{font-size:13px;color:#64748b;margin-left:2px;}
+.sc-sub{font-size:11px;margin-top:6px;}
+.sc-icon{font-size:28px;opacity:0.4;}
 
-.green { color:#32d74b; } .dg { background:#32d74b; }
-.red   { color:#ff453a; } .dr { background:#ff453a; }
-.yellow{ color:#ffd60a; } .dy { background:#ffd60a; }
-.blue  { color:#0a84ff; } .db { background:#0a84ff; }
-.muted { color:#555; }    .dm { background:#333; }
+/* 우선처리 */
+.priority-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;}
+.pcard{background:#252840;border:1px solid #2e3350;border-radius:10px;padding:14px 16px;border-left:3px solid #3b82f6;}
+.pcard.red{border-left-color:#ef4444;}
+.pcard.yellow{border-left-color:#f59e0b;}
+.pcard.green{border-left-color:#10b981;}
+.pcard-title{font-size:12px;font-weight:600;color:#e2e4f0;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;}
+.pcard-count{font-size:20px;font-weight:300;color:#fff;}
+.pcard-status{font-size:11px;color:#64748b;margin-top:4px;}
 
-.bar { background:#0d0d0d; border-radius:20px; padding:26px 26px; margin-bottom:14px; }
-.bar-top { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; }
-.blabel { font-size:11px; color:#666; letter-spacing:1.5px; text-transform:uppercase; }
-.bnum { font-size:40px; font-weight:200; letter-spacing:-2px; line-height:1; }
-.bnum span { font-size:14px; color:#555; margin-left:3px; }
-.track { height:2px; background:#1c1c1c; border-radius:2px; overflow:hidden; }
-.fill { height:100%; border-radius:2px; transition:width 1s cubic-bezier(.4,0,.2,1); }
-.bar-foot { display:flex; justify-content:space-between; margin-top:12px; }
-.bar-foot span { font-size:12px; color:#555; }
-.bar-foot em { font-style:normal; color:#aaa; }
+/* 테이블 */
+.table-card{background:#252840;border:1px solid #2e3350;border-radius:10px;overflow:hidden;}
+.table-head{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2e3350;}
+.table-head-title{font-size:13px;font-weight:600;color:#e2e4f0;}
+.table-link{font-size:12px;color:#3b82f6;cursor:pointer;}
+table{width:100%;border-collapse:collapse;}
+th{font-size:11px;color:#64748b;font-weight:500;padding:10px 16px;text-align:left;background:#1e2035;border-bottom:1px solid #2e3350;}
+td{font-size:13px;color:#cbd5e1;padding:12px 16px;border-bottom:1px solid #1e2035;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#2a2e4a;}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;}
+.badge.blue{background:#1e3a8a;color:#60a5fa;}
+.badge.green{background:#064e3b;color:#34d399;}
+.badge.red{background:#450a0a;color:#f87171;}
+.badge.gray{background:#1e293b;color:#94a3b8;}
 
-.list { background:#0d0d0d; border-radius:20px; overflow:hidden; }
-.lhead { padding:22px 26px 12px; font-size:11px; color:#555; letter-spacing:2px; text-transform:uppercase; }
-.lgrid { display:grid; grid-template-columns:1fr 1fr; border-top:1px solid #1a1a1a; }
-@media(max-width:500px){ .lgrid{ grid-template-columns:1fr; } }
-.litem { display:flex; align-items:center; justify-content:space-between; padding:17px 26px; border-bottom:1px solid #141414; cursor:pointer; transition:background .1s; -webkit-tap-highlight-color:transparent; }
-.litem:nth-child(odd){ border-right:1px solid #141414; }
-@media(max-width:500px){ .litem:nth-child(odd){ border-right:none; } }
-.litem:hover { background:#131313; }
-.litem:active { background:#171717; }
-.lname { font-size:14px; color:#bbb; font-weight:300; }
-.litem.locked .lname { color:#0a84ff60; }
-.larrow { font-size:20px; color:#333; }
+/* 하단 카드 */
+.bottom-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+@media(max-width:600px){.bottom-grid{grid-template-columns:1fr;}}
+.bcard{background:#252840;border:1px solid #2e3350;border-radius:10px;padding:16px;}
+.bcard-title{font-size:12px;color:#64748b;margin-bottom:12px;display:flex;justify-content:space-between;}
+.bcard-title a{color:#3b82f6;font-size:11px;cursor:pointer;}
+.bcard-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1e2035;}
+.bcard-row:last-child{border-bottom:none;}
+.bcard-name{font-size:13px;color:#cbd5e1;}
+.bcard-val{font-size:13px;font-weight:500;}
+.bcard-val.blue{color:#60a5fa;}
+.bcard-val.green{color:#34d399;}
+.bcard-val.red{color:#f87171;}
+.bcard-val.orange{color:#fb923c;}
+
+/* 구분선 */
+.divider{height:1px;background:#1e2035;margin:0 24px;}
+
+/* 알림 */
+.alert{background:#251f1f;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:8px;}
+.alert-title{font-size:12px;color:#fbbf24;font-weight:500;}
+.alert-desc{font-size:11px;color:#92400e;margin-top:2px;}
+
+.empty{font-size:12px;color:#475569;padding:16px 0;text-align:center;}
 </style>
 </head>
 <body>
-<div class="page">
 
-  <div class="top">
-    <div class="eyebrow">CAMS · Dashboard</div>
-    <div class="title">오늘 현황</div>
-    <div class="date" id="dateStr"></div>
-  </div>
-
-  <div class="grid">
-    <div class="card">
-      <div class="clabel">토크 측정</div>
-      <div class="cnum" id="torqueNum">—</div>
-      <div class="csub muted" id="torqueSub"><span class="dot dm"></span>탭 방문 후 표시</div>
+<div class="banner">
+  <div class="banner-top">
+    <div>
+      <div class="banner-title">📊 캠스 조립 대시보드</div>
+      <div class="banner-sub">김환기 · 조립팀 담당자</div>
     </div>
-    <div class="card">
-      <div class="clabel">알카 불량</div>
-      <div class="cnum" id="alkaNum">—</div>
-      <div class="csub muted" id="alkaSub"><span class="dot dm"></span>로딩 중</div>
-    </div>
-    <div class="card">
-      <div class="clabel">업무일지</div>
-      <div class="cnum" id="jisaNum">—</div>
-      <div class="csub muted" id="jisaSub"><span class="dot dm"></span>로딩 중</div>
-    </div>
-    <div class="card">
-      <div class="clabel">이번달 입력</div>
-      <div class="cnum" id="monthNum">—</div>
-      <div class="csub muted" id="monthSub"><span class="dot dm"></span>로딩 중</div>
+    <div>
+      <div class="banner-date" id="dateStr"></div>
+      <div class="banner-time" id="timeStr"></div>
     </div>
   </div>
-
-  <div class="bar">
-    <div class="bar-top">
-      <div class="blabel">알카 월 목표 달성률</div>
-      <div class="bnum"><span id="barPct">—</span><span>%</span></div>
+  <div class="banner-stats">
+    <div class="bstat">
+      <div class="bstat-num" id="torqueTotal">—</div>
+      <div class="bstat-label">토크 누계</div>
     </div>
-    <div class="track"><div class="fill" id="barFill" style="width:0%"></div></div>
-    <div class="bar-foot">
-      <span><em id="barDone">—</em>건 완료</span>
-      <span>잔여 <em id="barLeft">—</em>건 · 목표 <em id="barTarget">155</em>건</span>
+    <div class="bstat">
+      <div class="bstat-num orange" id="alkaMonth">—</div>
+      <div class="bstat-label">알카 이번달</div>
     </div>
-  </div>
-
-  <div class="list">
-    <div class="lhead">도구 바로가기</div>
-    <div class="lgrid">
-      <div class="litem" onclick="goTool(0)"><span class="lname">토크 측정</span><span class="larrow">›</span></div>
-      <div class="litem" onclick="goTool(1)"><span class="lname">토크 관리</span><span class="larrow">›</span></div>
-      <div class="litem" onclick="goTool(2)"><span class="lname">대차 관리</span><span class="larrow">›</span></div>
-      <div class="litem" onclick="goTool(3)"><span class="lname">3정5S</span><span class="larrow">›</span></div>
-      <div class="litem" onclick="goTool(4)"><span class="lname">알카 KPI</span><span class="larrow">›</span></div>
-      <div class="litem" onclick="goTool(5)"><span class="lname">ALC 정리</span><span class="larrow">›</span></div>
-      <div class="litem" onclick="goTool(6)"><span class="lname">컨베어</span><span class="larrow">›</span></div>
-      <div class="litem" onclick="goTool(7)"><span class="lname">컨베어</span><span class="larrow">›</span></div>
-      <div class="litem locked" onclick="goTool(7)"><span class="lname">🔒 업무일지</span><span class="larrow">›</span></div>
-      <div class="litem locked" onclick="goTool(8)"><span class="lname">🔒 PPTX 캡처</span><span class="larrow">›</span></div>
+    <div class="bstat">
+      <div class="bstat-num green" id="alkaPct">—%</div>
+      <div class="bstat-label">목표 달성률</div>
+    </div>
+    <div class="bstat">
+      <div class="bstat-num" id="jisaTotal">—</div>
+      <div class="bstat-label">업무일지 누계</div>
     </div>
   </div>
-
 </div>
+
+<div class="section">
+  <div class="sec-title">빠른 이동</div>
+  <div class="quick-grid">
+    <div class="quick-btn" onclick="goTool(0)">
+      <div class="quick-icon">🔧</div>
+      <div class="quick-name">토크 측정</div>
+      <div class="quick-desc">범퍼 조립</div>
+    </div>
+    <div class="quick-btn" onclick="goTool(1)">
+      <div class="quick-icon">📋</div>
+      <div class="quick-name">토크 관리</div>
+      <div class="quick-desc">이력 조회</div>
+    </div>
+    <div class="quick-btn" onclick="goTool(2)">
+      <div class="quick-icon">🚗</div>
+      <div class="quick-name">대차 관리</div>
+      <div class="quick-desc">실시간 현황</div>
+    </div>
+    <div class="quick-btn" onclick="goTool(3)">
+      <div class="quick-icon">✅</div>
+      <div class="quick-name">3정5S</div>
+      <div class="quick-desc">체크리스트</div>
+    </div>
+    <div class="quick-btn" onclick="goTool(4)">
+      <div class="quick-icon">📊</div>
+      <div class="quick-name">알카 KPI</div>
+      <div class="quick-desc">실적 종합</div>
+    </div>
+    <div class="quick-btn" onclick="goTool(5)">
+      <div class="quick-icon">📁</div>
+      <div class="quick-name">ALC 정리</div>
+      <div class="quick-desc">파일 정리</div>
+    </div>
+    <div class="quick-btn" onclick="goTool(6)">
+      <div class="quick-icon">🏭</div>
+      <div class="quick-name">컨베어</div>
+      <div class="quick-desc">시뮬레이션</div>
+    </div>
+    <div class="quick-btn" onclick="goTool(7)">
+      <div class="quick-icon">🔒</div>
+      <div class="quick-name">업무일지</div>
+      <div class="quick-desc">PIN 필요</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <div class="sec-title">이번달 현황</div>
+  <div class="status-grid">
+    <div class="status-card active">
+      <div class="sc-left">
+        <div class="sc-label">토크 측정</div>
+        <div class="sc-num" id="s-torque">—</div>
+        <div class="sc-sub" id="s-torque-sub" style="color:#64748b">탭 방문 후 표시</div>
+      </div>
+      <div class="sc-icon">🔧</div>
+    </div>
+    <div class="status-card">
+      <div class="sc-left">
+        <div class="sc-label">알카 불량</div>
+        <div class="sc-num" id="s-alka">—</div>
+        <div class="sc-sub" id="s-alka-sub" style="color:#64748b">로딩 중</div>
+      </div>
+      <div class="sc-icon">⚠️</div>
+    </div>
+    <div class="status-card">
+      <div class="sc-left">
+        <div class="sc-label">업무일지 오늘</div>
+        <div class="sc-num" id="s-jisa">—</div>
+        <div class="sc-sub" id="s-jisa-sub" style="color:#64748b">로딩 중</div>
+      </div>
+      <div class="sc-icon">📝</div>
+    </div>
+    <div class="status-card">
+      <div class="sc-left">
+        <div class="sc-label">목표 달성</div>
+        <div class="sc-num" id="s-pct">—<span>%</span></div>
+        <div class="sc-sub" id="s-pct-sub" style="color:#64748b">로딩 중</div>
+      </div>
+      <div class="sc-icon">🎯</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <div class="sec-title">알카 불량 현황</div>
+  <div class="table-card">
+    <div class="table-head">
+      <div class="table-head-title">이번달 불량 목록</div>
+      <div class="table-link" onclick="goTool(4)">전체 보기 →</div>
+    </div>
+    <div id="alkaTable">
+      <div class="empty">알카 KPI 탭 방문 후 데이터가 표시됩니다</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="section">
+  <div class="sec-title">업무일지 최근 기록</div>
+  <div class="table-card">
+    <div class="table-head">
+      <div class="table-head-title">최근 업무 이력</div>
+      <div class="table-link" onclick="goTool(7)">전체 보기 →</div>
+    </div>
+    <div id="jisaTable">
+      <div class="empty">업무일지 탭 방문 후 데이터가 표시됩니다</div>
+    </div>
+  </div>
+</div>
+
+<div style="height:32px"></div>
+
 <script>
 function goTool(idx){ window.parent.postMessage({type:'cams_goto',idx},'*'); }
 
 window.addEventListener('message',e=>{
   if(e.data&&e.data.type==='cams_torque_stat'){
-    document.getElementById('torqueNum').textContent=e.data.thisMonth;
-    document.getElementById('torqueSub').innerHTML=`<span class="dot db"></span><span class="blue">누계 ${e.data.total}건</span>`;
+    const{thisMonth,total}=e.data;
+    document.getElementById('torqueTotal').textContent=total;
+    document.getElementById('s-torque').textContent=thisMonth;
+    document.getElementById('s-torque-sub').textContent='이번달 측정';
+    document.getElementById('s-torque-sub').style.color='#60a5fa';
   }
 });
 
 function pad(n){return String(n).padStart(2,'0');}
 
-function init(){
+function tick(){
   const now=new Date();
   const days=['일','월','화','수','목','금','토'];
   document.getElementById('dateStr').textContent=
     `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${days[now.getDay()]}요일`;
+  document.getElementById('timeStr').textContent=
+    `현재 시간 ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+}
+
+function init(){
+  tick();
+  const now=new Date();
   const ym=`${now.getFullYear()}-${pad(now.getMonth()+1)}`;
   const today=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
 
+  // 알카
   try{
     const alka=JSON.parse(localStorage.getItem('alka_db_v1')||'null');
     if(alka&&alka.months){
@@ -148,42 +295,60 @@ function init(){
       const target=alka.targetCount||155;
       const done=mr.length;
       const pct=Math.round(done/target*100);
-      document.getElementById('alkaNum').textContent=done;
-      document.getElementById('alkaSub').innerHTML=done===0
-        ?`<span class="dot dg"></span><span class="green">이번달 없음</span>`
-        :done>=15?`<span class="dot dr"></span><span class="red">누계 ${all.length}건</span>`
-        :`<span class="dot dy"></span><span class="yellow">누계 ${all.length}건</span>`;
-      document.getElementById('monthNum').textContent=done;
-      document.getElementById('monthSub').innerHTML=`<span class="dot dm"></span><span class="muted">목표 ${target}건 중</span>`;
-      document.getElementById('barPct').textContent=pct;
-      document.getElementById('barDone').textContent=done;
-      document.getElementById('barLeft').textContent=Math.max(0,target-done);
-      document.getElementById('barTarget').textContent=target;
-      setTimeout(()=>{
-        const f=document.getElementById('barFill');
-        f.style.width=Math.min(pct,100)+'%';
-        f.style.background=pct>=80?'#32d74b':pct>=50?'#0a84ff':'#ffd60a';
-      },150);
-    } else {
-      ['alkaSub','monthSub'].forEach(id=>{
-        document.getElementById(id).innerHTML=`<span class="dot dm"></span><span class="muted">알카탭 방문 후 표시</span>`;
-      });
+
+      document.getElementById('alkaMonth').textContent=done;
+      document.getElementById('alkaPct').textContent=pct+'%';
+      document.getElementById('s-alka').textContent=done;
+      document.getElementById('s-alka-sub').textContent=`누계 ${all.length}건`;
+      document.getElementById('s-alka-sub').style.color=done>=15?'#f87171':done>=8?'#fbbf24':'#34d399';
+      document.getElementById('s-pct').textContent=pct;
+      document.getElementById('s-pct-sub').textContent=`${done}/${target}건`;
+      document.getElementById('s-pct-sub').style.color=pct>=80?'#34d399':pct>=50?'#60a5fa':'#fbbf24';
+
+      // 알카 테이블
+      if(mr.length>0){
+        const rows=mr.slice(-8).reverse().map(r=>{
+          const loc=r['발생위치']||r['위치']||'-';
+          const part=r['부품명']||r['단품']||'-';
+          const blame=r['귀책']||'-';
+          const bclass=blame==='캠스'?'red':blame==='기아'?'blue':'gray';
+          return`<tr><td>${loc}</td><td>${part}</td><td><span class="badge ${bclass}">${blame}</span></td></tr>`;
+        }).join('');
+        document.getElementById('alkaTable').innerHTML=
+          `<table><thead><tr><th>발생위치</th><th>부품명</th><th>귀책</th></tr></thead><tbody>${rows}</tbody></table>`;
+      } else {
+        document.getElementById('alkaTable').innerHTML='<div class="empty">이번달 불량 없음 ✓</div>';
+      }
     }
   }catch(e){}
 
+  // 업무일지
   try{
     const jisa=JSON.parse(localStorage.getItem('jisa_history_v1')||'[]');
-    const ti=jisa.filter(r=>r.date===today).reduce((s,r)=>s+(r.items?r.items.length:0),0);
+    const todayItems=jisa.filter(r=>r.date===today).reduce((s,r)=>s+(r.items?r.items.length:0),0);
     const total=jisa.reduce((s,r)=>s+(r.items?r.items.length:0),0);
-    document.getElementById('jisaNum').textContent=ti;
-    document.getElementById('jisaSub').innerHTML=ti>0
-      ?`<span class="dot db"></span><span class="blue">누계 ${total}건</span>`
-      :`<span class="dot dm"></span><span class="muted">오늘 없음</span>`;
+    document.getElementById('jisaTotal').textContent=total;
+    document.getElementById('s-jisa').textContent=todayItems;
+    document.getElementById('s-jisa-sub').textContent=todayItems>0?`누계 ${total}건`:'오늘 없음';
+    document.getElementById('s-jisa-sub').style.color=todayItems>0?'#60a5fa':'#64748b';
+
+    // 업무일지 테이블
+    const recent=jisa.slice(-5).reverse();
+    if(recent.length>0){
+      const rows=recent.map(r=>{
+        const cnt=r.items?r.items.length:0;
+        return`<tr><td>${r.date||'-'}</td><td>${cnt}건</td><td><span class="badge blue">${r.src==='daily'?'일지':'수동'}</span></td></tr>`;
+      }).join('');
+      document.getElementById('jisaTable').innerHTML=
+        `<table><thead><tr><th>날짜</th><th>건수</th><th>유형</th></tr></thead><tbody>${rows}</tbody></table>`;
+    }
   }catch(e){}
 
   window.parent.postMessage({type:'cams_request_stat',tool:'torque'},'*');
 }
+
 init();
+setInterval(tick,30000);
 setInterval(init,60000);
 </script>
 </body>
