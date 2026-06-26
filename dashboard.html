@@ -6,395 +6,185 @@
 <title>CAMS 대시보드</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-
-html, body {
-  height: 100%;
-  background: #0a0a0a;
-  font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
-  color: #fff;
-  overflow-x: hidden;
-}
-
+html, body { height: 100%; background: #0d0d0d; font-family: 'Apple SD Gothic Neo','Noto Sans KR',-apple-system,sans-serif; color: #fff; }
 body { overflow-y: auto; }
 
-.page {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 40px 32px 60px;
-}
+.page { max-width: 960px; margin: 0 auto; padding: 40px 32px 60px; }
+@media(max-width:600px){ .page{ padding:28px 18px 48px; } }
 
-@media (max-width: 600px) {
-  .page { padding: 28px 18px 48px; }
-}
+.top { margin-bottom: 36px; }
+.eyebrow { font-size:11px; color:#666; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; }
+.title { font-size:36px; font-weight:300; letter-spacing:-1.5px; line-height:1.1; }
+.date { font-size:13px; color:#555; margin-top:8px; }
+@media(max-width:600px){ .title{ font-size:28px; } }
 
-.top {
-  margin-bottom: 36px;
-}
-.top-eyebrow {
-  font-size: 11px;
-  color: #ffffff20;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  margin-bottom: 10px;
-}
-.top-title {
-  font-size: 36px;
-  font-weight: 300;
-  letter-spacing: -1.5px;
-  line-height: 1.1;
-  color: #fff;
-}
-.top-date {
-  font-size: 14px;
-  color: #ffffff30;
-  margin-top: 8px;
-  font-weight: 300;
-}
+.grid { display:grid; grid-template-columns:repeat(4,1fr); gap:2px; background:#1c1c1c; border-radius:20px; overflow:hidden; margin-bottom:14px; }
+@media(max-width:700px){ .grid{ grid-template-columns:repeat(2,1fr); } }
 
-@media (max-width: 600px) {
-  .top-title { font-size: 28px; }
-}
+.card { background:#0d0d0d; padding:26px 22px; }
+.clabel { font-size:11px; color:#666; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:16px; }
+.cnum { font-size:52px; font-weight:200; letter-spacing:-3px; line-height:1; color:#fff; }
+.cunit { font-size:18px; color:#444; }
+.csub { font-size:12px; margin-top:12px; display:flex; align-items:center; gap:6px; }
+.dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
 
-/* 카드 그리드 */
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 2px;
-  background: #1a1a1a;
-  border-radius: 20px;
-  overflow: hidden;
-  margin-bottom: 16px;
-}
+.green { color:#32d74b; } .dg { background:#32d74b; }
+.red   { color:#ff453a; } .dr { background:#ff453a; }
+.yellow{ color:#ffd60a; } .dy { background:#ffd60a; }
+.blue  { color:#0a84ff; } .db { background:#0a84ff; }
+.muted { color:#555; }    .dm { background:#333; }
 
-@media (max-width: 700px) {
-  .stat-grid { grid-template-columns: repeat(2, 1fr); }
-}
+.bar { background:#0d0d0d; border-radius:20px; padding:26px 26px; margin-bottom:14px; }
+.bar-top { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; }
+.blabel { font-size:11px; color:#666; letter-spacing:1.5px; text-transform:uppercase; }
+.bnum { font-size:40px; font-weight:200; letter-spacing:-2px; line-height:1; }
+.bnum span { font-size:14px; color:#555; margin-left:3px; }
+.track { height:2px; background:#1c1c1c; border-radius:2px; overflow:hidden; }
+.fill { height:100%; border-radius:2px; transition:width 1s cubic-bezier(.4,0,.2,1); }
+.bar-foot { display:flex; justify-content:space-between; margin-top:12px; }
+.bar-foot span { font-size:12px; color:#555; }
+.bar-foot em { font-style:normal; color:#aaa; }
 
-.stat-card {
-  background: #0f0f0f;
-  padding: 28px 24px;
-}
-
-.stat-label {
-  font-size: 11px;
-  color: #ffffff25;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  margin-bottom: 18px;
-}
-
-.stat-num {
-  font-size: 56px;
-  font-weight: 200;
-  letter-spacing: -4px;
-  line-height: 1;
-  color: #fff;
-}
-
-.stat-unit {
-  font-size: 20px;
-  color: #ffffff20;
-  letter-spacing: 0;
-  font-weight: 300;
-}
-
-.stat-sub {
-  font-size: 12px;
-  margin-top: 14px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.green { color: #32d74b; } .dg { background: #32d74b; }
-.red   { color: #ff453a; } .dr { background: #ff453a; }
-.yellow{ color: #ffd60a; } .dy { background: #ffd60a; }
-.blue  { color: #0a84ff; } .db { background: #0a84ff; }
-.dim   { color: #ffffff25; } .dd { background: #2a2a2a; }
-
-/* 목표 바 */
-.bar-card {
-  background: #0f0f0f;
-  border-radius: 20px;
-  padding: 28px 28px;
-  margin-bottom: 16px;
-}
-
-.bar-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 20px;
-}
-
-.bar-label {
-  font-size: 11px;
-  color: #ffffff25;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-}
-
-.bar-num {
-  font-size: 40px;
-  font-weight: 200;
-  letter-spacing: -2px;
-  line-height: 1;
-}
-
-.bar-num-sub {
-  font-size: 14px;
-  color: #ffffff25;
-  margin-left: 4px;
-}
-
-.track {
-  height: 2px;
-  background: #1e1e1e;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 1s cubic-bezier(.4,0,.2,1);
-}
-
-.bar-foot {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 14px;
-}
-
-.bar-foot span {
-  font-size: 12px;
-  color: #ffffff25;
-}
-
-.bar-foot em {
-  font-style: normal;
-  color: #ffffffbb;
-}
-
-/* 바로가기 */
-.list-card {
-  background: #0f0f0f;
-  border-radius: 20px;
-  overflow: hidden;
-}
-
-.list-head {
-  padding: 22px 28px 14px;
-  font-size: 11px;
-  color: #ffffff20;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-
-.list-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  border-top: 1px solid #161616;
-}
-
-@media (max-width: 500px) {
-  .list-grid { grid-template-columns: 1fr; }
-}
-
-.list-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 28px;
-  border-bottom: 1px solid #161616;
-  cursor: pointer;
-  transition: background 0.1s;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.list-item:nth-child(odd) { border-right: 1px solid #161616; }
-
-@media (max-width: 500px) {
-  .list-item:nth-child(odd) { border-right: none; }
-}
-
-.list-item:hover { background: #141414; }
-.list-item:active { background: #181818; }
-
-.list-name {
-  font-size: 14px;
-  color: #ffffffaa;
-  font-weight: 300;
-  letter-spacing: 0.2px;
-}
-
-.list-item.locked .list-name { color: #0a84ff60; }
-
-.list-arrow {
-  font-size: 20px;
-  color: #ffffff15;
-  font-weight: 100;
-}
-
-.section-gap { margin-top: 8px; }
+.list { background:#0d0d0d; border-radius:20px; overflow:hidden; }
+.lhead { padding:22px 26px 12px; font-size:11px; color:#555; letter-spacing:2px; text-transform:uppercase; }
+.lgrid { display:grid; grid-template-columns:1fr 1fr; border-top:1px solid #1a1a1a; }
+@media(max-width:500px){ .lgrid{ grid-template-columns:1fr; } }
+.litem { display:flex; align-items:center; justify-content:space-between; padding:17px 26px; border-bottom:1px solid #141414; cursor:pointer; transition:background .1s; -webkit-tap-highlight-color:transparent; }
+.litem:nth-child(odd){ border-right:1px solid #141414; }
+@media(max-width:500px){ .litem:nth-child(odd){ border-right:none; } }
+.litem:hover { background:#131313; }
+.litem:active { background:#171717; }
+.lname { font-size:14px; color:#bbb; font-weight:300; }
+.litem.locked .lname { color:#0a84ff60; }
+.larrow { font-size:20px; color:#333; }
 </style>
 </head>
 <body>
 <div class="page">
 
   <div class="top">
-    <div class="top-eyebrow">CAMS · Dashboard</div>
-    <div class="top-title">오늘 현황</div>
-    <div class="top-date" id="dateStr"></div>
+    <div class="eyebrow">CAMS · Dashboard</div>
+    <div class="title">오늘 현황</div>
+    <div class="date" id="dateStr"></div>
   </div>
 
-  <div class="stat-grid">
-    <div class="stat-card">
-      <div class="stat-label">토크 측정</div>
-      <div class="stat-num" id="torqueNum">—</div>
-      <div class="stat-sub dim" id="torqueSub"><span class="dot dd"></span>탭 방문 후 표시</div>
+  <div class="grid">
+    <div class="card">
+      <div class="clabel">토크 측정</div>
+      <div class="cnum" id="torqueNum">—</div>
+      <div class="csub muted" id="torqueSub"><span class="dot dm"></span>탭 방문 후 표시</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-label">알카 불량</div>
-      <div class="stat-num" id="alkaNum">—</div>
-      <div class="stat-sub dim" id="alkaSub"><span class="dot dd"></span>로딩 중</div>
+    <div class="card">
+      <div class="clabel">알카 불량</div>
+      <div class="cnum" id="alkaNum">—</div>
+      <div class="csub muted" id="alkaSub"><span class="dot dm"></span>로딩 중</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-label">업무일지</div>
-      <div class="stat-num" id="jisaNum">—</div>
-      <div class="stat-sub dim" id="jisaSub"><span class="dot dd"></span>로딩 중</div>
+    <div class="card">
+      <div class="clabel">업무일지</div>
+      <div class="cnum" id="jisaNum">—</div>
+      <div class="csub muted" id="jisaSub"><span class="dot dm"></span>로딩 중</div>
     </div>
-    <div class="stat-card">
-      <div class="stat-label">이번달 입력</div>
-      <div class="stat-num" id="monthNum">—</div>
-      <div class="stat-sub dim" id="monthSub"><span class="dot dd"></span>로딩 중</div>
+    <div class="card">
+      <div class="clabel">이번달 입력</div>
+      <div class="cnum" id="monthNum">—</div>
+      <div class="csub muted" id="monthSub"><span class="dot dm"></span>로딩 중</div>
     </div>
   </div>
 
-  <div class="bar-card">
+  <div class="bar">
     <div class="bar-top">
-      <div>
-        <div class="bar-label">알카 월 목표 달성률</div>
-      </div>
-      <div class="bar-num"><span id="barPct">—</span><span class="bar-num-sub">%</span></div>
+      <div class="blabel">알카 월 목표 달성률</div>
+      <div class="bnum"><span id="barPct">—</span><span>%</span></div>
     </div>
     <div class="track"><div class="fill" id="barFill" style="width:0%"></div></div>
     <div class="bar-foot">
       <span><em id="barDone">—</em>건 완료</span>
-      <span>잔여 <em id="barLeft">—</em>건 &nbsp;·&nbsp; 목표 <em id="barTarget">155</em>건</span>
+      <span>잔여 <em id="barLeft">—</em>건 · 목표 <em id="barTarget">155</em>건</span>
     </div>
   </div>
 
-  <div class="list-card section-gap">
-    <div class="list-head">도구 바로가기</div>
-    <div class="list-grid">
-      <div class="list-item" onclick="goTool(0)"><span class="list-name">토크 측정</span><span class="list-arrow">›</span></div>
-      <div class="list-item" onclick="goTool(1)"><span class="list-name">토크 관리</span><span class="list-arrow">›</span></div>
-      <div class="list-item" onclick="goTool(2)"><span class="list-name">대차 관리</span><span class="list-arrow">›</span></div>
-      <div class="list-item" onclick="goTool(3)"><span class="list-name">3정5S</span><span class="list-arrow">›</span></div>
-      <div class="list-item" onclick="goTool(4)"><span class="list-name">알카 KPI</span><span class="list-arrow">›</span></div>
-      <div class="list-item" onclick="goTool(5)"><span class="list-name">ALC 정리</span><span class="list-arrow">›</span></div>
-      <div class="list-item" onclick="goTool(6)"><span class="list-name">컨베어</span><span class="list-arrow">›</span></div>
-      <div class="list-item" onclick="goTool(7)"><span class="list-name">업무일지</span><span class="list-arrow">›</span></div>
-      <div class="list-item locked" onclick="goTool(7)"><span class="list-name">🔒 업무일지</span><span class="list-arrow">›</span></div>
-      <div class="list-item locked" onclick="goTool(8)"><span class="list-name">🔒 PPTX 캡처</span><span class="list-arrow">›</span></div>
+  <div class="list">
+    <div class="lhead">도구 바로가기</div>
+    <div class="lgrid">
+      <div class="litem" onclick="goTool(0)"><span class="lname">토크 측정</span><span class="larrow">›</span></div>
+      <div class="litem" onclick="goTool(1)"><span class="lname">토크 관리</span><span class="larrow">›</span></div>
+      <div class="litem" onclick="goTool(2)"><span class="lname">대차 관리</span><span class="larrow">›</span></div>
+      <div class="litem" onclick="goTool(3)"><span class="lname">3정5S</span><span class="larrow">›</span></div>
+      <div class="litem" onclick="goTool(4)"><span class="lname">알카 KPI</span><span class="larrow">›</span></div>
+      <div class="litem" onclick="goTool(5)"><span class="lname">ALC 정리</span><span class="larrow">›</span></div>
+      <div class="litem" onclick="goTool(6)"><span class="lname">컨베어</span><span class="larrow">›</span></div>
+      <div class="litem" onclick="goTool(7)"><span class="lname">컨베어</span><span class="larrow">›</span></div>
+      <div class="litem locked" onclick="goTool(7)"><span class="lname">🔒 업무일지</span><span class="larrow">›</span></div>
+      <div class="litem locked" onclick="goTool(8)"><span class="lname">🔒 PPTX 캡처</span><span class="larrow">›</span></div>
     </div>
   </div>
 
 </div>
-
 <script>
-function goTool(idx) {
-  window.parent.postMessage({ type: 'cams_goto', idx }, '*');
-}
+function goTool(idx){ window.parent.postMessage({type:'cams_goto',idx},'*'); }
 
-window.addEventListener('message', e => {
-  if (e.data && e.data.type === 'cams_torque_stat') {
-    const { thisMonth, total } = e.data;
-    document.getElementById('torqueNum').textContent = thisMonth;
-    document.getElementById('torqueSub').innerHTML =
-      `<span class="dot db"></span><span class="blue">누계 ${total}건</span>`;
+window.addEventListener('message',e=>{
+  if(e.data&&e.data.type==='cams_torque_stat'){
+    document.getElementById('torqueNum').textContent=e.data.thisMonth;
+    document.getElementById('torqueSub').innerHTML=`<span class="dot db"></span><span class="blue">누계 ${e.data.total}건</span>`;
   }
 });
 
-function pad(n) { return String(n).padStart(2, '0'); }
+function pad(n){return String(n).padStart(2,'0');}
 
-function init() {
-  const now = new Date();
-  const days = ['일','월','화','수','목','금','토'];
-  document.getElementById('dateStr').textContent =
+function init(){
+  const now=new Date();
+  const days=['일','월','화','수','목','금','토'];
+  document.getElementById('dateStr').textContent=
     `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${days[now.getDay()]}요일`;
+  const ym=`${now.getFullYear()}-${pad(now.getMonth()+1)}`;
+  const today=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
 
-  const ym = `${now.getFullYear()}-${pad(now.getMonth()+1)}`;
-  const today = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-
-  // 알카
-  try {
-    const alka = JSON.parse(localStorage.getItem('alka_db_v1') || 'null');
-    if (alka && alka.months) {
-      const monthRecs = alka.months[ym] || [];
-      const allRecs = Object.values(alka.months).flat();
-      const target = alka.targetCount || 155;
-      const done = monthRecs.length;
-      const pct = Math.round(done / target * 100);
-
-      document.getElementById('alkaNum').textContent = done;
-      const alkaSub = document.getElementById('alkaSub');
-      if (done === 0) {
-        alkaSub.innerHTML = `<span class="dot dg"></span><span class="green">이번달 없음</span>`;
-      } else if (done >= 15) {
-        alkaSub.innerHTML = `<span class="dot dr"></span><span class="red">누계 ${allRecs.length}건</span>`;
-      } else {
-        alkaSub.innerHTML = `<span class="dot dy"></span><span class="yellow">누계 ${allRecs.length}건</span>`;
-      }
-
-      document.getElementById('monthNum').textContent = done;
-      document.getElementById('monthSub').innerHTML =
-        `<span class="dot dd"></span><span class="dim">목표 ${target}건 중</span>`;
-
-      document.getElementById('barPct').textContent = pct;
-      document.getElementById('barDone').textContent = done;
-      document.getElementById('barLeft').textContent = Math.max(0, target - done);
-      document.getElementById('barTarget').textContent = target;
-
-      setTimeout(() => {
-        const fill = document.getElementById('barFill');
-        fill.style.width = Math.min(pct, 100) + '%';
-        fill.style.background = pct >= 80 ? '#32d74b' : pct >= 50 ? '#0a84ff' : '#ffd60a';
-      }, 150);
+  try{
+    const alka=JSON.parse(localStorage.getItem('alka_db_v1')||'null');
+    if(alka&&alka.months){
+      const mr=alka.months[ym]||[];
+      const all=Object.values(alka.months).flat();
+      const target=alka.targetCount||155;
+      const done=mr.length;
+      const pct=Math.round(done/target*100);
+      document.getElementById('alkaNum').textContent=done;
+      document.getElementById('alkaSub').innerHTML=done===0
+        ?`<span class="dot dg"></span><span class="green">이번달 없음</span>`
+        :done>=15?`<span class="dot dr"></span><span class="red">누계 ${all.length}건</span>`
+        :`<span class="dot dy"></span><span class="yellow">누계 ${all.length}건</span>`;
+      document.getElementById('monthNum').textContent=done;
+      document.getElementById('monthSub').innerHTML=`<span class="dot dm"></span><span class="muted">목표 ${target}건 중</span>`;
+      document.getElementById('barPct').textContent=pct;
+      document.getElementById('barDone').textContent=done;
+      document.getElementById('barLeft').textContent=Math.max(0,target-done);
+      document.getElementById('barTarget').textContent=target;
+      setTimeout(()=>{
+        const f=document.getElementById('barFill');
+        f.style.width=Math.min(pct,100)+'%';
+        f.style.background=pct>=80?'#32d74b':pct>=50?'#0a84ff':'#ffd60a';
+      },150);
     } else {
-      document.getElementById('alkaSub').innerHTML =
-        `<span class="dot dd"></span><span class="dim">알카탭 방문 후 표시</span>`;
-      document.getElementById('monthSub').innerHTML =
-        `<span class="dot dd"></span><span class="dim">알카탭 방문 후 표시</span>`;
+      ['alkaSub','monthSub'].forEach(id=>{
+        document.getElementById(id).innerHTML=`<span class="dot dm"></span><span class="muted">알카탭 방문 후 표시</span>`;
+      });
     }
-  } catch(e) {}
+  }catch(e){}
 
-  // 업무일지
-  try {
-    const jisa = JSON.parse(localStorage.getItem('jisa_history_v1') || '[]');
-    const todayItems = jisa.filter(r => r.date === today)
-      .reduce((s, r) => s + (r.items ? r.items.length : 0), 0);
-    const totalItems = jisa.reduce((s, r) => s + (r.items ? r.items.length : 0), 0);
+  try{
+    const jisa=JSON.parse(localStorage.getItem('jisa_history_v1')||'[]');
+    const ti=jisa.filter(r=>r.date===today).reduce((s,r)=>s+(r.items?r.items.length:0),0);
+    const total=jisa.reduce((s,r)=>s+(r.items?r.items.length:0),0);
+    document.getElementById('jisaNum').textContent=ti;
+    document.getElementById('jisaSub').innerHTML=ti>0
+      ?`<span class="dot db"></span><span class="blue">누계 ${total}건</span>`
+      :`<span class="dot dm"></span><span class="muted">오늘 없음</span>`;
+  }catch(e){}
 
-    document.getElementById('jisaNum').textContent = todayItems;
-    document.getElementById('jisaSub').innerHTML = todayItems > 0
-      ? `<span class="dot db"></span><span class="blue">누계 ${totalItems}건</span>`
-      : `<span class="dot dd"></span><span class="dim">오늘 없음</span>`;
-  } catch(e) {}
-
-  window.parent.postMessage({ type: 'cams_request_stat', tool: 'torque' }, '*');
+  window.parent.postMessage({type:'cams_request_stat',tool:'torque'},'*');
 }
-
 init();
-setInterval(init, 60000);
+setInterval(init,60000);
 </script>
 </body>
 </html>
