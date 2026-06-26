@@ -17,18 +17,50 @@ body {
 }
 
 .header {
-  background: #1c1c1e;
-  border-bottom: 1px solid #2c2c2e;
+  background: #12141f;
+  border-bottom: 1px solid #1e2235;
   flex-shrink: 0;
 }
 
 .header-top {
-  padding: 8px 16px 0;
+  padding: 10px 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.logo-mark {
+  width: 26px;
+  height: 26px;
+  background: #2563eb;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 11px;
-  font-weight: 600;
-  color: #636366;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.logo-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e2e4f0;
   letter-spacing: 0.5px;
-  text-transform: uppercase;
+}
+
+.logo-sub {
+  font-size: 10px;
+  color: #4a5180;
+  letter-spacing: 0.3px;
 }
 
 .tab-bar {
@@ -108,7 +140,13 @@ iframe.active { display: block; }
 <body>
 
 <div class="header">
-  <div class="header-top">CAMS 자동화</div>
+  <div class="header-top">
+    <div class="logo-mark">C</div>
+    <div class="logo-text">
+      <div class="logo-name">CAMS</div>
+      <div class="logo-sub">주식회사 캠스 · 조립팀</div>
+    </div>
+  </div>
   <div class="tab-bar" id="tabBar"></div>
 </div>
 <div class="content" id="content"></div>
