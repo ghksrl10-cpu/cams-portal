@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>3정5S 샘플 데이터 업로드</title>
+<style>
+  body{font-family:"맑은 고딕",sans-serif;background:#0f1117;color:#f1f5f9;padding:30px;max-width:700px;margin:0 auto}
+  h2{margin-bottom:6px}
+  p{color:#9ca3af;font-size:14px}
+  button{padding:12px 28px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:12px}
+  button:disabled{background:#374151;cursor:not-allowed}
+  #log{margin-top:20px;background:#1a1d24;border:1px solid #2a2d35;border-radius:10px;padding:14px;font-size:13px;line-height:2;min-height:60px;max-height:400px;overflow-y:auto}
+  .ok{color:#4ade80}.err{color:#f87171}.info{color:#93c5fd}.done{color:#fde68a;font-weight:700;font-size:15px}
+</style>
+</head>
+<body>
+<h2>3정5S 샘플 데이터 업로드</h2>
+<p>2025-06 ~ 2026-05 (12개월) 기록을 Firebase에 업로드합니다.<br>
+이미 같은 월 기록이 있으면 덮어씁니다.</p>
+<button id="btn" onclick="upload()">업로드 시작</button>
+<div id="log">대기 중…</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDZZSI3ib_rmGz4gSMe0DgZs650IuTCvKs",
+  authDomain: "cams-torque.firebaseapp.com",
+  projectId: "cams-torque",
+  storageBucket: "cams-torque.firebasestorage.app",
+  messagingSenderId: "404254094434",
+  appId: "1:404254094434:web:b4193a15de4153b9aa0d3b"
+};
+
+/* 항목 수: [설비8, 금형4, 대차4, 선입선출4, 부품1, 정리4, 안전6, 표준1, 시종1, 품질4] */
+const CNT = [8,4,4,4,1,4,6,1,1,4];
+
+function makeChecklist(scoresByGroup, issues) {
+  const cl = {};
+  CNT.forEach((cnt, ci) => {
+    for (let ii = 0; ii < cnt; ii++) {
+      const key = ci + '_' + ii;
+      const iss = (issues && issues[key]) || {};
+      cl[key] = {
+        score: (scoresByGroup[ci] && scoresByGroup[ci][ii]) || 5,
+        issue: iss.issue || '',
+        action: iss.action || ''
+      };
+    }
+  });
+  return cl;
+}
+
+function initZP() {
+  return {A:{before:[],after:[]},B:{before:[],after:[]},C:{before:[],after:[]},D:{before:[],after:[]},E:{before:[],after:[]}};
+}
+
+/*
+  대차(ci=2) ii: 0=식별관리, 1=훼손변형, 2=청결상태, 3=정위치
+  정리(ci=5) ii: 0=불필요품방치, 1=작업대정리, 2=청소상태, 3=구획선
+  안전(ci=6) ii: 0=보호구착용, 1=안전표지, 2=비상구확보, 3=소화기, 4=전기안전, 5=화학물질관리
+  표준(ci=7): 0=작업표준류
+  시종(ci=8): 0=시업종업점검
+*/
+
+const RECORDS = [
+  /* 2025-06  176/185  금  평범 기준달 */
+  {
+    ym:'2025-06', date:{y:'2025',m:'6',d:'13'}, checker:'김환기',
+    s:[[4,4,4,5,4,5,5,5],[5,5,5,5],[5,4,4,5],[5,5,5,5],[5],[4,4,5,5],[5,5,5,5,4,5],[5],[5],[5,5,5,5]],
+    issues:{
+      '2_2':{issue:'월간 대차 청소 실시',action:'청소 완료'}
+    }
+  },
+  /* 2025-07  174/185  금  대차 변형 */
+  {
+    ym:'2025-07', date:{y:'2025',m:'7',d:'11'}, checker:'김환기',
+    s:[[4,4,4,5,4,5,5,5],[5,5,5,5],[4,3,4,5],[5,5,5,5],[5],[4,4,5,5],[5,5,5,5,4,5],[5],[5],[5,5,5,5]],
+    issues:{
+      '2_1':{issue:'대차 일부 변형 발견 (측면 손상)',action:'수리 완료'},
+      '2_2':{issue:'월간 대차 청소 실시',action:'청소 완료'}
+    }
+  },
+  /* 2025-08  170/185  금  여름 청결 미흡 */
+  {
+    ym:'2025-08', date:{y:'2025',m:'8',d:'8'}, checker:'김환기',
+    s:[[4,4,4,4,4,5,5,5],[5,5,5,5],[4,4,3,5],[4,5,5,5],[5],[4,4,4,5],[4,5,5,5,4,5],[5],[5],[5,5,5,5]],
+    issues:{
+      '2_2':{issue:'월간 대차 청소 실시 / 여름 오염 다수',action:'세척 완료'},
+      '5_2':{issue:'작업장 청소 미흡 (하절기 분진)',action:'청소 완료'}
+    }
+  },
+  /* 2025-09  169/185  금  선풍기 철거 */
+  {
+    ym:'2025-09', date:{y:'2025',m:'9',d:'12'}, checker:'김환기',
+    s:[[4,4,4,4,4,5,5,5],[5,5,5,5],[4,3,4,5],[4,5,5,5],[5],[3,4,4,5],[4,5,5,5,4,5],[5],[5],[5,5,5,5]],
+    issues:{
+      '2_1':{issue:'대차 훼손 발견',action:'수리 예정'},
+      '2_2':{issue:'월간 대차 청소 실시',action:'청소 완료'},
+      '5_0':{issue:'선풍기 철거 미흡 — 현장 방치',action:'철거 완료'}
+    }
+  },
+  /* 2025-10  178/185  금  우수 달 */
+  {
+    ym:'2025-10', date:{y:'2025',m:'10',d:'17'}, checker:'김환기',
+    s:[[4,4,5,5,4,5,5,5],[5,5,5,5],[5,4,5,5],[4,5,5,5],[5],[5,5,5,5],[5,5,5,5,4,5],[5],[5],[5,5,5,4]],
+    issues:{
+      '2_2':{issue:'월간 대차 청소 실시',action:'청소 완료'}
+    }
+  },
+  /* 2025-11  171/185  금  온풍기 설치 */
+  {
+    ym:'2025-11', date:{y:'2025',m:'11',d:'14'}, checker:'김환기',
+    s:[[4,4,4,5,4,5,5,5],[5,5,5,5],[4,4,4,5],[4,5,5,5],[5],[3,4,5,4],[4,5,5,5,4,5],[5],[5],[5,5,5,5]],
+    issues:{
+      '2_2':{issue:'월간 대차 청소 실시',action:'청소 완료'},
+      '5_0':{issue:'온풍기 설치 위치 미정리',action:'설치 완료'},
+      '5_3':{issue:'온풍기 배치로 구획선 가려짐',action:'재배치 완료'}
+    }
+  },
+  /* 2025-12  175/185  금  대차 훼손 */
+  {
+    ym:'2025-12', date:{y:'2025',m:'12',d:'12'}, checker:'김환기',
+    s:[[4,4,4,5,4,5,5,5],[5,5,5,5],[5,3,5,5],[4,5,5,5],[5],[4,5,4,5],[5,5,5,5,4,5],[5],[5],[5,5,5,5]],
+    issues:{
+      '2_1':{issue:'대차 훼손 발견 (측면 긁힘)',action:'수리 완료'},
+      '2_2':{issue:'월간 대차 청소 실시',action:'청소 완료'}
+    }
+  },
+  /* 2026-01  173/185  금 */
+  {
+    ym:'2026-01', date:{y:'2026',m:'1',d:'9'}, checker:'김환기',
+    s:[[4,4,4,5,4,5,5,5],[5,5,5,5],[4,4,5,5],[4,5,5,5],[5],[4,4,5,5],[4,5,5,5,4,5],[5],[5],[4,5,5,5]],
+    issues:{
+      '2_2':{issue:'월간 대차 청소 실시',action:'청소 완료'},
+      '5_1':{issue:'작업대 정리 미흡',action:'현장 전달 완료'}
+    }
+  },
+  /* 2026-02  168/185  금  대차 변형·오염 */
+  {
+    ym:'2026-02', date:{y:'2026',m:'2',d:'6'}, checker:'김환기',
+    s:[[4,4,4,4,4,5,5,5],[5,5,5,5],[4,3,4,5],[4,5,5,5],[4],[3,4,4,5],[4,5,5,5,4,5],[5],[5],[5,5,5,5]],
+    issues:{
+      '2_1':{issue:'대차 변형 발견 (바퀴 손상)',action:'교체 완료'},
+      '2_2':{issue:'월간 대차 청소 실시 / 오염 심함',action:'세척 완료'},
+      '5_0':{issue:'불필요품 방치 발견',action:'즉시 제거'}
+    }
+  },
+  /* 2026-03  170/185  금  표준서 미흡 */
+  {
+    ym:'2026-03', date:{y:'2026',m:'3',d:'6'}, checker:'김환기',
+    s:[[4,4,4,4,4,5,5,5],[5,5,5,5],[4,3,4,5],[4,5,5,5],[5],[4,4,5,5],[4,5,5,5,4,5],[4],[5],[5,5,5,5]],
+    issues:{
+      '2_1':{issue:'대차 훼손 발견',action:'수리 계획 수립'},
+      '2_2':{issue:'월간 대차 청소 실시',action:'청소 완료'},
+      '7_0':{issue:'PE차종 작업표준서 최신화 필요',action:'업데이트 예정'}
+    }
+  },
+  /* 2026-04  169/185  금  온풍기 철거 */
+  {
+    ym:'2026-04', date:{y:'2026',m:'4',d:'10'}, checker:'김환기',
+    s:[[4,4,4,4,4,5,5,5],[5,5,5,5],[4,4,5,5],[4,5,5,5],[5],[3,4,4,4],[4,5,5,5,4,5],[5],[4],[5,5,5,5]],
+    issues:{
+      '2_2':{issue:'월간 대차 청소 실시',action:'청소 완료'},
+      '5_0':{issue:'온풍기 철거 미흡 — 현장 방치',action:'철거 완료'},
+      '5_3':{issue:'온풍기 이동 후 구획선 정리 필요',action:'정리 완료'}
+    }
+  },
+  /* 2026-05  172/185  금  선풍기 설치 */
+  {
+    ym:'2026-05', date:{y:'2026',m:'5',d:'8'}, checker:'김환기',
+    s:[[4,4,4,4,4,5,5,5],[5,5,5,5],[5,4,5,5],[4,5,5,5],[5],[3,4,5,5],[4,5,5,5,4,5],[5],[5],[4,5,5,5]],
+    issues:{
+      '2_2':{issue:'월간 대차 청소 실시',action:'청소 완료'},
+      '5_0':{issue:'선풍기 설치 배치 관리 미흡',action:'배치 정리 완료'}
+    }
+  }
+];
+
+const SCORES = [176,174,170,169,178,171,175,173,168,170,169,172];
+
+function log(msg, cls='') {
+  const el = document.getElementById('log');
+  el.innerHTML += `<div class="${cls}">${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+async function upload() {
+  document.getElementById('btn').disabled = true;
+  document.getElementById('log').innerHTML = '';
+
+  let db;
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    log('Firebase 연결 완료', 'info');
+  } catch(e) {
+    log('Firebase 오류: ' + e.message, 'err');
+    document.getElementById('btn').disabled = false;
+    return;
+  }
+
+  let ok = 0;
+  for (const r of RECORDS) {
+    try {
+      const checklist = makeChecklist(r.s, r.issues);
+      let total = 0;
+      for (const k in checklist) total += checklist[k].score || 0;
+
+      await db.collection('fivees').doc('rec__' + r.ym).set({
+        ym: r.ym,
+        date: r.date,
+        checker: r.checker,
+        checklist,
+        zonePhotos: initZP(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      log(`✅ ${r.ym}  ${r.date.m}/${r.date.d}  총점 ${total}/185점  (100점 환산 ${Math.round(total/185*100)}점)`, 'ok');
+      ok++;
+    } catch(e) {
+      log(`❌ ${r.ym} 실패: ${e.message}`, 'err');
+    }
+  }
+
+  const avg = Math.round(SCORES.reduce((a,b)=>a+b,0)/SCORES.length*10)/10;
+  log('', '');
+  log(`완료! ${ok}/${RECORDS.length}개 업로드됨  ·  평균 ${avg}/185점  (100점 환산 ${Math.round(avg/185*100)}점)`, 'done');
+  if (ok === RECORDS.length) {
+    log('이제 3정5S 관리 앱을 열고 🔄 새로고침 버튼을 누르세요.', 'info');
+  }
+  document.getElementById('btn').disabled = false;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>개선현황 샘플 데이터 업로드</title>
+<style>
+  body{font-family:"맑은 고딕",sans-serif;background:#0f1117;color:#f1f5f9;padding:30px;max-width:720px;margin:0 auto}
+  h2{margin-bottom:6px}
+  p{color:#9ca3af;font-size:14px;line-height:1.7}
+  button{padding:12px 28px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:12px}
+  button:disabled{background:#374151;cursor:not-allowed}
+  #log{margin-top:20px;background:#1a1d24;border:1px solid #2a2d35;border-radius:10px;padding:14px;font-size:13px;line-height:2;min-height:60px;max-height:500px;overflow-y:auto}
+  .ok{color:#4ade80}.err{color:#f87171}.info{color:#93c5fd}.done{color:#fde68a;font-weight:700;font-size:15px}
+  .q{color:#c084fc}
+</style>
+</head>
+<body>
+<h2>개선현황 샘플 데이터 업로드</h2>
+<p>
+  2024년 1분기 ~ 2026년 2분기 (10개 분기) 조립 라인 정리 개선 기록을 업로드합니다.<br>
+  ※ 사진은 빈 상태로 올라갑니다. 업로드 후 앱에서 각 기록 클릭 → 사진 추가하세요.
+</p>
+<button id="btn" onclick="upload()">업로드 시작</button>
+<div id="log">대기 중…</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyDZZSI3ib_rmGz4gSMe0DgZs650IuTCvKs",
+  authDomain:"cams-torque.firebaseapp.com",
+  projectId:"cams-torque"
+});
+
+const RECORDS = [
+  /* ===== 2024년 1분기 ===== */
+  {
+    no:'2401-01', process:'조립 라인 — B구역 1.2공장',
+    worker:'김환기', date:'2024-03-15',
+    schedule:{즉시:'2024-03-15', 단기:'', 장기:''},
+    note:'1분기', quarter:'2024 Q1',
+    problem:'호퍼 하부 및 주변 잡자재·부품 방치 — 이물질 혼입 위험 및 청결 불량',
+    before_photos:[], before_desc:'호퍼 베이스 주변에 금속 파이프, 공구, 각종 부자재가 방치된 상태',
+    temp_photos:[], temp_desc:'',
+    root_photos:[], root_desc:'불필요 잡자재 전량 수거 후 지정 창고 이관, 호퍼 주변 구역 청소 완료'
+  },
+  /* ===== 2024년 2분기 ===== */
+  {
+    no:'2402-01', process:'조립 라인 — B구역 1.2공장',
+    worker:'김환기', date:'2024-06-14',
+    schedule:{즉시:'2024-06-14', 단기:'', 장기:''},
+    note:'2분기', quarter:'2024 Q2',
+    problem:'호퍼 내·외부 분쇄 이물질 및 잔재 퇴적 — 청결 불량, 품질 위험 요소',
+    before_photos:[], before_desc:'호퍼 내부 바닥에 분쇄 잔재물·이물질 퇴적, 측면 개구부 주변 오염',
+    temp_photos:[], temp_desc:'임시 청소 실시',
+    root_photos:[], root_desc:'호퍼 내부 청소 주기 주 1회로 설정, 청소 이력 관리표 부착'
+  },
+  /* ===== 2024년 3분기 ===== */
+  {
+    no:'2403-01', process:'조립 라인 — B구역 1.2공장',
+    worker:'김환기', date:'2024-09-13',
+    schedule:{즉시:'2024-09-13', 단기:'2024-09-30', 장기:''},
+    note:'3분기', quarter:'2024 Q3',
+    problem:'빨간 대차·운반기기 주변 박스류 및 공구 방치 — 통행 방해 및 안전사고 위험',
+    before_photos:[], before_desc:'라인 측면에 박스, 소형 공구, 부자재 등 무질서하게 방치',
+    temp_photos:[], temp_desc:'긴급 통로 확보 — 박스류 임시 이동',
+    root_photos:[], root_desc:'물품 정위치 스티커 부착, 일일 점검 항목 추가, 통로 구획선 재도색'
+  },
+  /* ===== 2024년 4분기 ===== */
+  {
+    no:'2404-01', process:'조립 라인 — B구역 1.2공장',
+    worker:'김환기', date:'2024-12-13',
+    schedule:{즉시:'2024-12-13', 단기:'', 장기:''},
+    note:'4분기', quarter:'2024 Q4',
+    problem:'라인 코너 구역 불필요품 집중 방치 — 각종 공구·비품 혼재, 정위치 미준수',
+    before_photos:[], before_desc:'코너 공간에 청소 도구, 이동식 공구함, 기타 자재 무질서 적재',
+    temp_photos:[], temp_desc:'',
+    root_photos:[], root_desc:'코너 구역 지정 창고 지정, 물품별 위치 표지판 설치, 연말 대청소 실시'
+  },
+  /* ===== 2025년 1분기 ===== */
+  {
+    no:'2501-01', process:'조립 라인 — B구역 전체 통로',
+    worker:'김환기', date:'2025-03-14',
+    schedule:{즉시:'2025-03-14', 단기:'2025-03-31', 장기:''},
+    note:'1분기', quarter:'2025 Q1',
+    problem:'조립 라인 주 통로 불필요 설비 방치 — 통행 방해, 안전 통로 기준 미달',
+    before_photos:[], before_desc:'라인 전면 통로에 이동 설비·대차 등이 무질서하게 점유, 통행폭 미달',
+    temp_photos:[], temp_desc:'통로 내 설비 임시 이동',
+    root_photos:[], root_desc:'설비 정위치 구획 도색, 통로폭 1m 이상 유지 기준 설정 및 교육'
+  },
+  /* ===== 2025년 2분기 ===== */
+  {
+    no:'2502-01', process:'조립 라인 — B구역 전체 통로',
+    worker:'김환기', date:'2025-06-13',
+    schedule:{즉시:'2025-06-13', 단기:'', 장기:''},
+    note:'2분기', quarter:'2025 Q2',
+    problem:'라인 중앙 통로 잡자재 방치 및 바닥 오염 — 미끄럼 위험, 불필요품 혼재',
+    before_photos:[], before_desc:'중앙 통로 기둥 주변 쓰레기·포장재·부자재 방치 및 바닥 오염',
+    temp_photos:[], temp_desc:'긴급 청소 실시',
+    root_photos:[], root_desc:'통로 내 물품 반입 금지 표지 설치, 청소 당번제 실시'
+  },
+  /* ===== 2025년 3분기 ===== */
+  {
+    no:'2503-01', process:'조립 라인 — 설비 구역 (에어컨·블루 장비)',
+    worker:'김환기', date:'2025-09-12',
+    schedule:{즉시:'2025-09-12', 단기:'2025-09-30', 장기:'2025-12-31'},
+    note:'3분기', quarter:'2025 Q3',
+    problem:'라인 측면 블루 설비(에어컨 등) 전면 통로 점유 — 구획선 외 방치, 작업 동선 방해',
+    before_photos:[], before_desc:'블루 색상 이동형 설비 다수가 구획선 밖으로 밀려나와 통로를 점유한 상태 (빨간 박스 표시)',
+    temp_photos:[], temp_desc:'설비 구획선 내로 임시 이동',
+    root_photos:[], root_desc:'설비별 전용 구획 도색 및 번호 부착, 설비 점검 시 정위치 확인 의무화'
+  },
+  /* ===== 2025년 4분기 ===== */
+  {
+    no:'2504-01', process:'조립 라인 — 천장 배선 및 설비',
+    worker:'김환기', date:'2025-12-12',
+    schedule:{즉시:'', 단기:'2026-01-31', 장기:'2026-03-31'},
+    note:'4분기', quarter:'2025 Q4',
+    problem:'천장 전선 케이블 늘어짐 및 사다리 미정위치 보관 — 낙하 위험, 안전기준 미달',
+    before_photos:[], before_desc:'천장 배선이 느슨하게 늘어져 있고 사다리가 구획선 밖 임의 장소에 보관 (빨간 박스 표시)',
+    temp_photos:[], temp_desc:'사다리 임시 이동, 위험 배선 테이프 고정',
+    root_photos:[], root_desc:'천장 배선 케이블 트레이 고정 완료, 사다리 전용 보관 거치대 설치 및 정위치 표지 부착'
+  },
+  /* ===== 2026년 1분기 ===== */
+  {
+    no:'2601-01', process:'조립 라인 — 전체 구역',
+    worker:'김환기', date:'2026-03-13',
+    schedule:{즉시:'2026-03-13', 단기:'', 장기:''},
+    note:'1분기', quarter:'2026 Q1',
+    problem:'연초 전체 라인 청결도 저하 — 바닥 오염, 구획선 훼손, 기둥 주변 이물질',
+    before_photos:[], before_desc:'각 기둥 하부 및 라인 끝단에 이물질·먼지 퇴적, 일부 구획선 마모',
+    temp_photos:[], temp_desc:'라인 전체 청소 1차 실시',
+    root_photos:[], root_desc:'바닥 구획선 전체 재도색, 청소 구역별 담당자 지정, 월 1회 합동 청소의 날 운영'
+  },
+  /* ===== 2026년 2분기 ===== */
+  {
+    no:'2602-01', process:'조립 라인 — 전체 구역',
+    worker:'김환기', date:'2026-06-12',
+    schedule:{즉시:'2026-06-12', 단기:'', 장기:''},
+    note:'2분기', quarter:'2026 Q2',
+    problem:'상반기 종합 점검 — 통로 재정비 및 미흡 구역 추가 개선',
+    before_photos:[], before_desc:'1분기 개선 이후 일부 구역 원상 복귀 및 신규 불필요품 발생',
+    temp_photos:[], temp_desc:'',
+    root_photos:[], root_desc:'2분기 종합 개선 완료, 3정5S 점검표 항목 반영, 이후 월별 유지관리 기준 수립'
+  }
+];
+
+function log(msg, cls='') {
+  const el = document.getElementById('log');
+  el.innerHTML += `<div class="${cls}">${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+async function upload() {
+  document.getElementById('btn').disabled = true;
+  document.getElementById('log').innerHTML = '';
+
+  const db = firebase.firestore();
+  log('Firebase 연결 완료', 'info');
+
+  let ok = 0;
+  for (const r of RECORDS) {
+    try {
+      const data = {
+        no: r.no, process: r.process, worker: r.worker,
+        date: r.date, schedule: r.schedule, note: r.note,
+        problem: r.problem,
+        before_photos: r.before_photos, before_desc: r.before_desc,
+        temp_photos: r.temp_photos, temp_desc: r.temp_desc,
+        root_photos: r.root_photos, root_desc: r.root_desc,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      await db.collection('improvements').add(data);
+      log(`<span class="q">[${r.quarter}]</span> ${r.no} — ${r.process}`, 'ok');
+      ok++;
+    } catch(e) {
+      log(`❌ ${r.no} 실패: ${e.message}`, 'err');
+    }
+  }
+
+  log('', '');
+  log(`완료! ${ok}/${RECORDS.length}개 업로드됨`, 'done');
+  log('앱 → 개선현황 탭 → 각 기록 클릭 → 사진 추가하세요.', 'info');
+  document.getElementById('btn').disabled = false;
+}
+</script>
+</body>
+</html>

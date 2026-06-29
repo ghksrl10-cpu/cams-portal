@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>레이아웃 이미지 업로드</title>
+<style>
+  body{font-family:"맑은 고딕",sans-serif;background:#0f1117;color:#f1f5f9;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+  .box{background:#1a1d24;border:1px solid #2a2d35;border-radius:16px;padding:36px 40px;max-width:480px;width:100%;text-align:center}
+  h2{margin:0 0 8px;font-size:20px}
+  p{color:#9ca3af;font-size:14px;margin:0 0 28px;line-height:1.6}
+  .drop{border:2px dashed #3b82f6;border-radius:12px;padding:40px 20px;cursor:pointer;transition:.2s;margin-bottom:20px}
+  .drop:hover{background:#1e2535;border-color:#60a5fa}
+  .drop input{display:none}
+  .drop-icon{font-size:40px;margin-bottom:10px}
+  .drop-txt{font-size:15px;font-weight:700;color:#93c5fd}
+  .drop-sub{font-size:13px;color:#6b7280;margin-top:4px}
+  #preview{width:100%;border-radius:8px;margin-bottom:16px;display:none;border:1px solid #2a2d35}
+  button{width:100%;padding:13px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:800;cursor:pointer}
+  button:disabled{background:#374151;cursor:not-allowed}
+  #status{margin-top:16px;font-size:14px;min-height:22px}
+  .ok{color:#4ade80}.err{color:#f87171}.spin{color:#93c5fd}
+</style>
+</head>
+<body>
+<div class="box">
+  <h2>🗺️ 레이아웃 이미지 업로드</h2>
+  <p>구획별 LAY-OUT 이미지를 선택하면<br>자동으로 Firebase에 저장됩니다.</p>
+
+  <div class="drop" onclick="document.getElementById('fi').click()">
+    <input type="file" id="fi" accept="image/*" onchange="onFile(this)">
+    <div class="drop-icon">📁</div>
+    <div class="drop-txt">이미지 파일 선택</div>
+    <div class="drop-sub">PNG / JPG / 모든 이미지</div>
+  </div>
+
+  <img id="preview">
+  <button id="btn" onclick="doUpload()" disabled>업로드</button>
+  <div id="status"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyDZZSI3ib_rmGz4gSMe0DgZs650IuTCvKs",
+  authDomain:"cams-torque.firebaseapp.com",
+  projectId:"cams-torque"
+});
+const db = firebase.firestore();
+
+let compressed = null;
+
+function onFile(input) {
+  const f = input.files[0]; if (!f) return;
+  st('이미지 처리 중…','spin');
+  document.getElementById('btn').disabled = true;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      const max = 1400;
+      if (w >= h && w > max) { h = Math.round(h*max/w); w = max; }
+      else if (h > w && h > max) { w = Math.round(w*max/h); h = max; }
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      compressed = cv.toDataURL('image/jpeg', 0.55);
+
+      document.getElementById('preview').src = compressed;
+      document.getElementById('preview').style.display = 'block';
+      document.getElementById('btn').disabled = false;
+      st(`준비 완료  ${w}×${h}px  (${Math.round(compressed.length/1024)}KB)`, 'ok');
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(f);
+}
+
+async function doUpload() {
+  if (!compressed) return;
+  document.getElementById('btn').disabled = true;
+  st('Firebase 저장 중…', 'spin');
+  try {
+    await db.collection('settings').doc('fivees_layout').set({ layout: compressed });
+    st('✅ 업로드 완료! 앱을 새로고침하면 레이아웃이 표시됩니다.', 'ok');
+  } catch(e) {
+    st('❌ 실패: ' + e.message, 'err');
+    document.getElementById('btn').disabled = false;
+  }
+}
+
+function st(msg, cls) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = cls || '';
+}
+</script>
+</body>
+</html>
