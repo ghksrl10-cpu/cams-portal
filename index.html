@@ -170,11 +170,10 @@ iframe.active { display: block; }
 
 <script>
 const BASE = 'https://ghksrl10-cpu.github.io';
-const ERP_URL = 'https://selfservice.icams.co.kr/api/erp/login';
-const ERP_KEY = '6147';
 const AUTH_KEY = 'cams_auth';
 const ADMIN_ID = '103518';
 const AUTH_EXP = 8 * 60 * 60 * 1000;
+const PIN = '5270';
 
 function getAuth() {
   try {
@@ -190,6 +189,13 @@ async function doLogin() {
   const err = document.getElementById('loginErr');
   const btn = document.getElementById('loginBtn');
   if (!id || !pw) { err.textContent = '사번과 비밀번호를 입력하세요.'; return; }
+  if (id === ADMIN_ID && pw === PIN) {
+    localStorage.setItem(AUTH_KEY, JSON.stringify({ id: ADMIN_ID, name: '김환기', dept: '조립팀', exp: Date.now() + AUTH_EXP }));
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('loginId').value = '';
+    document.getElementById('loginPw').value = '';
+    return;
+  }
   btn.disabled = true; btn.textContent = '확인 중…'; err.textContent = '';
   try {
     const res = await fetch(ERP_URL, {
