@@ -111,30 +111,32 @@ iframe {
 
 iframe.active { display: block; }
 
-.pin-overlay {
-  position: absolute;
-  inset: 0;
+#loginOverlay {
+  position: fixed; inset: 0; z-index: 9999;
   background: #111;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  z-index: 100;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
 }
-.pin-overlay h2 { color: #fff; font-size: 16px; font-weight: 500; }
-.pin-dots { display: flex; gap: 14px; }
-.pin-dot { width: 14px; height: 14px; border-radius: 50%; background: #3a3a3c; transition: background 0.15s; }
-.pin-dot.filled { background: #0a84ff; }
-.pin-pad { display: grid; grid-template-columns: repeat(3, 72px); gap: 12px; }
-.pin-btn {
-  height: 72px; border-radius: 50%; background: #2c2c2e; border: none;
-  color: #fff; font-size: 22px; font-weight: 400; cursor: pointer;
+.login-box {
+  background: #2c2c2e; border-radius: 16px;
+  padding: 32px 28px; width: 300px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.login-box h2 { color: #fff; font-size: 17px; font-weight: 600; text-align: center; }
+.login-box input {
+  width: 100%; padding: 12px 14px; border-radius: 10px;
+  border: 1px solid #3a3a3c; background: #1c1c1e;
+  color: #fff; font-size: 15px; outline: none;
+}
+.login-box input:focus { border-color: #0a84ff; }
+.login-box button {
+  width: 100%; padding: 13px; border-radius: 10px;
+  background: #0a84ff; border: none; color: #fff;
+  font-size: 15px; font-weight: 600; cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.pin-btn:active { background: #48484a; }
-.pin-btn.del { font-size: 18px; }
-.pin-err { color: #ff453a; font-size: 13px; min-height: 18px; }
+.login-box button:active { background: #0060df; }
+#loginErr { color: #ff453a; font-size: 13px; text-align: center; min-height: 18px; }
 </style>
 </head>
 <body>
@@ -155,10 +157,71 @@ iframe.active { display: block; }
   </div>
   <div class="tab-bar" id="tabBar"></div>
 </div>
+<div id="loginOverlay">
+  <div class="login-box">
+    <h2>🏭 캠스 자동화 도구</h2>
+    <input id="loginId" type="text" inputmode="numeric" placeholder="사번" maxlength="10" autocomplete="off">
+    <input id="loginPw" type="password" placeholder="비밀번호" autocomplete="off">
+    <div id="loginErr"></div>
+    <button id="loginBtn" onclick="doLogin()">로그인</button>
+  </div>
+</div>
 <div class="content" id="content"></div>
 
 <script>
 const BASE = 'https://ghksrl10-cpu.github.io';
+const ERP_URL = 'https://selfservice.icams.co.kr/api/erp/login';
+const ERP_KEY = '6147';
+const AUTH_KEY = 'cams_auth';
+const ADMIN_ID = '103518';
+const AUTH_EXP = 8 * 60 * 60 * 1000;
+
+function getAuth() {
+  try {
+    const a = JSON.parse(localStorage.getItem(AUTH_KEY) || '');
+    if (a && a.exp > Date.now()) return a;
+  } catch(e) {}
+  return null;
+}
+
+async function doLogin() {
+  const id = document.getElementById('loginId').value.trim();
+  const pw = document.getElementById('loginPw').value;
+  const err = document.getElementById('loginErr');
+  const btn = document.getElementById('loginBtn');
+  if (!id || !pw) { err.textContent = '사번과 비밀번호를 입력하세요.'; return; }
+  btn.disabled = true; btn.textContent = '확인 중…'; err.textContent = '';
+  try {
+    const res = await fetch(ERP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ERP_KEY },
+      body: JSON.stringify({ employeeId: id, password: pw })
+    });
+    const data = await res.json();
+    if (data.authenticated) {
+      localStorage.setItem(AUTH_KEY, JSON.stringify({
+        id: data.employee.employeeId,
+        name: data.employee.name,
+        dept: data.employee.department,
+        exp: Date.now() + AUTH_EXP
+      }));
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('loginId').value = '';
+      document.getElementById('loginPw').value = '';
+    } else {
+      err.textContent = data.message || '로그인 실패';
+    }
+  } catch(e) {
+    err.textContent = '서버 연결 오류';
+  }
+  btn.disabled = false; btn.textContent = '로그인';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (getAuth()) document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('loginPw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('loginId').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPw').focus(); });
+});
 
 const TOOLS = [
   { name: '홈',        src: 'dashboard.html', home: true },
@@ -169,12 +232,10 @@ const TOOLS = [
   { name: '알카 KPI',  src: '알카_실적종합.html' },
   { name: 'ALC 정리',  src: 'ALC정리.html' },
   { name: '컨베어',    src: BASE + '/cams-conveyor-sim/' },
-  { name: '업무일지',  src: '업무일지_웹.html', pin: true },
-  { name: 'PPTX 캡처', src: 'pptx캡처/index.html', pin: true },
+  { name: '업무일지',  src: '업무일지_웹.html', admin: true },
+  { name: 'PPTX 캡처', src: 'pptx캡처/index.html', admin: true },
 ];
 
-const PIN = '5270';
-const SESSION_KEY = 'cams_pin_ok';
 const tabBar = document.getElementById('tabBar');
 const content = document.getElementById('content');
 let activeIdx = 0;
@@ -193,53 +254,15 @@ TOOLS.forEach((tool, i) => {
   content.appendChild(frame);
 });
 
-function showPin(onSuccess) {
-  const ov = document.createElement('div');
-  ov.className = 'pin-overlay';
-  let entered = '';
-
-  ov.innerHTML = `
-    <h2>🔒 본인 확인</h2>
-    <div class="pin-dots">
-      ${[0,1,2,3].map(()=>`<div class="pin-dot"></div>`).join('')}
-    </div>
-    <div class="pin-err" id="pinErr"></div>
-    <div class="pin-pad">
-      ${[1,2,3,4,5,6,7,8,9,'','0','⌫'].map(k=>`<button class="pin-btn${k==='⌫'?' del':''}" data-k="${k}">${k}</button>`).join('')}
-    </div>`;
-
-  content.appendChild(ov);
-
-  function updateDots() {
-    ov.querySelectorAll('.pin-dot').forEach((d,i) => d.classList.toggle('filled', i < entered.length));
-  }
-
-  ov.addEventListener('click', e => {
-    const k = e.target.dataset.k;
-    if (k === undefined) return;
-    if (k === '⌫') { entered = entered.slice(0,-1); }
-    else if (k !== '' && entered.length < 4) { entered += k; }
-    updateDots();
-    if (entered.length === 4) {
-      if (entered === PIN) {
-        sessionStorage.setItem(SESSION_KEY, '1');
-        ov.remove();
-        onSuccess();
-      } else {
-        ov.querySelector('#pinErr').textContent = '비밀번호가 틀렸어요';
-        entered = '';
-        updateDots();
-      }
-    }
-  });
-}
-
 function activate(idx) {
   if (idx === activeIdx) return;
   const tool = TOOLS[idx];
-  if (tool.pin && sessionStorage.getItem(SESSION_KEY) !== '1') {
-    showPin(() => doActivate(idx));
-    return;
+  if (tool.admin) {
+    const auth = getAuth();
+    if (!auth || auth.id !== ADMIN_ID) {
+      alert('🔒 이 메뉴는 관리자(김환기)만 이용할 수 있습니다.');
+      return;
+    }
   }
   doActivate(idx);
 }

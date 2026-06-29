@@ -328,13 +328,15 @@ function getDefaultBase(line){
 
 let curLine='1LINE', curRecId='', DB={'1LINE':{records:{}},'2LINE':{records:{}}}, db=null;
 let SETTINGS={dashPhotos:[]};
-const ADMIN_PIN='103518';
+const ADMIN_ID='103518';
 let _authed=false;
 function checkAdmin(){
   if(_authed) return true;
-  const v=prompt('🔒 관리자 비밀번호를 입력하세요');
-  if(v===ADMIN_PIN){ _authed=true; setTimeout(()=>_authed=false, 30*60*1000); return true; }
-  if(v!==null) alert('비밀번호가 틀렸습니다.');
+  try{
+    const a=JSON.parse(localStorage.getItem('cams_auth')||'');
+    if(a&&a.id===ADMIN_ID&&a.exp>Date.now()){_authed=true;setTimeout(()=>_authed=false,30*60*1000);return true;}
+  }catch(e){}
+  alert('🔒 관리자(김환기)로 로그인 후 이용하세요.');
   return false;
 }
 
