@@ -177,7 +177,7 @@ const AUTH_EXP = 8 * 60 * 60 * 1000;
 
 function getAuth() {
   try {
-    const a = JSON.parse(localStorage.getItem(AUTH_KEY) || '');
+    const a = JSON.parse(sessionStorage.getItem(AUTH_KEY) || '');
     if (a && a.exp > Date.now()) return a;
   } catch(e) {}
   return null;
@@ -198,7 +198,7 @@ async function doLogin() {
     });
     const data = await res.json();
     if (data.authenticated) {
-      localStorage.setItem(AUTH_KEY, JSON.stringify({
+      sessionStorage.setItem(AUTH_KEY, JSON.stringify({
         id: data.employee.employeeId,
         name: data.employee.name,
         dept: data.employee.department,
@@ -257,7 +257,7 @@ const JISA_KEY = 'cams_jisa_auth';
 
 function getJisaAuth() {
   try {
-    const a = JSON.parse(localStorage.getItem(JISA_KEY) || '');
+    const a = JSON.parse(sessionStorage.getItem(JISA_KEY) || '');
     if (a && a.exp > Date.now()) return a;
   } catch(e) {}
   return null;
@@ -296,7 +296,7 @@ async function doJisaLogin(onSuccess) {
     });
     const data = await res.json();
     if (data.authenticated) {
-      localStorage.setItem(JISA_KEY, JSON.stringify({ id: data.employee.employeeId, exp: Date.now() + AUTH_EXP }));
+      sessionStorage.setItem(JISA_KEY, JSON.stringify({ id: data.employee.employeeId, exp: Date.now() + AUTH_EXP }));
       document.getElementById('jisaOverlay').remove();
       onSuccess();
     } else {
