@@ -192,12 +192,22 @@ function getAuth() {
   return null;
 }
 
+const GUEST_ACCOUNTS = [{ id: 'guest', pw: 'cams2026', name: '방문자', dept: '도급사' }];
+
 async function doLogin() {
   const id = document.getElementById('loginId').value.trim();
   const pw = document.getElementById('loginPw').value;
   const err = document.getElementById('loginErr');
   const btn = document.getElementById('loginBtn');
   if (!id || !pw) { err.textContent = '사번과 비밀번호를 입력하세요.'; return; }
+  const guest = GUEST_ACCOUNTS.find(a => a.id === id && a.pw === pw);
+  if (guest) {
+    sessionStorage.setItem(AUTH_KEY, JSON.stringify({ id: guest.id, name: guest.name, dept: guest.dept, exp: Date.now() + AUTH_EXP }));
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('loginId').value = '';
+    document.getElementById('loginPw').value = '';
+    return;
+  }
   btn.disabled = true; btn.textContent = '확인 중…'; err.textContent = '';
   try {
     const res = await fetch(PROXY_URL, {
