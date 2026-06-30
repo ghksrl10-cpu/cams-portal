@@ -6,10 +6,67 @@
 <title>CAMS 대시보드</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{min-height:100%;background:#1a1c2e;font-family:'Apple SD Gothic Neo','Noto Sans KR',-apple-system,sans-serif;color:#e2e4f0;font-size:14px;}
+html,body{min-height:100%;background:#ffffff;font-family:'Apple SD Gothic Neo','Noto Sans KR',-apple-system,sans-serif;color:#1c1c1e;font-size:14px;}
+body.dark{background:#1a1c2e;color:#e2e4f0;}
+
+/* 라이트 기본값 */
+.banner{background:linear-gradient(135deg,#1e3a8a 0%,#1e40af 50%,#2563eb 100%);padding:20px 28px 22px;}
+.quick-btn{background:#f2f2f7;border:1px solid #e0e0e5;}
+.quick-btn:hover{background:#e5e5ea;border-color:#3b82f6;}
+.quick-name{color:#1c1c1e;}
+.quick-desc{color:#8e8e93;}
+.status-card{background:#f2f2f7;border:1px solid #e0e0e5;}
+.sc-label{color:#8e8e93;}
+.sc-num{color:#1c1c1e;}
+.sc-icon{opacity:0.3;}
+.pcard{background:#f2f2f7;border:1px solid #e0e0e5;}
+.pcard-title{color:#1c1c1e;}
+.pcard-count{color:#1c1c1e;}
+.pcard-status{color:#8e8e93;}
+.table-card{background:#f2f2f7;border:1px solid #e0e0e5;}
+.table-head{border-bottom-color:#e0e0e5;}
+.table-head-title{color:#1c1c1e;}
+th{color:#8e8e93;background:#e5e5ea;border-bottom-color:#e0e0e5;}
+td{color:#1c1c1e;border-bottom-color:#e0e0e5;}
+tr:hover td{background:#e5e5ea;}
+.bcard{background:#f2f2f7;border:1px solid #e0e0e5;}
+.bcard-title{color:#8e8e93;}
+.bcard-row{border-bottom-color:#e0e0e5;}
+.bcard-name{color:#1c1c1e;}
+.sec-title{color:#636366;}
+.divider{background:#e0e0e5;}
+.empty{color:#8e8e93;}
+.alert{background:#fffbeb;border-left-color:#f59e0b;}
+.alert-title{color:#b45309;}
+.alert-desc{color:#92400e;}
+
+/* 다크모드 */
+body.dark .quick-btn{background:#252840;border-color:#2e3350;}
+body.dark .quick-btn:hover{background:#2e3350;border-color:#3b82f6;}
+body.dark .quick-name{color:#e2e4f0;}
+body.dark .quick-desc{color:#64748b;}
+body.dark .status-card{background:#252840;border-color:#2e3350;}
+body.dark .sc-label{color:#64748b;}
+body.dark .sc-num{color:#fff;}
+body.dark .pcard{background:#252840;border-color:#2e3350;}
+body.dark .pcard-title{color:#e2e4f0;}
+body.dark .pcard-count{color:#fff;}
+body.dark .pcard-status{color:#64748b;}
+body.dark .table-card{background:#252840;border-color:#2e3350;}
+body.dark .table-head{border-bottom-color:#2e3350;}
+body.dark .table-head-title{color:#e2e4f0;}
+body.dark th{color:#64748b;background:#1e2035;border-bottom-color:#2e3350;}
+body.dark td{color:#cbd5e1;border-bottom-color:#1e2035;}
+body.dark tr:hover td{background:#2a2e4a;}
+body.dark .bcard{background:#252840;border-color:#2e3350;}
+body.dark .bcard-title{color:#64748b;}
+body.dark .bcard-row{border-bottom-color:#1e2035;}
+body.dark .bcard-name{color:#cbd5e1;}
+body.dark .sec-title{color:#94a3b8;}
+body.dark .divider{background:#1e2035;}
+body.dark .empty{color:#475569;}
 
 /* 헤더 배너 */
-.banner{background:linear-gradient(135deg,#1e3a8a 0%,#1e40af 50%,#2563eb 100%);padding:20px 28px 22px;}
 .banner-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
 .banner-title{font-size:22px;font-weight:600;color:#fff;letter-spacing:-0.5px;}
 .banner-sub{font-size:12px;color:#93c5fd;margin-top:3px;}
@@ -304,6 +361,15 @@ function saveKey(){
 
 <script>
 function goTool(idx){ window.parent.postMessage({type:'cams_goto',idx},'*'); }
+
+window.addEventListener('message', e => {
+  if (e.data && e.data.type === 'cams_theme') {
+    document.body.classList.toggle('dark', e.data.dark);
+  }
+});
+
+// 포털에 현재 테마 요청
+window.parent.postMessage({ type: 'cams_request_theme' }, '*');
 
 window.addEventListener('message',e=>{
   if(e.data&&e.data.type==='cams_torque_stat'){
