@@ -7,10 +7,15 @@
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
   :root{
+    --bd:#dde1e7;--line:#e8ebf0;--hd:#eef0f3;--hd2:#e4e7ec;
+    --blue:#3b82f6;--blue2:#2563eb;--ok:#16a34a;--okbg:#dcfce7;
+    --ng:#dc2626;--ngbg:#fee2e2;--mut:#6b7280;--ink:#111827;
+    --side:#1a1d28;--bg:#f5f6f8;--card:#ffffff;
+  }
+  body.dark{
     --bd:#2a2d35;--line:#23262f;--hd:#1a1d24;--hd2:#20232b;
-    --blue:#3b82f6;--blue2:#2563eb;--ok:#22c55e;--okbg:#052e16;
-    --ng:#ef4444;--ngbg:#2d0a0a;--mut:#9ca3af;--ink:#f1f5f9;
-    --side:#13151c;--bg:#0f1117;--card:#1a1d24;
+    --ok:#22c55e;--okbg:#052e16;--ng:#ef4444;--ngbg:#2d0a0a;
+    --mut:#9ca3af;--ink:#f1f5f9;--side:#13151c;--bg:#0f1117;--card:#1a1d24;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:"맑은 고딕","Malgun Gothic",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
@@ -128,6 +133,22 @@
     .conv-grid{grid-template-columns:1fr}
     .model-grid{grid-template-columns:1fr}
   }
+  body:not(.dark) .btn{background:#fff;color:#374151;border-color:#d1d5db}
+  body:not(.dark) .btn:hover{background:#f3f4f6}
+  body:not(.dark) .btn.pri{background:var(--blue);color:#fff;border-color:var(--blue)}
+  body:not(.dark) .btn.suc{background:#16a34a;color:#fff;border-color:#16a34a}
+  body:not(.dark) .btn.dan{background:#dc2626;color:#fff;border-color:#dc2626}
+  body:not(.dark) .bar{background:var(--hd);border-color:var(--bd)}
+  body:not(.dark) .bar input,body:not(.dark) .bar select{background:#fff;color:#111827;border-color:var(--bd)}
+  body:not(.dark) .sec,body:not(.dark) .card,body:not(.dark) .sum-card,body:not(.dark) .model-card,body:not(.dark) .preview-wrap,body:not(.dark) .upload-box{background:#fff;border-color:var(--bd)}
+  body:not(.dark) .preview-head{background:var(--hd);border-color:var(--bd)}
+  body:not(.dark) .field-row input,body:not(.dark) .field-row select{background:#fff;color:#111827;border-color:var(--bd)}
+  body:not(.dark) input,body:not(.dark) select,body:not(.dark) textarea{background:#fff;color:#111827;border-color:var(--bd)}
+  body:not(.dark) tr:hover td{background:#eef2ff}
+  body:not(.dark) .nav-item{color:#4b5563}
+  body:not(.dark) .hamb{background:#fff;border-color:var(--bd)}
+  body:not(.dark) .mc-nq{background:#eff6ff;color:var(--blue);border-color:#bfdbfe}
+  body:not(.dark) .upload-box.done{background:#f0fdf4;border-color:#22c55e}
 </style>
 </head>
 <body>
@@ -841,7 +862,12 @@ function toast(msg){
 })();
 
 window.addEventListener('message', e => {
-  if (!e.data || e.data.type !== 'cams_auth') return;
+  if (!e.data) return;
+  if (e.data.type === 'cams_theme') {
+    document.body.classList.toggle('dark', !!e.data.dark);
+    return;
+  }
+  if (e.data.type !== 'cams_auth') return;
   const { name, dept } = e.data;
   const av = document.getElementById('userAv');
   const un = document.getElementById('userName');
@@ -852,6 +878,7 @@ window.addEventListener('message', e => {
   if (ud) ud.textContent = dept || '캠스 담당자';
   if (hu) hu.textContent = '생산팀 · ' + (name || '') + 'PM';
 });
+window.parent.postMessage({ type: 'cams_request_theme' }, '*');
 </script>
 
 <!-- 파일 선택 모달 -->

@@ -6,12 +6,18 @@
 <title>업무일지 자동화 | 캠스</title>
 <style>
 :root{
-  --bd:#2a2d35;--line:#23262f;--hd:#1a1d24;--hd2:#20232b;
+  --bd:#dde1e7;--line:#e8ebf0;--hd:#eef0f3;--hd2:#e4e7ec;
   --blue:#3b82f6;--blue2:#2563eb;
+  --ok:#16a34a;--okbg:#dcfce7;--ng:#dc2626;--ngbg:#fee2e2;
+  --warn:#d97706;--warnbg:#fef3c7;
+  --mut:#6b7280;--ink:#111827;
+  --side:#1a1d28;--bg:#f5f6f8;--card:#ffffff;
+}
+body.dark{
+  --bd:#2a2d35;--line:#23262f;--hd:#1a1d24;--hd2:#20232b;
   --ok:#22c55e;--okbg:#052e16;--ng:#ef4444;--ngbg:#2d0a0a;
   --warn:#f59e0b;--warnbg:#1c1a05;
-  --mut:#9ca3af;--ink:#f1f5f9;
-  --side:#13151c;--bg:#0f1117;
+  --mut:#9ca3af;--ink:#f1f5f9;--side:#13151c;--bg:#0f1117;--card:#1a1d24;
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:"맑은 고딕","Malgun Gothic",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
@@ -136,6 +142,22 @@ pre.out-pre{
   .two-col{grid-template-columns:1fr}
 }
 @media(max-width:440px){.cards{grid-template-columns:1fr}}
+body:not(.dark) .btn{background:#fff;color:#374151;border-color:#d1d5db}
+body:not(.dark) .btn:hover{background:#f3f4f6}
+body:not(.dark) .btn.pri{background:var(--blue);color:#fff;border-color:var(--blue)}
+body:not(.dark) .btn.ok{background:var(--okbg);color:var(--ok);border-color:var(--ok)}
+body:not(.dark) .btn.warn{background:var(--warnbg);color:var(--warn);border-color:var(--warn)}
+body:not(.dark) .btn.danger{background:var(--ngbg);color:var(--ng);border-color:var(--ng)}
+body:not(.dark) .card,body:not(.dark) .form-card,body:not(.dark) .tbl-wrap,body:not(.dark) .help-card{background:#fff;border-color:var(--bd)}
+body:not(.dark) .tbl-wrap th{background:var(--hd)}
+body:not(.dark) input,body:not(.dark) select,body:not(.dark) textarea{background:#fff;color:#111827;border-color:var(--bd)}
+body:not(.dark) .search-bar input{background:#fff;color:#111827;border-color:var(--bd)}
+body:not(.dark) tr:hover td{background:#eef2ff}
+body:not(.dark) .paste-zone{border-color:var(--bd);color:#6b7280}
+body:not(.dark) .paste-zone:hover{border-color:var(--blue);background:#eff6ff}
+body:not(.dark) .help-code{background:#f8fafc;color:#374151;border-color:var(--bd)}
+body:not(.dark) .nav-item{color:#4b5563}
+body:not(.dark) .hamb{background:#fff;border-color:var(--bd)}
 </style>
 </head>
 <body>
@@ -984,12 +1006,15 @@ function renderAuto(){
 })();
 
 window.addEventListener('message', e => {
-  if (!e.data || e.data.type !== 'cams_auth') return;
+  if (!e.data) return;
+  if (e.data.type === 'cams_theme') { document.body.classList.toggle('dark', !!e.data.dark); return; }
+  if (e.data.type !== 'cams_auth') return;
   const { name, dept } = e.data;
   window._authName = name || '';
   const hu = document.getElementById('headerUser');
   if (hu) hu.textContent = '생산팀 조립 · ' + (name || '김환기');
 });
+window.parent.postMessage({ type: 'cams_request_theme' }, '*');
 </script>
 </body>
 </html>

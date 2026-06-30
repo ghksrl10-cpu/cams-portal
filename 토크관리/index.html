@@ -6,9 +6,14 @@
 <title>범퍼 조립 토크 측정 관리</title>
 <style>
   :root{
-    --bd:#2a2d35; --line:#23262f; --hd:#1a1d24; --hd2:#20232b; --blue:#3b82f6; --blue2:#2563eb;
+    --bd:#dde1e7; --line:#e8ebf0; --hd:#eef0f3; --hd2:#e4e7ec; --blue:#3b82f6; --blue2:#2563eb;
+    --ok:#16a34a; --okbg:#dcfce7; --ng:#dc2626; --ngbg:#fee2e2; --mut:#6b7280; --ink:#111827;
+    --side:#1a1d28; --bg:#f5f6f8; --card:#ffffff;
+  }
+  body.dark{
+    --bd:#2a2d35; --line:#23262f; --hd:#1a1d24; --hd2:#20232b;
     --ok:#22c55e; --okbg:#052e16; --ng:#ef4444; --ngbg:#2d0a0a; --mut:#9ca3af; --ink:#f1f5f9;
-    --side:#13151c; --bg:#0f1117;
+    --side:#13151c; --bg:#0f1117; --card:#1a1d24;
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:"맑은 고딕","Malgun Gothic",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
@@ -118,6 +123,21 @@
     #repArea{position:absolute;left:0;top:0;width:100%}
     table{min-width:0!important}
   }
+  body:not(.dark) .btn{background:#fff;color:#374151;border-color:#d1d5db}
+  body:not(.dark) .btn:hover{background:#f3f4f6}
+  body:not(.dark) .btn.pri{background:var(--blue);color:#fff;border-color:var(--blue)}
+  body:not(.dark) .card,body:not(.dark) .chart-box,body:not(.dark) .sec,body:not(.dark) .hist-item{background:#fff;border-color:var(--bd)}
+  body:not(.dark) .bar{background:var(--hd);border-color:var(--bd)}
+  body:not(.dark) .bar input,body:not(.dark) .bar select{background:#fff;color:#111827;border-color:var(--bd)}
+  body:not(.dark) input,body:not(.dark) select,body:not(.dark) textarea{background:#fff;color:#111827;border-color:var(--bd)}
+  body:not(.dark) td input{color:#111827;background:transparent}
+  body:not(.dark) td.off{background:#f5f6f8}
+  body:not(.dark) td.off input{background:#f5f6f8}
+  body:not(.dark) .tab{background:#fff;color:#374151;border-color:var(--bd)}
+  body:not(.dark) .tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+  body:not(.dark) tr:hover td{background:#eef2ff}
+  body:not(.dark) .nav-item{color:#4b5563}
+  body:not(.dark) .hist-item:hover{background:#eff6ff;border-color:var(--blue)}
 </style>
 </head>
 <body>
@@ -1097,6 +1117,20 @@ async function initMonthlyRecords(){
   showView('dash');
   hideOverlay();
 })();
+window.addEventListener('message', e => {
+  if (!e.data) return;
+  if (e.data.type === 'cams_theme') { document.body.classList.toggle('dark', !!e.data.dark); return; }
+  if (e.data.type === 'cams_auth') {
+    const { name, dept } = e.data;
+    const av = document.querySelector('.side-foot .av');
+    const un = document.querySelector('.side-foot .sf-name');
+    const ud = document.querySelector('.side-foot .sf-dept');
+    if (av) av.textContent = name ? name.charAt(0) : '?';
+    if (un) un.textContent = name || '-';
+    if (ud) ud.textContent = dept || '캠스 담당자';
+  }
+});
+window.parent.postMessage({ type: 'cams_request_theme' }, '*');
 </script>
 </body>
 </html>
