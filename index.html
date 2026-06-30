@@ -159,7 +159,16 @@ iframe.active { display: block; }
 </div>
 <div id="loginOverlay">
   <div class="login-box">
-    <h2>🏭 캠스 자동화 도구</h2>
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px;">
+      <svg viewBox="0 0 100 100" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
+        <defs><clipPath id="lc"><circle cx="50" cy="50" r="49"/></clipPath></defs>
+        <circle cx="50" cy="50" r="49" fill="#111"/>
+        <rect x="0" y="36" width="100" height="28" fill="#dd0000" clip-path="url(#lc)"/>
+        <text x="91" y="58" text-anchor="end" fill="white" font-family="Arial Black,Impact,sans-serif" font-weight="900" font-size="24" letter-spacing="-1">AMS</text>
+        <path d="M 81 19 A 44 44 0 1 0 81 81" fill="none" stroke="#1414cc" stroke-width="15" stroke-linecap="round"/>
+      </svg>
+      <h2 style="margin:0">캠스 생산팀 조립 자동화</h2>
+    </div>
     <input id="loginId" type="text" inputmode="numeric" placeholder="사번" maxlength="10" autocomplete="off">
     <input id="loginPw" type="password" placeholder="비밀번호" autocomplete="off">
     <div id="loginErr"></div>
