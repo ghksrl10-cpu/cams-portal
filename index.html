@@ -263,7 +263,10 @@ function getJisaAuth() {
   return null;
 }
 
+let _jisaCallback = null;
+
 function showJisaLogin(onSuccess) {
+  _jisaCallback = onSuccess;
   const ov = document.createElement('div');
   ov.id = 'jisaOverlay';
   ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#111;display:flex;align-items:center;justify-content:center;';
@@ -273,14 +276,15 @@ function showJisaLogin(onSuccess) {
       <input id="jisaId" type="text" inputmode="numeric" placeholder="사번" maxlength="10" autocomplete="off">
       <input id="jisaPw" type="password" placeholder="비밀번호" autocomplete="off">
       <div id="jisaErr" style="color:#ff453a;font-size:13px;text-align:center;min-height:18px;"></div>
-      <button id="jisaBtn" onclick="doJisaLogin(${JSON.stringify(onSuccess).replace(/"/g,"'")})">로그인</button>
+      <button id="jisaBtn" onclick="doJisaLogin()">로그인</button>
       <button onclick="document.getElementById('jisaOverlay').remove()" style="background:#3a3a3c;">취소</button>
     </div>`;
   document.body.appendChild(ov);
-  ov.querySelector('#jisaPw').addEventListener('keydown', e => { if (e.key === 'Enter') doJisaLogin(onSuccess); });
+  ov.querySelector('#jisaPw').addEventListener('keydown', e => { if (e.key === 'Enter') doJisaLogin(); });
 }
 
-async function doJisaLogin(onSuccess) {
+async function doJisaLogin() {
+  const onSuccess = _jisaCallback;
   const id = document.getElementById('jisaId').value.trim();
   const pw = document.getElementById('jisaPw').value;
   const err = document.getElementById('jisaErr');
