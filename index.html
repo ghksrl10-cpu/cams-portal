@@ -226,6 +226,7 @@ async function doLogin() {
       document.getElementById('loginOverlay').style.display = 'none';
       document.getElementById('loginId').value = '';
       document.getElementById('loginPw').value = '';
+      document.querySelectorAll('iframe').forEach(f => sendAuthToFrame(f));
     } else {
       err.textContent = data.message || '로그인 실패';
     }
