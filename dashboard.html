@@ -142,44 +142,39 @@ tr:hover td{background:#2a2e4a;}
   <div class="sec-title">빠른 이동</div>
   <div class="quick-grid">
     <div class="quick-btn" onclick="goTool(0)">
-      <div class="quick-icon">🔧</div>
-      <div class="quick-name">토크 측정</div>
-      <div class="quick-desc">범퍼 조립</div>
-    </div>
-    <div class="quick-btn" onclick="goTool(1)">
       <div class="quick-icon">📋</div>
       <div class="quick-name">토크 관리</div>
       <div class="quick-desc">이력 조회</div>
     </div>
-    <div class="quick-btn" onclick="goTool(2)">
+    <div class="quick-btn" onclick="goTool(1)">
       <div class="quick-icon">🚗</div>
       <div class="quick-name">대차 관리</div>
       <div class="quick-desc">실시간 현황</div>
     </div>
-    <div class="quick-btn" onclick="goTool(3)">
+    <div class="quick-btn" onclick="goTool(2)">
       <div class="quick-icon">✅</div>
       <div class="quick-name">3정5S</div>
       <div class="quick-desc">체크리스트</div>
     </div>
-    <div class="quick-btn" onclick="goTool(4)">
+    <div class="quick-btn" onclick="goTool(3)">
       <div class="quick-icon">📊</div>
       <div class="quick-name">알카 KPI</div>
       <div class="quick-desc">실적 종합</div>
     </div>
-    <div class="quick-btn" onclick="goTool(5)">
+    <div class="quick-btn" onclick="goTool(4)">
       <div class="quick-icon">📁</div>
       <div class="quick-name">ALC 정리</div>
       <div class="quick-desc">파일 정리</div>
     </div>
-    <div class="quick-btn" onclick="goTool(6)">
+    <div class="quick-btn" onclick="goTool(5)">
       <div class="quick-icon">🏭</div>
       <div class="quick-name">컨베어</div>
       <div class="quick-desc">시뮬레이션</div>
     </div>
-    <div class="quick-btn" onclick="goTool(7)">
-      <div class="quick-icon">🔒</div>
+    <div class="quick-btn" onclick="goTool(6)">
+      <div class="quick-icon">📝</div>
       <div class="quick-name">업무일지</div>
-      <div class="quick-desc">PIN 필요</div>
+      <div class="quick-desc">ERP 로그인</div>
     </div>
   </div>
 </div>
@@ -258,6 +253,17 @@ tr:hover td{background:#2a2e4a;}
 
 <div class="section">
   <div class="sec-title">설정</div>
+  <div class="table-card" style="margin-bottom:8px">
+    <div class="table-head"><div class="table-head-title">스킨</div></div>
+    <div style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:14px;color:#e2e4f0">다크 모드 사용</span>
+      <label style="position:relative;display:inline-block;width:51px;height:31px;cursor:pointer;">
+        <input type="checkbox" id="darkToggle" style="opacity:0;width:0;height:0;" onchange="setDark(this.checked)">
+        <span id="darkSlider" style="position:absolute;inset:0;border-radius:34px;background:#3a3a3c;transition:.3s;"></span>
+        <span id="darkKnob" style="position:absolute;left:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></span>
+      </label>
+    </div>
+  </div>
   <div class="table-card">
     <div class="table-head">
       <div class="table-head-title">Claude API 키 (업무일지 자동 분석)</div>
@@ -280,6 +286,21 @@ tr:hover td{background:#2a2e4a;}
   const status = document.getElementById('apiStatus');
   if(saved){ inp.value = saved; status.textContent = '✓ API 키 등록됨 — 업무일지에서 바로 사용 가능'; status.style.color='#34d399'; }
   else { status.textContent = 'API 키를 입력하면 업무일지 자동 분석 기능이 활성화됩니다'; }
+})();
+
+function setDark(dark) {
+  localStorage.setItem('cams_dark_mode', dark);
+  document.getElementById('darkSlider').style.background = dark ? '#0a84ff' : '#3a3a3c';
+  document.getElementById('darkKnob').style.left = dark ? '22px' : '2px';
+  window.parent.postMessage({ type: 'cams_set_dark', dark }, '*');
+}
+
+(function(){
+  const dark = localStorage.getItem('cams_dark_mode') !== 'false';
+  const cb = document.getElementById('darkToggle');
+  cb.checked = dark;
+  document.getElementById('darkSlider').style.background = dark ? '#0a84ff' : '#3a3a3c';
+  document.getElementById('darkKnob').style.left = dark ? '22px' : '2px';
 })();
 
 function saveKey(){

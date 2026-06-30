@@ -111,6 +111,15 @@ iframe {
 
 iframe.active { display: block; }
 
+body.light { background: #f2f2f7; }
+body.light .header { background: #ffffff; border-bottom-color: #e0e0e5; }
+body.light .logo-name { color: #1c1c1e; }
+body.light .logo-sub { color: #8e8e93; }
+body.light .tab { color: #8e8e93; }
+body.light .tab.active { color: #1c1c1e; border-bottom-color: #0a84ff; }
+body.light .content { background: #f2f2f7; }
+body.light iframe { background: #f2f2f7; }
+
 #loginOverlay {
   position: fixed; inset: 0; z-index: 9999;
   background: #111;
@@ -361,7 +370,19 @@ function sendAuthToFrame(frame) {
   }
 }
 
+const DARK_KEY = 'cams_dark_mode';
+(function(){
+  const dark = localStorage.getItem(DARK_KEY);
+  if (dark === 'false') document.body.classList.add('light');
+})();
+
 window.addEventListener('message', e => {
+  if (e.data && e.data.type === 'cams_set_dark') {
+    const isDark = e.data.dark;
+    localStorage.setItem(DARK_KEY, isDark);
+    document.body.classList.toggle('light', !isDark);
+    return;
+  }
   if (!e.data) return;
   if (e.data.type === 'cams_goto') doActivate(e.data.idx + 1);
   if (e.data.type === 'cams_torque_stat') {
