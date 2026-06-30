@@ -610,6 +610,8 @@
     _pushing=true;
     const payload={};
     allSyncKeys().forEach(k=>{const v=localStorage.getItem(k);if(v)payload[k]=v;});
+    payload._lastSavedBy = _currentUser.name || '알 수 없음';
+    payload._lastSavedAt = new Date().toLocaleString('ko');
     // 기존 Firestore 데이터 → backup 문서로 먼저 저장 후 업로드
     db.collection('conveyor_sim').doc('config').get().then(snap=>{
       if(snap.exists){
@@ -1602,7 +1604,7 @@ function saveScenario(){
   const uph=bnCT>0?Math.round(3600/bnCT):0,daily=bnCT>0?Math.floor(wm*60/bnCT):0;
   const lb=active.length>0?pc.reduce((a,v)=>a+v,0)/(bnCT*active.length)*100:0;
   const rowsSnap=JSON.parse(JSON.stringify(s.rows));
-  scenarios.push({id:Date.now(),name,lbl,ratio:n+':1',base,pitch:pitch.toFixed(1),cnt:active.length,uph,daily,lb:lb.toFixed(1),bnCT:bnCT.toFixed(1),at:new Date().toLocaleString('ko'),rows:rowsSnap,line:curLine,sub:curSub});
+  scenarios.push({id:Date.now(),name,lbl,ratio:n+':1',base,pitch:pitch.toFixed(1),cnt:active.length,uph,daily,lb:lb.toFixed(1),bnCT:bnCT.toFixed(1),at:new Date().toLocaleString('ko'),savedBy:_currentUser.name||'',rows:rowsSnap,line:curLine,sub:curSub});
   localStorage.setItem('conv_scen4',JSON.stringify(scenarios));
   if(typeof _simPushCloud==='function')_simPushCloud();
   document.getElementById('saveNote').innerHTML='<b>저장됨</b> · '+name;
@@ -1611,13 +1613,13 @@ function renderScen(){
   if(!scenarios.length){document.getElementById('scenArea').innerHTML='<div style="padding:30px;text-align:center;color:var(--mut)">저장된 시나리오가 없습니다.</div>';return;}
   const mU=Math.max(...scenarios.map(s=>s.uph)),mD=Math.max(...scenarios.map(s=>s.daily)),mL=Math.max(...scenarios.map(s=>+s.lb));
   let html=`<table class="scen-table"><thead><tr>
-    <th>시나리오</th><th>라인</th><th>저장일시</th><th>공피치</th><th>기준생산</th><th>공정수</th>
+    <th>시나리오</th><th>라인</th><th>저장일시</th><th>저장자</th><th>공피치</th><th>기준생산</th><th>공정수</th>
     <th>실UPH</th><th>병목C/T</th><th>일생산량</th><th>밸런스</th><th>삭제</th>
   </tr></thead><tbody>`;
   scenarios.forEach(s=>{
     html+=`<tr>
       <td style="font-weight:700">${esc(s.name)}</td><td style="color:var(--blue)">${esc(s.lbl)}</td>
-      <td style="font-size:11px;color:var(--mut)">${s.at}</td><td>${s.ratio||''} (${s.pitch}초)</td><td>${s.base||'-'}대</td><td>${s.cnt}</td>
+      <td style="font-size:11px;color:var(--mut)">${s.at}</td><td style="font-size:11px;color:var(--mut)">${s.savedBy||'-'}</td><td>${s.ratio||''} (${s.pitch}초)</td><td>${s.base||'-'}대</td><td>${s.cnt}</td>
       <td class="${s.uph===mU?'best':''}">${s.uph}</td><td>${s.bnCT}초</td>
       <td class="${s.daily===mD?'best':''}">${s.daily.toLocaleString()}</td>
       <td class="${+s.lb===mL?'best':''}">${s.lb}%</td>
@@ -2570,9 +2572,12 @@ buildStabs();render();loadLineData();renderMain();renderScen();calcPitch();rende
   else{showView(lv);}
 })();
 
+let _currentUser = { name: '', dept: '' };
+
 window.addEventListener('message', e => {
   if (e.data && e.data.type === 'cams_auth') {
     const { name, dept } = e.data;
+    _currentUser = { name: name || '', dept: dept || '' };
     const av = name ? name.charAt(0) : '?';
     document.getElementById('userAv').textContent = av;
     document.getElementById('userName').textContent = name || '-';
