@@ -210,7 +210,7 @@
         <path d="M 81 19 A 44 44 0 1 0 81 81" fill="none" stroke="#1414cc" stroke-width="15" stroke-linecap="round"/>
       </svg>
     </div>
-    <div><b>컨베어 시뮬레이션</b><small>주식회사 캠스</small><small>생산팀 · 김환기PM</small></div>
+    <div><b>컨베어 시뮬레이션</b><small>주식회사 캠스</small><small id="headerUser">생산팀 · 캠스PM</small></div>
   </div>
   <nav class="nav">
     <div class="nav-group">메뉴</div>
@@ -227,8 +227,8 @@
     <div class="nav-item" id="nl4" onclick="gotoSim(4)"><span class="ic">🏗</span> 전주</div>
   </nav>
   <div class="side-foot">
-    <div class="av">김</div>
-    <div><b style="font-size:14px">김환기</b><small>캠스 담당자</small></div>
+    <div class="av" id="userAv">?</div>
+    <div><b style="font-size:14px" id="userName">-</b><small id="userDept">캠스 담당자</small></div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b">
       <span id="syncDot" title="동기화 대기중" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#64748b;transition:background .4s"></span>☁
     </div>
@@ -948,7 +948,7 @@ function render(){
   const _isAir=r=>_isSub(r)&&((r.name||'').includes('에어백')||(r.task||'').includes('에어백'));
   const _mainIdx=[],_airIdx=[],_otherSubIdx=[];
   s.rows.forEach((r,i)=>{if(_isAir(r))_airIdx.push(i);else if(_isSub(r))_otherSubIdx.push(i);else _mainIdx.push(i);});
-  const _displayOrder=[..._mainIdx.slice(0,4),..._airIdx,..._mainIdx.slice(4),..._otherSubIdx];
+  const _displayOrder=[..._mainIdx,..._airIdx,..._otherSubIdx];
   // SUB 행이 rowspan 그룹 중간에 삽입될 때 컬럼 밀림 방지 — 동적 span 재계산
   const _drows=_displayOrder.map(idx=>s.rows[idx]);
   function _respan(key){
@@ -961,7 +961,7 @@ function render(){
         let sp=1;
         for(let q=p+1;q<_drows.length;q++){
           if(_isSub(_drows[q]))break;
-          if((_drows[q][key]||1)===0)sp++;else break;
+          if((_drows[q][key]??1)===0)sp++;else break;
         }
         eff[p]=sp;
         for(let q=p+1;q<p+sp;q++)eff[q]=0;
@@ -1926,70 +1926,68 @@ function renderOverloadPanel(){
   // 6명이 필요해지는 첫 pn 찾기
   const firstSix=scenarios.find(sc=>sc.minW>=6);
 
-  const fixedW=fixedWSaved>0?fixedWSaved:0;
+  const perPersonSaved=+(document.getElementById('perPersonProd')||{}).value||35;
+  const fixedWSaved=+(document.getElementById('fixedWorkers')||{}).value||0;
+  if(!window._workerOvr) window._workerOvr={};
+  const COL_W=['90px','55px','85px','80px','65px','80px','65px','80px'];
+  const colgroup=`<colgroup>${COL_W.map(w=>`<col style="width:${w}">`).join('')}</colgroup>`;
   function renderTable(scList,title,color,isCtBased){
-    const showFixed=fixedW>0;
+    const tkey=isCtBased?'ct':'cams';
     let t=`<div style="margin:0 0 6px;font-size:12px;font-weight:700;color:${color}">${title}</div>`;
-    t+=`<table style="width:100%;border-collapse:collapse;font-size:12px">
+    t+=`<table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed">${colgroup}
       <tr style="background:#20232b;color:#94a3b8">
         <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">공피치<br><span style="font-weight:400;font-size:10px">공:실제</span></th>
         <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">UPH</th>
         <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">피치<br><span style="font-weight:400;font-size:10px">유효주기</span></th>
-        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">최소<br>작업자</th>
+        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">인원</th>
         <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">부하율</th>
         <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">일 생산량</th>
         <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">인당<br><span style="font-weight:400;font-size:10px">대/인/일</span></th>
         <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">고객사 대비</th>
-        ${showFixed?`<th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35;border-left:2px solid #fb923c;color:#fb923c">${fixedW}명<br><span style="font-weight:400;font-size:10px">생산량</span></th>
-        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35;color:#fb923c">${fixedW}명<br><span style="font-weight:400;font-size:10px">부하율</span></th>`:''}
       </tr>`;
-    let prevW=null;
+    let prevMinW=null;
     scList.forEach(sc=>{
       const isCur=sc.pn===curPn;
-      const w=isCtBased?sc.minW:sc.camsMinW;
-      const prod=sc.prod;
-      const diff=sc.diff;
-      const uph=Math.round(sc.prod*60/wm);
+      const minW=isCtBased?sc.minW:sc.camsMinW;
+      const ovrKey=`${tkey}_${sc.pn}`;
+      const ovr=window._workerOvr[ovrKey];
+      const w=ovr>0?ovr:minW;
+      const prod=ovr>0&&ovr<minW?Math.floor(wm*60*ovr/grpCTTotal):sc.prod;
+      const load=Math.round(grpCTTotal/(w*sc.pitchEff)*100);
+      const diff=prod-base;
+      const uph=Math.round(prod*60/wm);
       const perHead=w>0?Math.round(prod/w):0;
-      const workerChanged=prevW!==null&&w!==prevW;
-      prevW=w;
+      const workerChanged=prevMinW!==null&&minW!==prevMinW;
+      prevMinW=minW;
       const is6boundary=isCtBased&&sc.pn===firstSix?.pn;
-      const loadColor=sc.load>=95?'#ef4444':sc.load>=85?'#f59e0b':'#22c55e';
+      const loadColor=load>=100?'#ef4444':load>=85?'#f59e0b':'#22c55e';
+      const wColor=ovr>0&&ovr<minW?'#fb923c':w>=6?'#ef4444':w>=5?'#f59e0b':'#4ade80';
       const diffStr=diff>=0
         ?`<span style="color:#22c55e;font-weight:700">+${diff}대</span>`
         :`<span style="color:#ef4444;font-weight:700">${diff}대</span>`;
       const rowBg=isCur?'background:#0f2940;':(diff<0?'background:#160808;':'');
       const leftBorder=isCur?'border-left:3px solid #0284c7;':is6boundary?'border-left:3px solid #ef4444;':'border-left:3px solid transparent;';
       const topBorder=workerChanged?'border-top:2px solid #334155;':'';
-      let fixedCell='';
-      if(showFixed){
-        const fProd=fixedW>=w?prod:Math.floor(wm*60*fixedW/grpCTTotal);
-        const fLoad=fixedW>0?Math.round(grpCTTotal/(fixedW*sc.pitchEff)*100):0;
-        const fDiff=fProd-base;
-        const fDiffStr=fDiff>=0?`<span style="color:#22c55e;font-weight:600">+${fDiff}</span>`:`<span style="color:#ef4444;font-weight:600">${fDiff}</span>`;
-        const fLoadColor=fLoad>=100?'#ef4444':fLoad>=85?'#f59e0b':'#22c55e';
-        const fProdColor=fixedW<w?'#f97316':'#e2e8f0';
-        fixedCell=`<td style="padding:5px 8px;text-align:center;border-left:2px solid #431407;font-weight:700;color:${fProdColor}">${fProd}대 <span style="font-size:10px;font-weight:400">${fDiffStr}</span></td>
-        <td style="padding:5px 8px;text-align:center;font-weight:700;color:${fLoadColor}">${fLoad}%</td>`;
-      }
       t+=`<tr style="${rowBg}${leftBorder}${topBorder}border-bottom:1px solid #1e2128;">
         <td style="padding:5px 8px;text-align:center;color:${isCur?'#38bdf8':is6boundary?'#fca5a5':'#cbd5e1'};font-weight:${isCur||is6boundary?'700':'400'}">${sc.pn===0?'없음':`1:${sc.pn}`}${isCur?' ◀':''}${is6boundary?' ⚠️':''}</td>
         <td style="padding:5px 8px;text-align:center;color:#fbbf24;font-weight:700">${uph}</td>
         <td style="padding:5px 8px;text-align:center;color:#60a5fa">${sc.pitchEff.toFixed(1)}초</td>
-        <td style="padding:5px 8px;text-align:center;font-weight:700;color:${w>=6?'#ef4444':w>=5?'#f59e0b':'#4ade80'}">${w}명</td>
-        <td style="padding:5px 8px;text-align:center;font-weight:700;color:${loadColor}">${sc.load.toFixed(0)}%</td>
+        <td style="padding:4px 6px;text-align:center">
+          <input type="number" value="${w}" min="1" max="20"
+            style="width:46px;padding:2px 4px;background:#1e293b;border:1px solid ${wColor};border-radius:4px;color:${wColor};font-weight:700;text-align:center;font-size:12px"
+            onchange="window._workerOvr['${ovrKey}']=+this.value||0;renderOverloadPanel()">
+          ${ovr>0&&ovr<minW?`<div style="font-size:9px;color:#64748b">최소${minW}</div>`:''}
+        </td>
+        <td style="padding:5px 8px;text-align:center;font-weight:700;color:${loadColor}">${load}%</td>
         <td style="padding:5px 8px;text-align:center;font-weight:700;color:#e2e8f0">${prod}대</td>
         <td style="padding:5px 8px;text-align:center;color:#a78bfa;font-weight:700">${perHead}대</td>
         <td style="padding:5px 8px;text-align:center">${diffStr}</td>
-        ${fixedCell}
       </tr>`;
     });
     t+='</table>';
     return t;
   }
 
-  const perPersonSaved=+(document.getElementById('perPersonProd')||{}).value||35;
-  const fixedWSaved=+(document.getElementById('fixedWorkers')||{}).value||0;
   const infoBar=`<div style="margin:12px 0 8px;font-size:11px;color:#94a3b8;display:flex;gap:16px;flex-wrap:wrap;align-items:center">
     <span>고객사 목표: <b style="color:#f8fafc">${base}대/일</b></span>
     <span>총 C/T: <b style="color:#60a5fa">${grpCTTotal.toFixed(1)}초</b></span>
@@ -1999,12 +1997,6 @@ function renderOverloadPanel(){
         style="width:52px;padding:2px 4px;background:#1e293b;border:1px solid #334155;border-radius:4px;color:#fbbf24;font-weight:700;text-align:center;font-size:12px"
         onchange="renderOverloadPanel()">
       <span>대/인/일</span>
-    </span>
-    <span style="display:flex;align-items:center;gap:4px;border-left:1px solid #334155;padding-left:12px">지정 인원:
-      <input type="number" id="fixedWorkers" value="${fixedWSaved||''}" min="1" max="20" step="1" placeholder="–"
-        style="width:40px;padding:2px 4px;background:#1e293b;border:1px solid #475569;border-radius:4px;color:#fb923c;font-weight:700;text-align:center;font-size:12px"
-        onchange="renderOverloadPanel()">
-      <span>명</span>
     </span>
   </div>`;
 
@@ -2577,6 +2569,17 @@ buildStabs();render();loadLineData();renderMain();renderScen();calcPitch();rende
   else if(lv==='2d'){showView('2d');}
   else{showView(lv);}
 })();
+
+window.addEventListener('message', e => {
+  if (e.data && e.data.type === 'cams_auth') {
+    const { name, dept } = e.data;
+    const av = name ? name.charAt(0) : '?';
+    document.getElementById('userAv').textContent = av;
+    document.getElementById('userName').textContent = name || '-';
+    document.getElementById('userDept').textContent = dept || '캠스 담당자';
+    document.getElementById('headerUser').textContent = '생산팀 · ' + (name || '') + 'PM';
+  }
+});
 </script>
 
 <!-- ===== 기아 인정표 C/T 계산기 모달 ===== -->

@@ -269,6 +269,7 @@ TOOLS.forEach((tool, i) => {
   frame.className = i === 0 ? 'active' : '';
   frame.dataset.src = tool.src;
   if (i === 0) frame.src = tool.src;
+  frame.addEventListener('load', () => sendAuthToFrame(frame));
   content.appendChild(frame);
 });
 
@@ -348,6 +349,13 @@ function activate(idx) {
     }
   }
   doActivate(idx);
+}
+
+function sendAuthToFrame(frame) {
+  const auth = getAuth();
+  if (auth && frame.contentWindow) {
+    frame.contentWindow.postMessage({ type: 'cams_auth', name: auth.name, dept: auth.dept }, '*');
+  }
 }
 
 window.addEventListener('message', e => {
