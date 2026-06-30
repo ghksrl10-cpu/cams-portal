@@ -318,7 +318,7 @@ TOOLS.forEach((tool, i) => {
   frame.className = i === 0 ? 'active' : '';
   frame.dataset.src = tool.src;
   if (i === 0) frame.src = tool.src;
-  frame.addEventListener('load', () => sendAuthToFrame(frame));
+  frame.addEventListener('load', () => { sendAuthToFrame(frame); sendThemeToFrame(frame); });
   content.appendChild(frame);
 });
 
@@ -398,6 +398,11 @@ function activate(idx) {
     }
   }
   doActivate(idx);
+}
+
+function sendThemeToFrame(frame) {
+  const isDark = document.body.classList.contains('dark');
+  if (frame.contentWindow) frame.contentWindow.postMessage({ type: 'cams_theme', dark: isDark }, '*');
 }
 
 function sendAuthToFrame(frame) {
