@@ -9,7 +9,7 @@
 
 body {
   font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-  background: #111;
+  background: #f2f2f7;
   height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -17,8 +17,8 @@ body {
 }
 
 .header {
-  background: #12141f;
-  border-bottom: 1px solid #1e2235;
+  background: #ffffff;
+  border-bottom: 1px solid #e0e0e5;
   flex-shrink: 0;
 }
 
@@ -53,13 +53,13 @@ body {
 .logo-name {
   font-size: 13px;
   font-weight: 700;
-  color: #e2e4f0;
+  color: #1c1c1e;
   letter-spacing: 0.5px;
 }
 
 .logo-sub {
   font-size: 10px;
-  color: #4a5180;
+  color: #8e8e93;
   letter-spacing: 0.3px;
 }
 
@@ -77,7 +77,7 @@ body {
   padding: 10px 16px;
   font-size: 13px;
   font-weight: 500;
-  color: #636366;
+  color: #8e8e93;
   cursor: pointer;
   border-bottom: 2.5px solid transparent;
   white-space: nowrap;
@@ -87,7 +87,7 @@ body {
 }
 
 .tab.active {
-  color: #fff;
+  color: #1c1c1e;
   border-bottom-color: #0a84ff;
 }
 
@@ -96,7 +96,7 @@ body {
 .content {
   flex: 1;
   position: relative;
-  background: #0a0a0a;
+  background: #f2f2f7;
 }
 
 iframe {
@@ -106,19 +106,49 @@ iframe {
   height: 100%;
   border: none;
   display: none;
-  background: #0a0a0a;
+  background: #f2f2f7;
 }
 
 iframe.active { display: block; }
 
-body.light { background: #f2f2f7; }
-body.light .header { background: #ffffff; border-bottom-color: #e0e0e5; }
-body.light .logo-name { color: #1c1c1e; }
-body.light .logo-sub { color: #8e8e93; }
-body.light .tab { color: #8e8e93; }
-body.light .tab.active { color: #1c1c1e; border-bottom-color: #0a84ff; }
-body.light .content { background: #f2f2f7; }
-body.light iframe { background: #f2f2f7; }
+/* 다크모드 */
+body.dark { background: #111; }
+body.dark .header { background: #12141f; border-bottom-color: #1e2235; }
+body.dark .logo-name { color: #e2e4f0; }
+body.dark .logo-sub { color: #4a5180; }
+body.dark .tab { color: #636366; }
+body.dark .tab.active { color: #fff; border-bottom-color: #0a84ff; }
+body.dark .content { background: #0a0a0a; }
+body.dark iframe { background: #0a0a0a; }
+body.dark #loginOverlay { background: #111; }
+
+/* 다크모드 토글 버튼 */
+.dark-toggle {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 7px;
+  padding: 4px 6px 4px 8px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.dark-toggle-label { font-size: 10px; color: #8e8e93; }
+body.dark .dark-toggle-label { color: #636366; }
+.dark-toggle-sw {
+  position: relative; width: 40px; height: 24px;
+}
+.dark-toggle-sw input { opacity:0; width:0; height:0; }
+.dt-track {
+  position: absolute; inset: 0; border-radius: 34px;
+  background: #d1d1d6; transition: background .25s;
+}
+.dt-knob {
+  position: absolute; top: 2px; left: 2px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #fff; transition: left .25s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+body.dark .dt-track { background: #0a84ff; }
+body.dark .dt-knob { left: 18px; }
 
 #loginOverlay {
   position: fixed; inset: 0; z-index: 9999;
@@ -162,6 +192,13 @@ body.light iframe { background: #f2f2f7; }
     <div class="logo-text">
       <div class="logo-name">CAMS</div>
       <div class="logo-sub">생산팀 조립 자동화</div>
+    </div>
+    <div class="dark-toggle" onclick="toggleDark()">
+      <span class="dark-toggle-label">🌙</span>
+      <div class="dark-toggle-sw">
+        <div class="dt-track"></div>
+        <div class="dt-knob"></div>
+      </div>
     </div>
   </div>
   <div class="tab-bar" id="tabBar"></div>
@@ -372,9 +409,13 @@ function sendAuthToFrame(frame) {
 
 const DARK_KEY = 'cams_dark_mode';
 (function(){
-  const dark = localStorage.getItem(DARK_KEY);
-  if (dark === 'false') document.body.classList.add('light');
+  if (localStorage.getItem(DARK_KEY) === 'true') document.body.classList.add('dark');
 })();
+
+function toggleDark() {
+  const isDark = document.body.classList.toggle('dark');
+  localStorage.setItem(DARK_KEY, isDark);
+}
 
 window.addEventListener('message', e => {
   if (e.data && e.data.type === 'cams_set_dark') {
