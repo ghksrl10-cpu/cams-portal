@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>캠스 데이터 이전 도구</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background: #111; color: #e2e4f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.box { background: #1c1c1e; border-radius: 20px; padding: 36px 32px; width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 20px; }
+h1 { font-size: 18px; font-weight: 700; text-align: center; color: #fff; }
+.sub { font-size: 13px; color: #888; text-align: center; line-height: 1.6; }
+.section { background: #2c2c2e; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.section h2 { font-size: 14px; font-weight: 600; color: #fff; }
+.section p { font-size: 12px; color: #888; line-height: 1.6; }
+button { width: 100%; padding: 13px; border-radius: 10px; border: none; font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+button:active { opacity: 0.7; }
+.btn-export { background: #0a84ff; color: #fff; }
+.btn-import { background: #30d158; color: #fff; }
+.btn-clear { background: #ff453a; color: #fff; }
+.status { font-size: 13px; padding: 10px 14px; border-radius: 8px; text-align: center; display: none; }
+.status.ok { background: #1a3a1a; color: #30d158; display: block; }
+.status.err { background: #3a1a1a; color: #ff453a; display: block; }
+.key-list { font-size: 11px; color: #666; line-height: 1.8; }
+input[type=file] { display: none; }
+label.file-btn { display: block; width: 100%; padding: 13px; border-radius: 10px; background: #3a3a3c; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; text-align: center; }
+label.file-btn:active { opacity: 0.7; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>📦 캠스 데이터 이전</h1>
+  <p class="sub">로컬 PC 데이터를 GitHub 포털로 이전합니다</p>
+
+  <div class="section" id="exportSection">
+    <h2>① 내보내기 (로컬 PC에서 실행)</h2>
+    <p>현재 PC에 저장된 알카 KPI, 컨베어 시뮬레이션 데이터를 파일로 저장합니다.</p>
+    <div class="key-list" id="keyList">키 확인 중...</div>
+    <button class="btn-export" onclick="exportData()">💾 데이터 파일 저장</button>
+    <div class="status" id="exportStatus"></div>
+  </div>
+
+  <div class="section">
+    <h2>② 가져오기 (포털에서 실행)</h2>
+    <p>저장된 파일을 불러와서 포털에 데이터를 복원합니다.<br>⚠ 기존 포털 데이터는 덮어씁니다.</p>
+    <label class="file-btn" for="importFile">📂 파일 선택 후 가져오기</label>
+    <input type="file" id="importFile" accept=".json" onchange="importData(this)">
+    <div class="status" id="importStatus"></div>
+  </div>
+</div>
+
+<script>
+const KEYS = [
+  'alka_db_v1',
+  'conv_struct_2_0',
+  'conv_struct_2_0_backup',
+  'conv_scen4',
+  'conv_lastView',
+  'conv_lastLine',
+  'conv_ct_saves',
+];
+
+function getDynamicKeys() {
+  const extras = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('conv_') && !KEYS.includes(k)) extras.push(k);
+  }
+  return extras;
+}
+
+function allKeys() {
+  return [...KEYS, ...getDynamicKeys()];
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const keys = allKeys();
+  const found = keys.filter(k => localStorage.getItem(k) !== null);
+  const el = document.getElementById('keyList');
+  if (found.length === 0) {
+    el.textContent = '⚠ 저장된 데이터 없음 (이미 이전했거나 데이터 없음)';
+  } else {
+    el.innerHTML = found.map(k => {
+      const v = localStorage.getItem(k);
+      const size = v ? Math.round(v.length / 1024) : 0;
+      return `• ${k} (${size}KB)`;
+    }).join('<br>');
+  }
+});
+
+function exportData() {
+  const keys = allKeys();
+  const data = {};
+  keys.forEach(k => {
+    const v = localStorage.getItem(k);
+    if (v !== null) data[k] = v;
+  });
+
+  if (Object.keys(data).length === 0) {
+    showStatus('exportStatus', '저장된 데이터가 없습니다.', false);
+    return;
+  }
+
+  const json = JSON.stringify({ _exported: new Date().toLocaleString('ko'), _keys: Object.keys(data).length, data });
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'cams-data-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showStatus('exportStatus', `✅ ${Object.keys(data).length}개 항목 저장 완료`, true);
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      const data = parsed.data || parsed;
+      let count = 0;
+      Object.entries(data).forEach(([k, v]) => {
+        if (k.startsWith('_')) return;
+        localStorage.setItem(k, v);
+        count++;
+      });
+      showStatus('importStatus', `✅ ${count}개 항목 복원 완료! 각 도구를 새로고침하세요.`, true);
+    } catch (err) {
+      showStatus('importStatus', '❌ 파일 형식 오류: ' + err.message, false);
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function showStatus(id, msg, ok) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'status ' + (ok ? 'ok' : 'err');
+}
+</script>
+</body>
+</html>
