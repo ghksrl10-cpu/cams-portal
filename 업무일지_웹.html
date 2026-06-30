@@ -154,7 +154,7 @@ pre.out-pre{
     <div>
       <b>업무일지 자동화</b>
       <small>주식회사 캠스</small>
-      <small>생산팀 조립 · 김환기</small>
+      <small id="headerUser">생산팀 조립 · 김환기</small>
     </div>
   </div>
   <nav class="nav">
@@ -330,7 +330,8 @@ function run(){
   const hist=loadHist(), today=getToday();
   const tl=[],hl=[];
   function L(tv,hv){tl.push(tv);hl.push(hv!==undefined?hv:esc(tv));}
-  L(`${today}  업무일지   (생산팀 김환기)`,`<span class="c-hd">${today}  업무일지   (생산팀 김환기)</span>`);
+  const _uname = window._authName || '김환기';
+  L(`${today}  업무일지   (생산팀 ${_uname})`,`<span class="c-hd">${today}  업무일지   (생산팀 ${_uname})</span>`);
   L('='.repeat(46),`<span class="c-sep">${'='.repeat(46)}</span>`);
   L('','');
   let totalRel=0;
@@ -981,6 +982,14 @@ function renderAuto(){
   const _origSet=localStorage.setItem.bind(localStorage);
   localStorage.setItem=function(k,v){_origSet(k,v);if(k===LSKEY||k==='cams_claude_key')odSave();};
 })();
+
+window.addEventListener('message', e => {
+  if (!e.data || e.data.type !== 'cams_auth') return;
+  const { name, dept } = e.data;
+  window._authName = name || '';
+  const hu = document.getElementById('headerUser');
+  if (hu) hu.textContent = '생산팀 조립 · ' + (name || '김환기');
+});
 </script>
 </body>
 </html>

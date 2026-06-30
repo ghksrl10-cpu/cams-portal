@@ -148,7 +148,7 @@
           <path d="M 81 19 A 44 44 0 1 0 81 81" fill="none" stroke="#1414cc" stroke-width="15" stroke-linecap="round"/>
         </svg>
       </div>
-      <div><b>ALC 정리 도구</b><small>주식회사 캠스</small><small>생산팀 · 김환기PM</small></div>
+      <div><b>ALC 정리 도구</b><small>주식회사 캠스</small><small id="headerUser">생산팀 · 캠스PM</small></div>
     </div>
     <nav class="nav">
       <div class="nav-item active" onclick="showView('dash')"><span class="ic">🏠</span> 메인</div>
@@ -156,8 +156,8 @@
       <div class="nav-item" onclick="showView('settings')"><span class="ic">⚙️</span> 차종 설정</div>
     </nav>
     <div class="side-foot">
-      <div class="av">김</div>
-      <div><b style="font-size:14px">김환기</b><small>캠스 담당자</small></div>
+      <div class="av" id="userAv">?</div>
+      <div><b style="font-size:14px" id="userName">-</b><small id="userDept">캠스 담당자</small></div>
     </div>
   </aside>
 
@@ -839,6 +839,19 @@ function toast(msg){
   renderDash();
   try{ loadSaveDir(); }catch(e){ console.error(e); }
 })();
+
+window.addEventListener('message', e => {
+  if (!e.data || e.data.type !== 'cams_auth') return;
+  const { name, dept } = e.data;
+  const av = document.getElementById('userAv');
+  const un = document.getElementById('userName');
+  const ud = document.getElementById('userDept');
+  const hu = document.getElementById('headerUser');
+  if (av) av.textContent = name ? name.charAt(0) : '?';
+  if (un) un.textContent = name || '-';
+  if (ud) ud.textContent = dept || '캠스 담당자';
+  if (hu) hu.textContent = '생산팀 · ' + (name || '') + 'PM';
+});
 </script>
 
 <!-- 파일 선택 모달 -->
