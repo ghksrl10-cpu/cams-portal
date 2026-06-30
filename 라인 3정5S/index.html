@@ -170,7 +170,7 @@
   body:not(.dark) .nav-item{color:#4b5563}
 </style>
 </head>
-<body>
+<body><script>(function(){if(localStorage.getItem('cams_dark_mode')==='true')document.body.classList.add('dark');})()</script>
 <div id="overlay">불러오는 중…</div>
 <div class="scrim" id="scrim" onclick="toggleNav(false)"></div>
 <div id="lightbox" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:999;align-items:center;justify-content:center;cursor:zoom-out">

@@ -140,7 +140,7 @@
   body:not(.dark) .hist-item:hover{background:#eff6ff;border-color:var(--blue)}
 </style>
 </head>
-<body>
+<body><script>(function(){if(localStorage.getItem('cams_dark_mode')==='true')document.body.classList.add('dark');})()</script>
 <div id="overlay">불러오는 중…</div>
 <div class="scrim" id="scrim" onclick="toggleNav(false)"></div>
 

@@ -160,7 +160,7 @@ body:not(.dark) .nav-item{color:#4b5563}
 body:not(.dark) .hamb{background:#fff;border-color:var(--bd)}
 </style>
 </head>
-<body>
+<body><script>(function(){if(localStorage.getItem('cams_dark_mode')==='true')document.body.classList.add('dark');})()</script>
 <!-- 이미지 확대 모달 -->
 <div id="imgModal" onclick="this.classList.remove('show')">
   <img id="imgModalImg" src="" alt="사진">

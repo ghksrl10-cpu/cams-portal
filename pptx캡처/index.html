@@ -6,9 +6,13 @@
 <title>캡처 도구</title>
 <style>
 :root{
+  --bg:#f5f6f8;--side:#1a1d28;--card:#ffffff;--border:#dde1e7;
+  --blue:#3b82f6;--blue2:#2563eb;--green:#16a34a;--red:#dc2626;
+  --text:#111827;--sub:#6b7280;--radius:10px;
+}
+body.dark{
   --bg:#0f1117;--side:#13151c;--card:#1a1d27;--border:#2a2d3a;
-  --blue:#3b82f6;--blue2:#2563eb;--green:#22c55e;--red:#ef4444;
-  --text:#e2e8f0;--sub:#94a3b8;--radius:10px;
+  --green:#22c55e;--red:#ef4444;--text:#e2e8f0;--sub:#94a3b8;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{display:flex;min-height:100vh;background:var(--bg);color:var(--text);font-family:'Malgun Gothic',sans-serif;font-size:14px}
@@ -64,7 +68,7 @@ input[type=text]::placeholder{color:#3a4050}
 .err.show{display:block}
 </style>
 </head>
-<body>
+<body><script>(function(){if(localStorage.getItem('cams_dark_mode')==='true')document.body.classList.add('dark');})()</script>
 
 <nav class="sidebar">
   <div class="logo">
@@ -320,6 +324,10 @@ function setProg(pfx,pct){document.getElementById(pfx+'-prog-bar').style.width=p
 function hideProg(pfx){document.getElementById(pfx+'-prog').classList.remove('show');}
 function showErr(pfx,msg){const e=document.getElementById(pfx+'-err');e.textContent=msg;e.classList.add('show');}
 function hideErr(pfx){document.getElementById(pfx+'-err').classList.remove('show');}
+window.addEventListener('message', e => {
+  if (!e.data) return;
+  if (e.data.type === 'cams_theme') { document.body.classList.toggle('dark', !!e.data.dark); }
+});
 </script>
 </body>
 </html>
