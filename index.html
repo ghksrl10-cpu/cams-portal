@@ -464,6 +464,8 @@ function doActivate(idx) {
   frames[idx].classList.add('active');
   if (!frames[idx].src || frames[idx].src === location.href) {
     frames[idx].src = frames[idx].dataset.src;
+  } else {
+    setTimeout(() => sendThemeToFrame(frames[idx]), 100);
   }
   tabs[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   sessionStorage.setItem(TAB_KEY, idx);
