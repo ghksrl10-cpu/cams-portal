@@ -1129,6 +1129,7 @@ function showPreview(src){
   }
   const errIdx=new Set(errs.map(({i})=>i));
   document.getElementById('regStat').textContent='총 '+_parsed.length+'건'+(src?' ('+src+')':'')+(errs.length?` ⚠ 오류 ${errs.length}건`:'');
+  const EDIT_COLS=new Set(['차종','아이템','귀책','발생','불량 사유','단품만 요청']);
   let prev=null,html='';
   for(let ri=0;ri<_parsed.length;ri++){
     const r=_parsed[ri];
@@ -1143,11 +1144,38 @@ function showPreview(src){
       else if(LOCS.includes(c)&&v===1)cls='loc1';
       else if(c==='단품만 요청'&&v)cls='part-c';
       else if(c==='불량 사유'&&v)cls='def-c';
-      html+=`<td class="${cls}">${v===''||v===null?'':v}</td>`;
+      if(EDIT_COLS.has(c))html+=`<td class="${cls}" onclick="cellEdit(event,${ri},'${c}')" style="cursor:pointer" title="클릭해서 수정">${v===''||v===null?'':v}</td>`;
+      else html+=`<td class="${cls}">${v===''||v===null?'':v}</td>`;
     }
     html+='</tr>';
   }
   document.getElementById('regBody').innerHTML=html;
+}
+function cellEdit(ev,ri,col){
+  const td=ev.currentTarget;
+  if(td.querySelector('select,input'))return;
+  const r=_parsed[ri];
+  const cur=r[col]??'';
+  const SEL={'차종':['NQ5','OV1','SP3','?'],'아이템':['FRT','RR','?'],'귀책':['기아','캠스','부영'],'발생':['1','2','']};
+  const st='background:#0f1117;color:#f1f5f9;border:1px solid #2563eb;border-radius:3px;padding:1px 4px;font-size:12px;max-width:90px';
+  let el;
+  if(SEL[col]){
+    el=document.createElement('select');el.style.cssText=st;
+    SEL[col].forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v===''?'(공란)':v;if(String(v)===String(cur))o.selected=true;el.appendChild(o);});
+  }else{
+    el=document.createElement('input');el.type='text';el.value=cur;el.style.cssText=st+';width:90px';
+  }
+  const save=()=>{
+    let val=el.value;
+    if(col==='발생')val=val===''?'':+val;
+    r[col]=val;
+    if(col==='차종'&&(r.발생===1||r.발생===2))r.발생=(DB.발생2||['NQ5']).includes(val)?2:1;
+    saveDB();showPreview();
+  };
+  el.addEventListener(SEL[col]?'change':'blur',save);
+  el.addEventListener('keydown',e=>{if(e.key==='Enter')save();if(e.key==='Escape'){r[col]=cur;showPreview();}});
+  td.innerHTML='';td.appendChild(el);
+  if(!SEL[col])el.focus();else el.focus();
 }
 function openFix(i){const el=document.getElementById('fx-'+i);if(el)el.style.display=el.style.display==='none'?'flex':'none';}
 function applyFix(i){
