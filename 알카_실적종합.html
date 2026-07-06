@@ -350,9 +350,9 @@
           <div class="sec-h">분석 결과 미리보기 <span class="stat" id="regStat"></span></div>
           <div class="scroll">
             <table>
-              <thead><tr>
+              <thead id="regHead"><tr>
                 <th>일자</th><th>발생</th><th>차종</th><th>아이템</th><th>귀책</th>
-                <th>평동</th><th>경산</th><th>목포항</th><th>충주</th><th>신태인</th><th>오토큐</th><th>덕평</th>
+                <th>평동</th><th>경산</th><th>목포항</th><th>충주</th><th>신태인</th><th>오토큐</th><th>덕평</th><th>송악</th>
                 <th>단품만 요청</th><th>불량 사유</th>
               </tr></thead>
               <tbody id="regBody"></tbody>
@@ -680,7 +680,7 @@
 // ─── 상수 ────────────────────────────────────────────────
 const UNIT={NQ5:{FRT:120678,RR:94921},OV1:{FRT:210349,RR:188959},SP3:{FRT:193396,RR:153988}};
 const VEHICLES=['NQ5','OV1','SP3'];
-const DEFAULT_LOCS=['평동','경산','목포항','충주','신태인','오토큐','덕평'];
+const DEFAULT_LOCS=['평동','경산','목포항','충주','신태인','오토큐','덕평','송악'];
 const DEFAULT_LOCATION_MAP=[
   ['평동',['평동출하장','평동 출하장']],
   ['경산',['경산출하장','경산 출하장','경산']],
@@ -688,14 +688,15 @@ const DEFAULT_LOCATION_MAP=[
   ['충주',['충주출하장','충주 출하장']],
   ['신태인',['신태인']],
   ['오토큐',['광주서비스센터','오토큐','서비스센터','바디넘버']],
-  ['덕평',['덕평','송악출하장','송악 출하장']],
+  ['덕평',['덕평출하장','덕평 출하장','덕평']],
+  ['송악',['송악출하장','송악 출하장','송악출고센터','송악 출고센터']],
 ];
 let LOCS=[...DEFAULT_LOCS];
 let LOCATION_MAP=[...DEFAULT_LOCATION_MAP];
 let REC_COLS=['일자','발생','차종','아이템','귀책',...LOCS,'단품만 요청','불량 사유'];
 
 function applyCustomLocs(){
-  const custom=(DB.customLocs||[]);
+  const custom=(DB.customLocs||[]).filter(l=>!DEFAULT_LOCS.includes(l.name));
   LOCS=[...DEFAULT_LOCS,...custom.map(l=>l.name)];
   LOCATION_MAP=[...DEFAULT_LOCATION_MAP,...custom.map(l=>[l.name,l.keywords])];
   REC_COLS=['일자','발생','차종','아이템','귀책',...LOCS,'단품만 요청','불량 사유'];
@@ -1114,6 +1115,8 @@ function parsePaste(){
 }
 function showPreview(src){
   document.getElementById('regPreview').style.display='block';
+  const rh=document.getElementById('regHead');
+  if(rh)rh.innerHTML='<tr>'+REC_COLS.map(c=>`<th>${c}</th>`).join('')+'</tr>';
   // 오류 감지: 차종 또는 아이템이 '?'인 레코드
   const errs=_parsed.map((r,i)=>({r,i})).filter(({r})=>r.차종==='?'||r.아이템==='?');
   const warnBox=document.getElementById('parseWarn');
@@ -1893,6 +1896,7 @@ function addCustomLoc(){
   DB.customLocs.push({name,keywords});
   localStorage.setItem(DB_KEY,JSON.stringify(DB));
   applyCustomLocs();renderLocList();
+  if(_parsed.length)showPreview();
   document.getElementById('locNameIn').value='';
   document.getElementById('locKwIn').value='';
 }
@@ -1901,6 +1905,7 @@ function removeCustomLoc(i){
   DB.customLocs.splice(i,1);
   localStorage.setItem(DB_KEY,JSON.stringify(DB));
   applyCustomLocs();renderLocList();
+  if(_parsed.length)showPreview();
 }
 
 // ─── 시작 ────────────────────────────────────────────────
