@@ -1636,7 +1636,7 @@ function _sld6Tbl1(recs,LOCS_LIST){
   const cws=[lw,...Array(nc).fill(cw),tw];
   const rh=Math.round(cy/5);
   const H='1F3864',HF='FFFFFF',D='FFFFFF',DA='DCE6F1',T='2E4776',TF='FFFFFF';
-  const colLbl={K1:'기아1',K2:'기아2',평동:'평동',경산:'경산',목포항:'목포항',충주:'충주',신태인:'신태인',오토큐:'오토큐',덕평:'덕평'};
+  const colLbl={K1:'기아1',K2:'기아2',평동:'평동',경산:'경산',목포항:'목포항',충주:'충주',신태인:'신태인',오토큐:'오토큐',덕평:'덕평',송악:'송악'};
   const hdr=[_mkCell('차종',H,HF,true),...cols.map(c=>_mkCell(colLbl[c]||c,H,HF,true)),_mkCell('TOTAL',H,HF,true)];
   const rows=[hdr];
   const k1t=VEHS.reduce((s,v)=>s+vd[v].K1,0);
