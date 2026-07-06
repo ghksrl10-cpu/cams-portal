@@ -650,27 +650,12 @@
         <h1>KPI 자료화</h1>
         <span class="grow"></span>
         <select id="kpiDataMonSel" onchange="renderKpiData()" style="padding:8px;border:1px solid var(--bd);border-radius:8px;font-size:14px;background:#0f1117;color:#f1f5f9">
-          <option value="all">(월 선택)</option>
+          <option value="">(월 선택)</option>
         </select>
-        <button id="kpiPptxBtn" onclick="dlKpiPptx()" style="padding:8px 18px;background:#2563eb;color:#fff;border:0;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;font-weight:700">PPTX 다운로드</button>
-        <div class="sub">월 선택 후 PPTX 다운로드 — 슬라이드 1(연간) + 슬라이드 2(월별)</div>
+        <div class="sub">월별 KPI 현황</div>
       </div>
-
-      <!-- 슬라이드 1용: 연간 추이 업데이트 -->
-      <div class="sec" style="margin-bottom:14px">
-        <div class="sec-h">📊 슬라이드 1 — 연간 추이 업데이트용 수치</div>
-        <div style="padding:16px" id="kpiSlide1">
-          <div style="color:var(--mut);font-size:13px">월을 선택하면 해당 월에 추가할 수치가 표시됩니다.</div>
-        </div>
-      </div>
-
-      <!-- 슬라이드 2용: 신규 월 슬라이드 -->
-      <div class="sec">
-        <div class="sec-h">📋 슬라이드 2 — 신규 월 슬라이드 데이터</div>
-        <div style="padding:16px" id="kpiSlide2">
-          <div style="color:var(--mut);font-size:13px">월을 선택하면 새 슬라이드에 들어갈 테이블이 표시됩니다.</div>
-        </div>
-      </div>
+      <div id="kpiSlide1"><div style="color:var(--mut);font-size:13px;padding:32px;text-align:center">월을 선택하세요.</div></div>
+      <div id="kpiSlide2"></div>
     </section>
 
   </main>
@@ -1384,50 +1369,43 @@ function renderKpiSlide1(recs,mon){
   const k1=kpiCnt(recs,r=>r.발생===1&&!LOCS.some(l=>r[l]===1));
   const k2=kpiCnt(recs,r=>r.발생===2&&!LOCS.some(l=>r[l]===1));
   const loc=kpiCnt(recs,r=>LOCS.some(l=>r[l]===1));
-  // 연누계
   const allMons=monthList().filter(m=>m<=mon);
   const allRecs=allMons.flatMap(m=>DB.months[m]||[]);
   const ytd={기아:kpiCnt(allRecs,r=>r.귀책==='기아'),캠스:kpiCnt(allRecs,r=>r.귀책==='캠스'),부영:kpiCnt(allRecs,r=>r.귀책==='부영'),total:allRecs.length};
+  const card=(label,val,t,color,bg)=>`<div style="background:${bg};border-radius:10px;padding:14px 10px;text-align:center;border-top:3px solid ${color}"><div style="font-size:10px;color:#94a3b8;letter-spacing:1px;margin-bottom:6px">${label}</div><div style="font-size:26px;font-weight:900;color:${color};line-height:1">${val}</div><div style="font-size:11px;color:#64748b;margin-top:4px">${t?pct(val,t)+'%':''}</div></div>`;
 
   document.getElementById('kpiSlide1').innerHTML=`
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-    <div>
-      <div style="font-weight:800;color:#93c5fd;margin-bottom:10px;font-size:14px">◎ ${mon} 월간 발생</div>
-      <table class="stbl">
-        <tr><th>구분</th><th>건수</th><th>비율</th></tr>
-        <tr><td class="kia-c"><b>기아</b></td><td>${g.기아}</td><td>${pct(g.기아,total)}%</td></tr>
-        <tr><td class="cams-c"><b>캠스</b></td><td>${g.캠스}</td><td>${pct(g.캠스,total)}%</td></tr>
-        <tr><td style="color:#fcd34d"><b>부영</b></td><td>${g.부영}</td><td>${pct(g.부영,total)}%</td></tr>
-        <tr class="tot-row"><td>합계</td><td>${total}</td><td>100%</td></tr>
-      </table>
+  <div style="padding:14px 16px 0">
+    <div style="font-size:12px;color:#64748b;margin-bottom:10px;font-weight:700">● ${mon} 이번 달</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
+      ${card('총 발생',total,0,'#f1f5f9','#1a1f2e')}
+      ${card('기아',g.기아,total,'#f87171','#1f1a1a')}
+      ${card('캠스',g.캠스,total,'#60a5fa','#1a1a1f')}
+      ${card('부영',g.부영,total,'#fcd34d','#1f1e1a')}
     </div>
-    <div>
-      <div style="font-weight:800;color:#93c5fd;margin-bottom:10px;font-size:14px">◎ ${mon} 공장별 발생</div>
-      <table class="stbl">
-        <tr><th>구분</th><th>건수</th><th>비율</th></tr>
-        <tr><td><b>K1 (1공장)</b></td><td>${k1}</td><td>${pct(k1,total)}%</td></tr>
-        <tr><td><b>K2 (2공장)</b></td><td>${k2}</td><td>${pct(k2,total)}%</td></tr>
-        <tr><td><b>출하장</b></td><td>${loc}</td><td>${pct(loc,total)}%</td></tr>
-        <tr class="tot-row"><td>합계</td><td>${total}</td><td>100%</td></tr>
-      </table>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px">
+      ${card('K1 기아1공장',k1,total,'#4ade80','#1a1f1a')}
+      ${card('K2 기아2공장',k2,total,'#38bdf8','#1a1c1f')}
+      ${card('출하장',loc,total,'#a78bfa','#1b1a1f')}
     </div>
   </div>
-  <div style="margin-top:14px">
-    <div style="font-weight:800;color:#93c5fd;margin-bottom:10px;font-size:14px">◎ 연누계 (${allMons[0]} ~ ${mon})</div>
-    <table class="stbl">
-      <tr><th></th>${allMons.map(m=>`<th>${m.replace(/\d+년/,'').replace('월','월')}</th>`).join('')}<th style="color:#f59e0b">합계</th></tr>
-      ${['기아','캠스','부영'].map(gn=>{
-        const cls=gn==='기아'?'kia-c':gn==='캠스'?'cams-c':'';
-        return `<tr><td class="${cls}"><b>${gn}</b></td>${allMons.map(m=>{const r=DB.months[m]||[];return`<td>${kpiCnt(r,x=>x.귀책===gn)}</td>`;}).join('')}<td><b>${ytd[gn]}</b></td></tr>`;
-      }).join('')}
-      <tr class="tot-row"><td>TL</td>${allMons.map(m=>{const r=DB.months[m]||[];return`<td>${r.length}</td>`;}).join('')}<td>${ytd.total}</td></tr>
-    </table>
+  <div class="sec" style="margin:0 0 0">
+    <div class="sec-h">📊 연누계 — 귀책 비교 (${allMons[0]} ~ ${mon})</div>
+    <div class="scroll" style="padding:10px 16px 14px">
+      <table class="stbl">
+        <tr><th>구분</th>${allMons.map(m=>`<th>${m.replace(/\d+년/,'')}</th>`).join('')}<th style="color:#f59e0b">합계</th></tr>
+        ${['기아','캠스','부영'].map(gn=>{
+          const cls=gn==='기아'?'kia-c':gn==='캠스'?'cams-c':'';
+          return`<tr><td class="${cls}"><b>${gn}</b></td>${allMons.map(m=>{const r=DB.months[m]||[];return`<td>${kpiCnt(r,x=>x.귀책===gn)||''}</td>`;}).join('')}<td><b>${ytd[gn]}</b></td></tr>`;
+        }).join('')}
+        <tr class="tot-row"><td>TL</td>${allMons.map(m=>{const r=DB.months[m]||[];return`<td>${r.length}</td>`;}).join('')}<td>${ytd.total}</td></tr>
+      </table>
+    </div>
   </div>`;
 }
 function renderKpiSlide2(recs,mon){
   const total=recs.length;
   const VEHS=['NQ5','OV1','SP3'];
-  // 차종 × 위치
   const vd={};
   VEHS.forEach(v=>{
     vd[v]={K1:0,K2:0};
@@ -1442,8 +1420,6 @@ function renderKpiSlide2(recs,mon){
   const locCols=['K1','K2',...usedLocs];
   const k1t=VEHS.reduce((s,v)=>s+vd[v].K1,0);
   const k2t=VEHS.reduce((s,v)=>s+vd[v].K2,0);
-
-  // 귀책 × 발생 × FRT/RR
   const tbl={};
   ['기아','캠스','부영'].forEach(g=>{
     tbl[g]={};
@@ -1455,29 +1431,29 @@ function renderKpiSlide2(recs,mon){
     tbl[g].계.tot=tbl[g].계.FRT+tbl[g].계.RR;
   });
   const frtT=kpiCnt(recs,r=>r.아이템==='FRT'),rrT=kpiCnt(recs,r=>r.아이템==='RR');
-
-  const colLabel={K1:'기아 1',K2:'기아 2',평동:'평동',경산:'경산',목포항:'목포항',충주:'충주',신태인:'신태인',오토큐:'오토큐',덕평:'덕평'};
+  const colLabel={K1:'기아 1',K2:'기아 2',평동:'평동',경산:'경산',목포항:'목포항',충주:'충주',신태인:'신태인',오토큐:'오토큐',덕평:'덕평',송악:'송악'};
 
   document.getElementById('kpiSlide2').innerHTML=`
-  <div style="font-weight:800;color:#f1f5f9;margin-bottom:4px;font-size:16px">■ 26. ${mon} 알카 공급 현황</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
-    <div>
-      <div style="font-weight:800;color:#93c5fd;margin-bottom:10px;font-size:14px">◎ 공장 및 출하장 공급 수량</div>
+  <div class="sec" style="margin:14px 0 0">
+    <div class="sec-h">🏭 공장 및 출하장 공급 수량</div>
+    <div class="scroll" style="padding:10px 16px 14px">
       <table class="stbl">
         <tr><th>차종</th>${locCols.map(c=>`<th>${colLabel[c]||c}</th>`).join('')}<th style="color:#f59e0b">TOTAL</th></tr>
-        ${VEHS.filter(v=>VEHS.some(()=>Object.values(vd[v]).some(n=>n>0))).map(v=>{
-          const rowTotal=locCols.reduce((s,c)=>s+vd[v][c],0);
+        ${VEHS.map(v=>{
+          const rowTotal=locCols.reduce((s,c)=>s+(vd[v][c]||0),0);
           if(!rowTotal)return'';
           return`<tr><td class="veh">${v==='NQ5'?'NQ':v}</td>${locCols.map(c=>`<td>${vd[v][c]||''}</td>`).join('')}<td><b>${rowTotal}</b></td></tr>`;
         }).join('')}
         <tr class="tot-row"><td>TOTAL</td>${locCols.map(c=>{
-          const s=c==='K1'?k1t:c==='K2'?k2t:VEHS.reduce((a,v)=>a+vd[v][c],0);
+          const s=c==='K1'?k1t:c==='K2'?k2t:VEHS.reduce((a,v)=>a+(vd[v][c]||0),0);
           return`<td>${s||''}</td>`;
         }).join('')}<td>${total}</td></tr>
       </table>
     </div>
-    <div>
-      <div style="font-weight:800;color:#93c5fd;margin-bottom:10px;font-size:14px">◎ 아이템 및 귀책 현황</div>
+  </div>
+  <div class="sec" style="margin:14px 0 14px">
+    <div class="sec-h">📋 아이템 및 귀책 현황</div>
+    <div class="scroll" style="padding:10px 16px 14px">
       <table class="stbl">
         <tr><th colspan="2">구분</th><th>FRT</th><th>RR</th><th style="color:#f59e0b">TOTAL</th></tr>
         ${['기아','캠스','부영'].map(gn=>{
@@ -1486,9 +1462,9 @@ function renderKpiSlide2(recs,mon){
             const d=tbl[gn][k];
             return`<tr${k==='계'?' class="sub-row"':''}>
               ${ki===0?`<td class="${cls}" rowspan="3"><b>${gn}</b></td>`:''}
-              <td>${k===1?'1':k===2?'2':'계'}</td>
+              <td>${k==='계'?'계':k}</td>
               <td>${d.FRT||'-'}</td><td>${d.RR||'-'}</td>
-              <td${k==='계'?` style="font-weight:800"`:''}>${d.tot||'-'}</td></tr>`;
+              <td${k==='계'?' style="font-weight:800"':''}>${d.tot||'-'}</td></tr>`;
           }).join('');
         }).join('')}
         <tr class="tot-row"><td colspan="2">TOTAL</td><td>${frtT}</td><td>${rrT}</td><td>${total}</td></tr>
