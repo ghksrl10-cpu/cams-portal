@@ -1003,7 +1003,7 @@ function parseChat(text){
           for(let ci=0;ci<cnt;ci++){
             const def=rawDef?rawDef:(g==='캠스'?(altIdx++%2===0?'도장':'찍힘'):'');
             const bal=(DB.발생2||['NQ5']).includes(vm)?2:1;
-            recs.push({일자:day,발생:bal,차종:vm,아이템:item,귀책:g,...locCols,'단품만 요청':part,'불량 사유':def});
+            recs.push({일자:day,발생:bal,차종:vm,아이템:item,귀책:g,...locCols,'단품만 요청':part,'불량 사유':def,_sender:sender,_time:mm[2]});
           }
         }
       }
@@ -1121,7 +1121,7 @@ function showPreview(src){
     const mkVOpts=(sel)=>VEHICLES.map(v=>`<option value="${v}"${v===sel?' selected':''}>${v}</option>`).join('')+`<option value="?"${'?'===sel?' selected':''}>?</option>`;
     const mkIOpts=(sel)=>['FRT','RR','?'].map(v=>`<option value="${v}"${v===sel?' selected':''}>${v}</option>`).join('');
     const mkGOpts=(sel)=>['기아','캠스','부영'].map(v=>`<option value="${v}"${v===sel?' selected':''}>${v}</option>`).join('');
-    const items=errs.map(({r,i})=>`<div class="warn-item" id="wi-${i}" style="display:flex;flex-direction:column;gap:4px"><div>📅 ${r.일자}일 | 차종: <b>${r.차종}</b> | 아이템: <b>${r.아이템}</b> | 귀책: ${r.귀책}<button onclick="openFix(${i})" style="margin-left:8px;padding:1px 7px;font-size:11px;background:#1e3a1e;border:1px solid #16a34a;border-radius:4px;color:#86efac;cursor:pointer">수정</button></div><div id="fx-${i}" style="display:none;flex-wrap:wrap;gap:5px;align-items:center;font-size:12px">차종:<select id="fxV-${i}" style="background:#0f1117;color:#f1f5f9;border:1px solid var(--bd);border-radius:4px;padding:2px 4px">${mkVOpts(r.차종)}</select>아이템:<select id="fxI-${i}" style="background:#0f1117;color:#f1f5f9;border:1px solid var(--bd);border-radius:4px;padding:2px 4px">${mkIOpts(r.아이템)}</select>귀책:<select id="fxG-${i}" style="background:#0f1117;color:#f1f5f9;border:1px solid var(--bd);border-radius:4px;padding:2px 4px">${mkGOpts(r.귀책)}</select><button onclick="applyFix(${i})" style="padding:1px 7px;font-size:11px;background:#1e3a5a;border:1px solid #2563eb;border-radius:4px;color:#93c5fd;cursor:pointer">저장</button></div></div>`).join('');
+    const items=errs.map(({r,i})=>`<div class="warn-item" id="wi-${i}" style="display:flex;flex-direction:column;gap:4px"><div>📅 ${r.일자}일 | 차종: <b>${r.차종}</b> | 아이템: <b>${r.아이템}</b> | 귀책: ${r.귀책}<button onclick="openFix(${i})" style="margin-left:8px;padding:1px 7px;font-size:11px;background:#1e3a1e;border:1px solid #16a34a;border-radius:4px;color:#86efac;cursor:pointer">수정</button></div>${r._sender?`<div style="font-size:11px;color:#64748b">👤 ${r._sender} · ${r._time}</div>`:''}<div id="fx-${i}" style="display:none;flex-wrap:wrap;gap:5px;align-items:center;font-size:12px">차종:<select id="fxV-${i}" style="background:#0f1117;color:#f1f5f9;border:1px solid var(--bd);border-radius:4px;padding:2px 4px">${mkVOpts(r.차종)}</select>아이템:<select id="fxI-${i}" style="background:#0f1117;color:#f1f5f9;border:1px solid var(--bd);border-radius:4px;padding:2px 4px">${mkIOpts(r.아이템)}</select>귀책:<select id="fxG-${i}" style="background:#0f1117;color:#f1f5f9;border:1px solid var(--bd);border-radius:4px;padding:2px 4px">${mkGOpts(r.귀책)}</select><button onclick="applyFix(${i})" style="padding:1px 7px;font-size:11px;background:#1e3a5a;border:1px solid #2563eb;border-radius:4px;color:#93c5fd;cursor:pointer">저장</button></div></div>`).join('');
     document.getElementById('parseWarnList').innerHTML=items;
     warnBox.style.display='block';
   } else {
