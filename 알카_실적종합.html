@@ -1385,16 +1385,16 @@ function _gbars(groups,colors,maxH,bw,gp,gg){
   const nS=colors.length,mx=Math.max(...groups.flatMap(g=>g.v),1);
   const GW=nS*bw+(nS-1)*gp,SH=maxH+28;
   const W=groups.length*(GW+gg)+gg;
-  let s=`<svg width="${W}" height="${SH}" style="overflow:visible;display:block">`;
+  let s=`<svg viewBox="0 -20 ${W} ${SH+20}" style="width:100%;height:auto;display:block;overflow:visible">`;
   groups.forEach(({label,v},gi)=>{
     const gx=gg+gi*(GW+gg);
     v.forEach((val,si)=>{
       const h=val?Math.max(2,Math.round(val/mx*maxH)):0;
       const x=gx+si*(bw+gp),y=maxH-h;
       if(h)s+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" fill="${colors[si]}" rx="1"/>`;
-      if(val)s+=`<text x="${x+bw/2}" y="${y-3}" text-anchor="middle" font-size="12" fill="#333">${val}</text>`;
+      if(val)s+=`<text x="${x+bw/2}" y="${y-3}" text-anchor="middle" font-size="13" fill="#333" font-weight="600">${val}</text>`;
     });
-    if(label)s+=`<text x="${gx+GW/2}" y="${maxH+20}" text-anchor="middle" font-size="12" fill="#555">${label}</text>`;
+    if(label)s+=`<text x="${gx+GW/2}" y="${maxH+20}" text-anchor="middle" font-size="13" fill="#444">${label}</text>`;
   });
   return s+'</svg>';
 }
@@ -1489,7 +1489,7 @@ function renderKpiSlide1(recs,mon){
         <div style="display:flex;gap:12px;align-items:flex-end">
           <div style="flex:1;overflow-x:auto">
             <div style="display:flex;gap:8px;font-size:11px;color:#666;margin-bottom:4px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])}</div>
-            ${_gbars(vehGbars,[_SC.N,_SC.G,'#AAAAAA'],110,24,5,12)}
+            ${_gbars(vehGbars,[_SC.N,_SC.G,'#AAAAAA'],110,28,6,16)}
           </div>
           <div style="flex:1;overflow-x:auto">
             <div style="font-size:11px;color:#666;margin-bottom:4px">월별 합계</div>
@@ -1525,11 +1525,11 @@ function renderKpiSlide1(recs,mon){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:10px">
       <div>
         <div style="display:flex;justify-content:flex-end;gap:12px;margin-bottom:6px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAAAAA','부영']])}</div>
-        <div style="overflow-x:auto">${_gbars(g귀책,[_SC.N,_SC.G,'#AAAAAA'],120,20,5,16)}</div>
+        <div>${_gbars(g귀책,[_SC.N,_SC.G,'#AAAAAA'],130,24,6,18)}</div>
       </div>
       <div>
         <div style="display:flex;justify-content:flex-end;gap:12px;margin-bottom:6px">${_legnd([[_SC.R,'K1'],[_SC.N,'K2'],[_SC.B,'출하']])}</div>
-        <div style="overflow-x:auto">${_gbars(g공장,[_SC.R,_SC.N,_SC.B],120,20,5,16)}</div>
+        <div>${_gbars(g공장,[_SC.R,_SC.N,_SC.B],130,24,6,18)}</div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px">
