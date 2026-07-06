@@ -1442,8 +1442,12 @@ function renderKpiSlide1(recs,mon){
   const total=recs.length;
   const VEHS=['NQ5','SP2','OV1','SP3'];
   const asRecs=recs.filter(r=>!r['단품만 요청']);
-  const vehBars=VEHS.map(v=>({v:kpiCnt(asRecs,r=>r.차종===v),label:v==='NQ5'?'NQ':v,color:_SC.N}));
-  const monBars=allMons.map((m,i)=>({v:_mv('total')[i],label:mlbl[i]+'월',color:_SC.N}));
+  // 차종별 grouped bars (기아 vs 캠스 per 차종)
+  const vehGbars=VEHS.filter(v=>kpiCnt(asRecs,r=>r.차종===v)>0).map(v=>({
+    label:v==='NQ5'?'NQ':v,
+    v:[kpiCnt(asRecs,r=>r.차종===v&&r.귀책==='기아'),kpiCnt(asRecs,r=>r.차종===v&&r.귀책==='캠스'),kpiCnt(asRecs,r=>r.차종===v&&r.귀책==='부영')]
+  }));
+  const monBars=allMons.map((m,i)=>({v:_mv('total')[i],label:mlbl[i],color:_SC.N}));
   const FRT=kpiCnt(asRecs,r=>r.아이템==='FRT'),RR=kpiCnt(asRecs,r=>r.아이템==='RR');
   const ASSY=asRecs.length;
   const 리어=kpiCnt(recs,r=>r['단품만 요청']==='리어몰딩');
@@ -1453,7 +1457,7 @@ function renderKpiSlide1(recs,mon){
   const 캠스ASSY=kpiCnt(asRecs,r=>r.귀책==='캠스'),캠스단품=kpiCnt(recs,r=>r.귀책==='캠스'&&r['단품만 요청']);
   const 부영ASSY=kpiCnt(asRecs,r=>r.귀책==='부영'),부영단품=kpiCnt(recs,r=>r.귀책==='부영'&&r['단품만 요청']);
 
-  const _legnd=(items)=>items.map(([c,n])=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px"><span style="display:inline-block;width:12px;height:12px;background:${c};flex-shrink:0"></span>${n}</span>`).join('');
+  const _legnd=(items)=>items.map(([c,n])=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:13px"><span style="display:inline-block;width:13px;height:13px;background:${c};flex-shrink:0"></span>${n}</span>`).join('');
 
   const 귀책표=`<table style="border-collapse:collapse;width:100%">
     <tr>${_th('구분')}${mlbl.map(l=>_th(l+'월'))}${_th('충합')}</tr>
@@ -1477,16 +1481,19 @@ function renderKpiSlide1(recs,mon){
       <div style="font-size:22px;font-weight:900">■ 26년 알카 공급 현황 <span style="font-size:16px;color:#CC0000;text-decoration:underline">_캠스+기아</span></div>
       <div style="font-size:13px;color:#888;font-style:italic">Creative Auto Module System</div>
     </div>
-    <div style="border-top:2px solid #333;margin-bottom:14px"></div>
+    <div style="border-top:2px solid #333;margin-bottom:16px"></div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:18px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:22px">
       <div>
         <div style="font-size:15px;font-weight:700;margin-bottom:10px">◎ 월별 발생 추이</div>
-        <div style="display:flex;gap:14px;align-items:flex-end">
-          <div style="flex:1;overflow-x:auto">${_bars(vehBars,80,30,8)}</div>
+        <div style="display:flex;gap:12px;align-items:flex-end">
           <div style="flex:1;overflow-x:auto">
-            <div style="font-size:11px;color:#888;text-align:right;margin-bottom:2px">단위:개</div>
-            ${_bars(monBars,80,28,7)}
+            <div style="display:flex;gap:8px;font-size:11px;color:#666;margin-bottom:4px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])}</div>
+            ${_gbars(vehGbars,[_SC.N,_SC.G,'#AAAAAA'],110,24,5,12)}
+          </div>
+          <div style="flex:1;overflow-x:auto">
+            <div style="font-size:11px;color:#666;margin-bottom:4px">월별 합계</div>
+            ${_bars(monBars,110,30,8)}
           </div>
         </div>
       </div>
@@ -1494,20 +1501,20 @@ function renderKpiSlide1(recs,mon){
         <div style="font-size:15px;font-weight:700;margin-bottom:10px">◎ 공급 아이템</div>
         <div style="display:flex;gap:16px;align-items:flex-start">
           <div style="flex:0 0 auto">
-            <div style="font-size:11px;color:#888;margin-bottom:4px">FRT / RR</div>
-            ${_bars([{v:FRT,label:'FRT',color:_SC.N},{v:RR,label:'RR',color:_SC.G}],80,36,12)}
+            <div style="font-size:11px;color:#666;margin-bottom:4px">FRT / RR</div>
+            ${_bars([{v:FRT,label:'FRT',color:_SC.N},{v:RR,label:'RR',color:_SC.G}],110,42,14)}
           </div>
           <div style="flex:0 0 auto">
-            <div style="font-size:11px;color:#888;margin-bottom:4px">아이템별</div>
-            ${_bars([{v:ASSY,label:'ASSY',color:_SC.N},{v:리어,label:'리어몰딩',color:_SC.G},{v:스키드,label:'스키드',color:'#BBBBBB'},{v:기타,label:'기타',color:'#DDDDDD'}],80,26,6)}
+            <div style="font-size:11px;color:#666;margin-bottom:4px">아이템별</div>
+            ${_bars([{v:ASSY,label:'ASSY',color:_SC.N},{v:리어,label:'리어몰딩',color:_SC.G},{v:스키드,label:'스키드',color:'#BBBBBB'},{v:기타,label:'기타',color:'#DDDDDD'}],110,28,6)}
           </div>
           <div style="flex:0 0 auto">
-            <div style="font-size:11px;color:#888;margin-bottom:4px">귀책별</div>
+            <div style="font-size:11px;color:#666;margin-bottom:4px">귀책별</div>
             <table style="border-collapse:collapse">
               <tr>${_th('구분')}${_th('ASSY')}${_th('단품')}</tr>
-              <tr><td style="border:1px solid #ccc;padding:5px 8px;font-size:13px">기아</td>${_td(기아ASSY)}${_td(기아단품)}</tr>
-              <tr><td style="border:1px solid #ccc;padding:5px 8px;font-size:13px">캠스</td>${_td(캠스ASSY)}${_td(캠스단품)}</tr>
-              <tr><td style="border:1px solid #ccc;padding:5px 8px;font-size:13px">부영</td>${_td(부영ASSY)}${_td(부영단품)}</tr>
+              <tr><td style="border:1px solid #ccc;padding:5px 10px;font-size:13px">기아</td>${_td(기아ASSY)}${_td(기아단품)}</tr>
+              <tr><td style="border:1px solid #ccc;padding:5px 10px;font-size:13px">캠스</td>${_td(캠스ASSY)}${_td(캠스단품)}</tr>
+              <tr><td style="border:1px solid #ccc;padding:5px 10px;font-size:13px">부영</td>${_td(부영ASSY)}${_td(부영단품)}</tr>
             </table>
           </div>
         </div>
@@ -1515,21 +1522,19 @@ function renderKpiSlide1(recs,mon){
     </div>
 
     <div style="font-size:15px;font-weight:700;margin-bottom:8px">◎ 귀책 비교</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:10px">
       <div>
-        <div style="display:flex;justify-content:flex-end;gap:10px;margin-bottom:4px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAAAAA','부영']])}</div>
-        <div style="display:flex;gap:12px;align-items:flex-start;min-width:0">
-          <div style="flex:0 0 auto;overflow-x:auto">${_gbars(g귀책,[_SC.N,_SC.G,'#AAAAAA'],90,14,3,10)}</div>
-          <div style="flex:1;overflow-x:auto;min-width:0">${귀책표}</div>
-        </div>
+        <div style="display:flex;justify-content:flex-end;gap:12px;margin-bottom:6px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAAAAA','부영']])}</div>
+        <div style="overflow-x:auto">${_gbars(g귀책,[_SC.N,_SC.G,'#AAAAAA'],120,20,5,16)}</div>
       </div>
       <div>
-        <div style="display:flex;justify-content:flex-end;gap:10px;margin-bottom:4px">${_legnd([[_SC.R,'K1'],[_SC.N,'K2'],[_SC.B,'출하']])}</div>
-        <div style="display:flex;gap:12px;align-items:flex-start;min-width:0">
-          <div style="flex:0 0 auto;overflow-x:auto">${_gbars(g공장,[_SC.R,_SC.N,_SC.B],90,14,3,10)}</div>
-          <div style="flex:1;overflow-x:auto;min-width:0">${공장표}</div>
-        </div>
+        <div style="display:flex;justify-content:flex-end;gap:12px;margin-bottom:6px">${_legnd([[_SC.R,'K1'],[_SC.N,'K2'],[_SC.B,'출하']])}</div>
+        <div style="overflow-x:auto">${_gbars(g공장,[_SC.R,_SC.N,_SC.B],120,20,5,16)}</div>
       </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px">
+      <div style="overflow-x:auto">${귀책표}</div>
+      <div style="overflow-x:auto">${공장표}</div>
     </div>
   </div>`;
 }
