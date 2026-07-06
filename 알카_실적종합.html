@@ -1002,7 +1002,7 @@ function parseChat(text){
         for(const[vm,item,cnt] of pairs){
           for(let ci=0;ci<cnt;ci++){
             const def=rawDef?rawDef:(g==='캠스'?(altIdx++%2===0?'도장':'찍힘'):'');
-            const bal=single?((DB.발생2||['NQ5']).includes(vm)?2:1):'';
+            const bal=(DB.발생2||['NQ5']).includes(vm)?2:1;
             recs.push({일자:day,발생:bal,차종:vm,아이템:item,귀책:g,...locCols,'단품만 요청':part,'불량 사유':def});
           }
         }
