@@ -1470,7 +1470,7 @@ function renderKpiSlide1(recs,mon){
     label:v,
     v:[kpiCnt(recs,r=>r.차종===v&&r.귀책==='기아'),kpiCnt(recs,r=>r.차종===v&&r.귀책==='캠스'),kpiCnt(recs,r=>r.차종===v&&r.귀책==='부영')]
   }));
-  const monBars=mon12.map((m,i)=>({v:_get(m,'total'),label:lbl12[i],color:_SC.N}));
+  const monBars=allMons.map((m,i)=>({v:_get(m,'total'),label:mlbl[i],color:_SC.N}));
 
   // 공급 아이템
   const FRT=kpiCnt(asRecs,r=>r.아이템==='FRT'),RR=kpiCnt(asRecs,r=>r.아이템==='RR');
@@ -1559,12 +1559,12 @@ function renderKpiSlide1(recs,mon){
 
     <div style="margin-bottom:14px">
       <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:7px">◎ 연 발생 추이</div>
-      <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:end">
-        <div>
+      <div style="display:flex;gap:20px;align-items:flex-end">
+        <div style="flex:0 0 auto;width:230px;overflow:hidden">
           <div style="margin-bottom:3px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])}</div>
           ${_gbarsT(vehYtdBars,[_SC.N,_SC.G,'#AAAAAA'],110,34,7,20)}
         </div>
-        <div>
+        <div style="flex:1 1 0;min-width:0;max-width:480px;overflow:hidden">
           <div style="display:flex;justify-content:flex-end;margin-bottom:3px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])}</div>
           ${_gbars(g귀책,[_SC.N,_SC.G,'#AAAAAA'],110,20,4,12)}
         </div>
@@ -1574,7 +1574,7 @@ function renderKpiSlide1(recs,mon){
     <div style="margin-bottom:10px">
       <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:7px">◎ 귀책 비교</div>
       <div style="display:flex;justify-content:flex-end;margin-bottom:3px">${_legnd([[_SC.R,'K1'],[_SC.N,'K2'],[_SC.B,'출하']])}</div>
-      ${_gbars(g공장,[_SC.R,_SC.N,_SC.B],110,20,4,12)}
+      <div style="max-width:480px;overflow:hidden">${_gbars(g공장,[_SC.R,_SC.N,_SC.B],110,20,4,12)}</div>
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
