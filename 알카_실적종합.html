@@ -1363,63 +1363,182 @@ function renderKpiData(){
   renderKpiSlide2(recs,mon);
 }
 function kpiCnt(recs,pred){return recs.filter(pred).length;}
+function pct(n,t){return t?Math.round(n/t*100):0;}
+
+// ─── KPI 슬라이드 스타일 헬퍼 ────────────────────────────────
+const _SC={R:'#7B1C20',N:'#1F3864',G:'#D4900C',B:'#2D5F9B',H:'#DEEAF1',T:'#C5DCF0',A:'#EEF6FB'};
+function _bars(data,maxH,bw,gp){
+  const mx=Math.max(...data.map(d=>d.v),1);
+  const W=data.length*(bw+gp)-gp,SH=maxH+18;
+  let s=`<svg width="${W}" height="${SH}" style="overflow:visible">`;
+  data.forEach(({v,label,color},i)=>{
+    const h=v?Math.max(2,Math.round(v/mx*maxH)):0;
+    const x=i*(bw+gp),y=maxH-h;
+    if(h)s+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" fill="${color}" rx="1"/>`;
+    if(v)s+=`<text x="${x+bw/2}" y="${y-2}" text-anchor="middle" font-size="7.5" fill="#333">${v}</text>`;
+    if(label)s+=`<text x="${x+bw/2}" y="${maxH+14}" text-anchor="middle" font-size="8" fill="#555">${label}</text>`;
+  });
+  return s+'</svg>';
+}
+function _gbars(groups,colors,maxH,bw,gp,gg){
+  if(!groups.length)return'';
+  const nS=colors.length,mx=Math.max(...groups.flatMap(g=>g.v),1);
+  const GW=nS*bw+(nS-1)*gp,SH=maxH+18;
+  const W=groups.length*(GW+gg)+gg;
+  let s=`<svg width="${W}" height="${SH}" style="overflow:visible;display:block">`;
+  groups.forEach(({label,v},gi)=>{
+    const gx=gg+gi*(GW+gg);
+    v.forEach((val,si)=>{
+      const h=val?Math.max(2,Math.round(val/mx*maxH)):0;
+      const x=gx+si*(bw+gp),y=maxH-h;
+      if(h)s+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" fill="${colors[si]}" rx="1"/>`;
+      if(val)s+=`<text x="${x+bw/2}" y="${y-2}" text-anchor="middle" font-size="7.5" fill="#333">${val}</text>`;
+    });
+    if(label)s+=`<text x="${gx+GW/2}" y="${maxH+14}" text-anchor="middle" font-size="8.5" fill="#555">${label}</text>`;
+  });
+  return s+'</svg>';
+}
+function _vbar(items,total,maxH){
+  maxH=maxH||150;
+  const mx=Math.max(...items.map(x=>x.v),1);
+  return`<div style="display:flex;gap:10px;align-items:flex-end;background:#fff">`+
+  items.map(({v,label,color})=>{
+    const h=v?Math.max(28,Math.round(v/mx*maxH)):4;
+    return`<div style="flex:1;display:flex;flex-direction:column;align-items:center">
+      <div style="font-size:12px;font-weight:700;margin-bottom:6px;text-align:center;color:#333">${label}</div>
+      <div style="width:100%;height:${h}px;background:${color};border-radius:3px 3px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:8px">
+        <span style="color:#fff;font-size:14px;font-weight:900">${v}건</span>
+        <span style="color:rgba(255,255,255,0.9);font-size:11px">(${pct(v,total)}%)</span>
+      </div>
+    </div>`;
+  }).join('')+'</div>';
+}
+function _th(t,cs,rs){
+  const a=cs>1?` colspan="${cs}"`:'',b=rs>1?` rowspan="${rs}"`:'';
+  return`<th${a}${b} style="background:${_SC.H};border:1px solid #aaa;padding:4px 6px;font-size:11px;text-align:center;white-space:nowrap">${t}</th>`;
+}
+function _td(t,extra){return`<td style="border:1px solid #ccc;padding:3px 6px;font-size:11px;text-align:center${extra||''}">${t===0?'':t||''}</td>`;}
+function _tdr(t){return _td(t,`;background:${_SC.T};font-weight:700`);}
+
 function renderKpiSlide1(recs,mon){
-  const total=recs.length;
-  const g={기아:kpiCnt(recs,r=>r.귀책==='기아'),캠스:kpiCnt(recs,r=>r.귀책==='캠스'),부영:kpiCnt(recs,r=>r.귀책==='부영')};
-  const k1=kpiCnt(recs,r=>r.발생===1&&!LOCS.some(l=>r[l]===1));
-  const k2=kpiCnt(recs,r=>r.발생===2&&!LOCS.some(l=>r[l]===1));
-  const loc=kpiCnt(recs,r=>LOCS.some(l=>r[l]===1));
   const allMons=monthList().filter(m=>m<=mon);
-  const allRecs=allMons.flatMap(m=>DB.months[m]||[]);
-  const ytd={기아:kpiCnt(allRecs,r=>r.귀책==='기아'),캠스:kpiCnt(allRecs,r=>r.귀책==='캠스'),부영:kpiCnt(allRecs,r=>r.귀책==='부영'),total:allRecs.length};
-  const card=(label,val,t,color,bg)=>`<div style="background:${bg};border-radius:10px;padding:14px 10px;text-align:center;border-top:3px solid ${color}"><div style="font-size:10px;color:#94a3b8;letter-spacing:1px;margin-bottom:6px">${label}</div><div style="font-size:26px;font-weight:900;color:${color};line-height:1">${val}</div><div style="font-size:11px;color:#64748b;margin-top:4px">${t?pct(val,t)+'%':''}</div></div>`;
+  const isK1=r=>r.발생===1&&!LOCS.some(l=>r[l]===1);
+  const isK2=r=>r.발생===2&&!LOCS.some(l=>r[l]===1);
+  const isLoc=r=>LOCS.some(l=>r[l]===1);
+  const _mv=key=>allMons.map(m=>{
+    const r=DB.months[m]||[];
+    if(key==='K1')return r.filter(isK1).length;
+    if(key==='K2')return r.filter(isK2).length;
+    if(key==='loc')return r.filter(isLoc).length;
+    if(key==='total')return r.length;
+    return r.filter(x=>x.귀책===key).length;
+  });
+  const mlbl=allMons.map(m=>m.replace(/\d+년/,'').replace('월',''));
+  const g귀책=allMons.map((m,i)=>({label:mlbl[i],v:[_mv('기아')[i],_mv('캠스')[i],_mv('부영')[i]]}));
+  const g공장=allMons.map((m,i)=>({label:mlbl[i],v:[_mv('K1')[i],_mv('K2')[i],_mv('loc')[i]]}));
+  const sum=arr=>arr.reduce((a,b)=>a+b,0);
+  const ytd기아=sum(_mv('기아')),ytd캠스=sum(_mv('캠스')),ytd부영=sum(_mv('부영')),ytdTot=sum(_mv('total'));
+  const ytdK1=sum(_mv('K1')),ytdK2=sum(_mv('K2')),ytdLoc=sum(_mv('loc'));
+  const total=recs.length;
+  const VEHS=['NQ5','SP2','OV1','SP3'];
+  const asRecs=recs.filter(r=>!r['단품만 요청']);
+  const vehBars=VEHS.map(v=>({v:kpiCnt(asRecs,r=>r.차종===v),label:v==='NQ5'?'NQ':v,color:_SC.N}));
+  const monBars=allMons.map((m,i)=>({v:_mv('total')[i],label:mlbl[i]+'월',color:_SC.N}));
+  const FRT=kpiCnt(asRecs,r=>r.아이템==='FRT'),RR=kpiCnt(asRecs,r=>r.아이템==='RR');
+  const ASSY=asRecs.length;
+  const 리어=kpiCnt(recs,r=>r['단품만 요청']==='리어몰딩');
+  const 스키드=kpiCnt(recs,r=>r['단품만 요청']==='스키드');
+  const 기타=kpiCnt(recs,r=>r['단품만 요청']&&!['리어몰딩','스키드'].includes(r['단품만 요청']));
+  const 기아ASSY=kpiCnt(asRecs,r=>r.귀책==='기아'),기아단품=kpiCnt(recs,r=>r.귀책==='기아'&&r['단품만 요청']);
+  const 캠스ASSY=kpiCnt(asRecs,r=>r.귀책==='캠스'),캠스단품=kpiCnt(recs,r=>r.귀책==='캠스'&&r['단품만 요청']);
+  const 부영ASSY=kpiCnt(asRecs,r=>r.귀책==='부영'),부영단품=kpiCnt(recs,r=>r.귀책==='부영'&&r['단품만 요청']);
+
+  const 귀책표=`<table style="width:100%;border-collapse:collapse;margin-top:6px">
+    <tr>${_th('구분')}${mlbl.map(l=>_th(l+'월'))}${_th('충합')}</tr>
+    ${[['기아',ytd기아,_mv('기아')],['캠스',ytd캠스,_mv('캠스')],['부영',ytd부영,_mv('부영')]].map(([n,s,vals])=>
+      `<tr><td style="border:1px solid #ccc;padding:3px 6px;font-size:11px;white-space:nowrap">${n}</td>${vals.map(v=>_td(v||'')).join('')}${_td(`<b>${s}</b>`)}</tr>`
+    ).join('')}
+    <tr>${_tdr('TL')}${_mv('total').map(v=>_tdr(v||'')).join('')}${_tdr(`<b>${ytdTot}</b>`)}</tr>
+  </table>`;
+
+  const 공장표=`<table style="width:100%;border-collapse:collapse;margin-top:6px">
+    <tr>${_th('구분')}${mlbl.map(l=>_th(l+'월'))}${_th('충합')}</tr>
+    ${[['K1',ytdK1,_mv('K1')],['K2',ytdK2,_mv('K2')],['출하',ytdLoc,_mv('loc')]].map(([n,s,vals])=>
+      `<tr><td style="border:1px solid #ccc;padding:3px 6px;font-size:11px">${n}</td>${vals.map(v=>_td(v||'')).join('')}${_td(`<b>${s}</b>`)}</tr>`
+    ).join('')}
+    <tr>${_tdr('TL')}${_mv('total').map(v=>_tdr(v||'')).join('')}${_tdr(`<b>${ytdTot}</b>`)}</tr>
+  </table>`;
 
   document.getElementById('kpiSlide1').innerHTML=`
-  <div style="padding:14px 16px 0">
-    <div style="font-size:12px;color:#64748b;margin-bottom:10px;font-weight:700">● ${mon} 이번 달</div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
-      ${card('총 발생',total,0,'#f1f5f9','#1a1f2e')}
-      ${card('기아',g.기아,total,'#f87171','#1f1a1a')}
-      ${card('캠스',g.캠스,total,'#60a5fa','#1a1a1f')}
-      ${card('부영',g.부영,total,'#fcd34d','#1f1e1a')}
+  <div style="background:#fff;color:#1a1a1a;padding:20px 24px;font-family:'맑은 고딕',Arial,sans-serif">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+      <div style="font-size:18px;font-weight:900">■ 26년 알카 공급 현황 <span style="font-size:13px;color:#CC0000;text-decoration:underline">_캠스+기아</span></div>
+      <div style="font-size:11px;color:#888;font-style:italic">Creative Auto Module System</div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px">
-      ${card('K1 기아1공장',k1,total,'#4ade80','#1a1f1a')}
-      ${card('K2 기아2공장',k2,total,'#38bdf8','#1a1c1f')}
-      ${card('출하장',loc,total,'#a78bfa','#1b1a1f')}
+    <div style="border-top:2px solid #333;margin-bottom:14px"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px">
+      <div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px">◎ 월별 발생 추이</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end">
+          <div><div style="overflow-x:auto">${_bars(vehBars,70,22,6)}</div></div>
+          <div><div style="font-size:9px;color:#888;text-align:right">단위:개</div><div style="overflow-x:auto">${_bars(monBars,70,20,5)}</div></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px">◎ 공급 아이템</div>
+        <div style="font-size:9px;color:#888;text-align:right;margin-bottom:2px">단위:개</div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
+          <div>${_bars([{v:FRT,label:'FRT',color:_SC.N},{v:RR,label:'RR',color:_SC.G}],70,26,8)}</div>
+          <div>${_bars([{v:ASSY,label:'ASSY',color:_SC.N},{v:리어,label:'리어몰딩',color:_SC.G},{v:스키드,label:'스키드',color:'#BBBBBB'},{v:기타,label:'기타',color:'#DDDDDD'}],70,20,4)}</div>
+          <table style="border-collapse:collapse;font-size:10px;margin-top:2px">
+            ${_th('구분')}${_th('ASSY')}${_th('단품')}
+            <tr><td style="border:1px solid #ccc;padding:2px 6px;font-size:10px">기아</td>${_td(기아ASSY)}${_td(기아단품)}</tr>
+            <tr><td style="border:1px solid #ccc;padding:2px 6px;font-size:10px">캠스</td>${_td(캠스ASSY)}${_td(캠스단품)}</tr>
+            <tr><td style="border:1px solid #ccc;padding:2px 6px;font-size:10px">부영</td>${_td(부영ASSY)}${_td(부영단품)}</tr>
+          </table>
+        </div>
+      </div>
     </div>
-  </div>
-  <div class="sec" style="margin:0 0 0">
-    <div class="sec-h">📊 연누계 — 귀책 비교 (${allMons[0]} ~ ${mon})</div>
-    <div class="scroll" style="padding:10px 16px 14px">
-      <table class="stbl">
-        <tr><th>구분</th>${allMons.map(m=>`<th>${m.replace(/\d+년/,'')}</th>`).join('')}<th style="color:#f59e0b">합계</th></tr>
-        ${['기아','캠스','부영'].map(gn=>{
-          const cls=gn==='기아'?'kia-c':gn==='캠스'?'cams-c':'';
-          return`<tr><td class="${cls}"><b>${gn}</b></td>${allMons.map(m=>{const r=DB.months[m]||[];return`<td>${kpiCnt(r,x=>x.귀책===gn)||''}</td>`;}).join('')}<td><b>${ytd[gn]}</b></td></tr>`;
-        }).join('')}
-        <tr class="tot-row"><td>TL</td>${allMons.map(m=>{const r=DB.months[m]||[];return`<td>${r.length}</td>`;}).join('')}<td>${ytd.total}</td></tr>
-      </table>
+
+    <div style="font-size:12px;font-weight:700;margin-bottom:6px">◎ 귀책 비교</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;font-size:9px;margin-bottom:3px;color:#333">
+          <span style="display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:10px;height:10px;background:${_SC.N}"></span>기아</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:10px;height:10px;background:${_SC.G}"></span>캠스</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:10px;height:10px;background:#AAAAAA"></span>부영</span>
+        </div>
+        <div style="overflow-x:auto">${_gbars(g귀책,[_SC.N,_SC.G,'#AAAAAA'],80,10,2,8)}</div>
+        <div style="overflow-x:auto">${귀책표}</div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;font-size:9px;margin-bottom:3px;color:#333">
+          <span style="display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:10px;height:10px;background:${_SC.R}"></span>K1</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:10px;height:10px;background:${_SC.N}"></span>K2</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:10px;height:10px;background:${_SC.B}"></span>출하</span>
+        </div>
+        <div style="overflow-x:auto">${_gbars(g공장,[_SC.R,_SC.N,_SC.B],80,10,2,8)}</div>
+        <div style="overflow-x:auto">${공장표}</div>
+      </div>
     </div>
   </div>`;
 }
+
 function renderKpiSlide2(recs,mon){
   const total=recs.length;
-  const VEHS=['NQ5','OV1','SP3'];
+  const VEHS=['NQ5','SP2','OV1','SP3'];
   const vd={};
-  VEHS.forEach(v=>{
-    vd[v]={K1:0,K2:0};
-    LOCS.forEach(l=>vd[v][l]=0);
-    recs.filter(r=>r.차종===v).forEach(r=>{
-      if(LOCS.some(l=>r[l]===1))LOCS.forEach(l=>{if(r[l]===1)vd[v][l]++;});
-      else if(r.발생===1)vd[v].K1++;
-      else vd[v].K2++;
-    });
+  VEHS.forEach(v=>{vd[v]={K1:0,K2:0};LOCS.forEach(l=>vd[v][l]=0);});
+  recs.forEach(r=>{
+    const v=r.차종; if(!vd[v])return;
+    if(LOCS.some(l=>r[l]===1))LOCS.forEach(l=>{if(r[l]===1)vd[v][l]++;});
+    else if(r.발생===1)vd[v].K1++; else vd[v].K2++;
   });
   const usedLocs=LOCS.filter(l=>VEHS.some(v=>vd[v][l]>0));
-  const locCols=['K1','K2',...usedLocs];
   const k1t=VEHS.reduce((s,v)=>s+vd[v].K1,0);
   const k2t=VEHS.reduce((s,v)=>s+vd[v].K2,0);
+  const locT=total-k1t-k2t;
   const tbl={};
   ['기아','캠스','부영'].forEach(g=>{
     tbl[g]={};
@@ -1432,47 +1551,75 @@ function renderKpiSlide2(recs,mon){
   });
   const frtT=kpiCnt(recs,r=>r.아이템==='FRT'),rrT=kpiCnt(recs,r=>r.아이템==='RR');
   const colLabel={K1:'기아 1',K2:'기아 2',평동:'평동',경산:'경산',목포항:'목포항',충주:'충주',신태인:'신태인',오토큐:'오토큐',덕평:'덕평',송악:'송악'};
+  const nUL=usedLocs.length;
+
+  const locTbl=`<table style="width:100%;border-collapse:collapse">
+    <tr>
+      ${_th('차종',1,2)}${_th('기아 1',1,2)}${_th('기아 2',1,2)}
+      ${nUL?_th('출하장',nUL,1):''}
+      ${_th('TOTAL',1,2)}
+    </tr>
+    ${nUL?`<tr>${usedLocs.map(l=>`<th style="background:${_SC.H};border:1px solid #aaa;padding:3px 6px;font-size:10px;text-align:center;white-space:nowrap">${l}</th>`).join('')}</tr>`:''}
+    ${VEHS.map(v=>{
+      const rt=[vd[v].K1,vd[v].K2,...usedLocs.map(l=>vd[v][l])].reduce((a,b)=>a+b,0);
+      if(!rt)return'';
+      return`<tr><td style="border:1px solid #ccc;padding:3px 8px;font-size:11px;font-weight:700">${v==='NQ5'?'NQ':v}</td>
+        ${_td(vd[v].K1||'')}${_td(vd[v].K2||'')}
+        ${usedLocs.map(l=>_td(vd[v][l]||'')).join('')}
+        ${_td(`<b>${rt}</b>`)}</tr>`;
+    }).join('')}
+    <tr><td style="background:${_SC.T};border:1px solid #aaa;padding:3px 8px;font-size:11px;font-weight:700">TOTAL</td>
+      ${_tdr(k1t||'')}${_tdr(k2t||'')}
+      ${usedLocs.map(l=>_tdr(VEHS.reduce((a,v)=>a+(vd[v][l]||0),0)||'')).join('')}
+      <td style="background:${_SC.T};border:1px solid #aaa;padding:3px 6px;font-size:11px;text-align:center;font-weight:700;color:#CC4400">${total}</td>
+    </tr>
+  </table>`;
+
+  const guiTbl=`<table style="width:100%;border-collapse:collapse">
+    <tr>${_th('구분',2)}${_th('FRT')}${_th('RR')}${_th('TOTAL')}</tr>
+    ${['기아','캠스','부영'].map(gn=>[1,2,'계'].map((k,ki)=>{
+      const d=tbl[gn][k],bg=k==='계'?_SC.A:'#fff';
+      return`<tr style="background:${bg}">
+        ${ki===0?`<td rowspan="3" style="border:1px solid #ccc;padding:3px 8px;font-size:11px;font-weight:700;text-align:center;vertical-align:middle">${gn}</td>`:''}
+        <td style="border:1px solid #ccc;padding:3px 6px;font-size:11px;text-align:center">${k==='계'?'계':k}</td>
+        ${_td(d.FRT||'-')}${_td(d.RR||'-')}
+        <td style="border:1px solid #ccc;padding:3px 6px;font-size:11px;text-align:center${k==='계'?';font-weight:700':''}">${d.tot||'-'}</td>
+      </tr>`;
+    }).join('')).join('')}
+    <tr><td colspan="2" style="background:${_SC.T};border:1px solid #aaa;padding:3px 6px;font-size:11px;font-weight:700;text-align:center">TOTAL</td>
+      <td style="background:${_SC.T};border:1px solid #aaa;padding:3px 6px;font-size:11px;text-align:center;font-weight:700;color:#CC4400">${frtT}</td>
+      <td style="background:${_SC.T};border:1px solid #aaa;padding:3px 6px;font-size:11px;text-align:center;font-weight:700;color:#CC4400">${rrT}</td>
+      <td style="background:${_SC.T};border:1px solid #aaa;padding:3px 6px;font-size:11px;text-align:center;font-weight:700;color:#CC4400">${total}</td>
+    </tr>
+  </table>`;
 
   document.getElementById('kpiSlide2').innerHTML=`
-  <div class="sec" style="margin:14px 0 0">
-    <div class="sec-h">🏭 공장 및 출하장 공급 수량</div>
-    <div class="scroll" style="padding:10px 16px 14px">
-      <table class="stbl">
-        <tr><th>차종</th>${locCols.map(c=>`<th>${colLabel[c]||c}</th>`).join('')}<th style="color:#f59e0b">TOTAL</th></tr>
-        ${VEHS.map(v=>{
-          const rowTotal=locCols.reduce((s,c)=>s+(vd[v][c]||0),0);
-          if(!rowTotal)return'';
-          return`<tr><td class="veh">${v==='NQ5'?'NQ':v}</td>${locCols.map(c=>`<td>${vd[v][c]||''}</td>`).join('')}<td><b>${rowTotal}</b></td></tr>`;
-        }).join('')}
-        <tr class="tot-row"><td>TOTAL</td>${locCols.map(c=>{
-          const s=c==='K1'?k1t:c==='K2'?k2t:VEHS.reduce((a,v)=>a+(vd[v][c]||0),0);
-          return`<td>${s||''}</td>`;
-        }).join('')}<td>${total}</td></tr>
-      </table>
+  <div style="background:#fff;color:#1a1a1a;padding:20px 24px;font-family:'맑은 고딕',Arial,sans-serif;border-top:1px solid #e2e8f0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+      <div style="font-size:18px;font-weight:900">■ 26. ${mon} 알카 공급 현황</div>
+      <div style="font-size:11px;color:#888;font-style:italic">Creative Auto Module System</div>
     </div>
-  </div>
-  <div class="sec" style="margin:14px 0 14px">
-    <div class="sec-h">📋 아이템 및 귀책 현황</div>
-    <div class="scroll" style="padding:10px 16px 14px">
-      <table class="stbl">
-        <tr><th colspan="2">구분</th><th>FRT</th><th>RR</th><th style="color:#f59e0b">TOTAL</th></tr>
-        ${['기아','캠스','부영'].map(gn=>{
-          const cls=gn==='기아'?'kia-c':gn==='캠스'?'cams-c':'';
-          return[1,2,'계'].map((k,ki)=>{
-            const d=tbl[gn][k];
-            return`<tr${k==='계'?' class="sub-row"':''}>
-              ${ki===0?`<td class="${cls}" rowspan="3"><b>${gn}</b></td>`:''}
-              <td>${k==='계'?'계':k}</td>
-              <td>${d.FRT||'-'}</td><td>${d.RR||'-'}</td>
-              <td${k==='계'?' style="font-weight:800"':''}>${d.tot||'-'}</td></tr>`;
-          }).join('');
-        }).join('')}
-        <tr class="tot-row"><td colspan="2">TOTAL</td><td>${frtT}</td><td>${rrT}</td><td>${total}</td></tr>
-      </table>
+    <div style="border-top:2px solid #333;margin-bottom:14px"></div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div style="font-size:13px;font-weight:700">◎ 공장 및 출하장 공급 수량</div>
+      <div style="font-size:10px;color:#888">단위 : 개</div>
+    </div>
+    <div style="display:flex;gap:20px;margin-bottom:20px;align-items:flex-end">
+      <div style="min-width:170px">${_vbar([{v:k1t,label:'기아 1',color:_SC.R},{v:k2t,label:'기아 2',color:_SC.N},{v:locT,label:'출하장',color:_SC.B}],total,140)}</div>
+      <div style="flex:1;overflow-x:auto">${locTbl}</div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div style="font-size:13px;font-weight:700">◎ 아이템 및 귀책 현황</div>
+      <div style="font-size:10px;color:#888">단위 : 개</div>
+    </div>
+    <div style="display:flex;gap:20px;align-items:flex-end;padding-bottom:6px">
+      <div style="min-width:170px">${_vbar([{v:kpiCnt(recs,r=>r.귀책==='기아'),label:'기아',color:_SC.R},{v:kpiCnt(recs,r=>r.귀책==='캠스'),label:'캠스',color:_SC.N},{v:kpiCnt(recs,r=>r.귀책==='부영'),label:'부영',color:_SC.B}],total,140)}</div>
+      <div style="flex:1;overflow-x:auto">${guiTbl}</div>
     </div>
   </div>`;
 }
-function pct(n,t){return t?Math.round(n/t*100):0;}
 
 // ─── KPI PPTX 생성 (JSZip 클라이언트 사이드) ────────────────
 function _monIdx(m){const r=m.match(/(\d+)월$/);return r?+r[1]-1:0;}
