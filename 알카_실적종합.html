@@ -1564,12 +1564,12 @@ function renderKpiSlide1(recs,mon){
 
     <div style="margin-bottom:14px">
       <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:7px">◎ 연 발생 추이</div>
-      <div style="display:flex;gap:20px;align-items:flex-end">
-        <div style="flex:0 0 auto;width:230px;overflow:hidden">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div style="overflow:hidden">
           <div style="margin-bottom:3px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])}</div>
           ${_gbarsT(vehYtdBars,[_SC.N,_SC.G,'#AAAAAA'],100,22,5,15)}
         </div>
-        <div style="flex:1 1 0;min-width:0;max-width:480px;overflow:hidden">
+        <div style="overflow:hidden">
           <div style="display:flex;justify-content:flex-end;margin-bottom:3px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])}</div>
           ${_gbars(g귀책,[_SC.N,_SC.G,'#AAAAAA'],80,12,2,6)}
         </div>
@@ -1578,12 +1578,12 @@ function renderKpiSlide1(recs,mon){
 
     <div style="margin-bottom:10px">
       <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:7px">◎ 귀책 비교</div>
-      <div style="display:flex;gap:16px">
-        <div style="flex:1 1 0;min-width:0;overflow:hidden">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div style="overflow:hidden">
           <div style="display:flex;justify-content:flex-end;margin-bottom:3px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAAAAA','부영']])}</div>
           ${_gbars(g귀책,[_SC.N,_SC.G,'#AAAAAA'],90,12,2,6)}
         </div>
-        <div style="flex:1 1 0;min-width:0;overflow:hidden">
+        <div style="overflow:hidden">
           <div style="display:flex;justify-content:flex-end;margin-bottom:3px">${_legnd([[_SC.R,'K1'],[_SC.N,'K2'],[_SC.B,'출하']])}</div>
           ${_gbars(g공장,[_SC.R,_SC.N,_SC.B],90,12,2,6)}
         </div>
