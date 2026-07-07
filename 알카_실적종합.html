@@ -965,6 +965,8 @@ function isAlka(c,s){
   if(s.startsWith('디에프_'))return false;
   const skip=['출하됐습니다','출하됬습니다','알카진행하겠습니다','취소해주세요','총검 측정','알겠습니다','입고 안됌','업체직원부재','폼 말씀','측정용 범퍼','검사구 측정','알카 취소','수정했습니다','나갔습니다','사양같은지','AMEW','AMAW','그릴이 다르','센서3호차','보내주시면'];
   if(skip.some(p=>c.includes(p)))return false;
+  if(/FOG커버|포그커버|FOG카바|FOG\s*COVER/i.test(c))return false;
+  if(/(하나|한\s*개|1\s*개)/.test(c)&&!/몰딩|스키드|어퍼가니쉬|그릴|범퍼|프런트|프론트|리어|FRT|RR/i.test(c))return false;
   if(c.includes('센서 보내주세요')&&!c.includes('알카'))return false;
   return ['알카 신청','알카신청','알카 요청','알카요청','R/C신청','RC신청','요청합니다','보내주세요','알카 입니다','알카입니다','신청합니다','요청드립니다'].some(t=>c.includes(t));
 }
