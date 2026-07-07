@@ -1467,8 +1467,9 @@ function renderKpiSlide1(recs,mon){
   const lbl12=Array.from({length:12},(_,i)=>`${i+1}월`);
   const allMons=monthList().filter(m=>m<=mon);
   const mlbl=allMons.map(m=>m.replace(/^\d+년/,''));
-  const isK1=r=>r.발생===1&&!LOCS.some(l=>r[l]===1);
-  const isK2=r=>r.발생===2&&!LOCS.some(l=>r[l]===1);
+  const _k2v=new Set(DB.발생2||['NQ5']);
+  const isK1=r=>!LOCS.some(l=>r[l]===1)&&(r.발생===1||(!r.발생&&!_k2v.has(r.차종)));
+  const isK2=r=>!LOCS.some(l=>r[l]===1)&&(r.발생===2||(!r.발생&&_k2v.has(r.차종)));
   const isLoc=r=>LOCS.some(l=>r[l]===1);
   const _get=(m,key)=>{
     const r=DB.months[m]||[];
@@ -1617,8 +1618,9 @@ function renderKpiSlide2(recs,mon){
   VEHS.forEach(v=>{vd[v]={K1:0,K2:0};LOCS.forEach(l=>vd[v][l]=0);});
   recs.forEach(r=>{
     const v=r.차종; if(!vd[v])return;
+    const _k2v2=new Set(DB.발생2||['NQ5']);
     if(LOCS.some(l=>r[l]===1))LOCS.forEach(l=>{if(r[l]===1)vd[v][l]++;});
-    else if(r.발생===1)vd[v].K1++; else vd[v].K2++;
+    else if(r.발생===1||(!r.발생&&!_k2v2.has(v)))vd[v].K1++; else vd[v].K2++;
   });
   const usedLocs=LOCS.filter(l=>VEHS.some(v=>vd[v][l]>0));
   const k1t=VEHS.reduce((s,v)=>s+vd[v].K1,0);
@@ -1915,8 +1917,9 @@ async function dlKpiPptx(){
     const allRecs=DB.months[mon];
     const ytd=allMons.flatMap(m=>DB.months[m]||[]).filter(r=>!r['단품만 요청']);
 
-    const isK1=(r)=>r.발생==1&&!LOCS.some(l=>r[l]==1);
-    const isK2=(r)=>r.발생==2&&!LOCS.some(l=>r[l]==1);
+    const _k2v3=new Set(DB.발생2||['NQ5']);
+    const isK1=(r)=>!LOCS.some(l=>r[l]==1)&&(r.발생==1||(!r.발생&&!_k2v3.has(r.차종)));
+    const isK2=(r)=>!LOCS.some(l=>r[l]==1)&&(r.발생==2||(!r.발생&&_k2v3.has(r.차종)));
     const isLoc=(r)=>LOCS.some(l=>r[l]==1);
 
     const mv=(key)=>allMons.map(m=>{const rs=DB.months[m]||[];
