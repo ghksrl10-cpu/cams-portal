@@ -981,6 +981,12 @@ function parseChat(text){
       let j=i+1;
       while(j<lines.length){const nl=lines[j].trim();if(/^\[.+?\] \[/.test(nl)||/^\d{4}년 \d/.test(nl))break;if(nl&&nl!=='메시지가 삭제되었습니다')content+='\n'+nl;j++;}
       i=j;
+      if(day&&!sender.startsWith('디에프_')&&/알카\s*취소/.test(content)){
+        for(let ri=recs.length-1;ri>=0;ri--){
+          if(recs[ri].일자===day&&recs[ri]._sender===sender){recs.splice(ri,1);break;}
+        }
+        continue;
+      }
       if(day&&isAlka(content,sender)){
         const g=gG(content),loc=gL(content),rawDef=g==='기아'?'찍힘':g==='부영'?'낙하':gD(content);
         const single=(g==='부영'&&DB.buyAssyOverride!==false)?false:isSingle(content);
