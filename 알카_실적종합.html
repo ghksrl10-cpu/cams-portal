@@ -1494,15 +1494,14 @@ function renderKpiSlide1(recs,mon){
   }));
   const monBars=mon12.map((m,i)=>({v:_get(m,'total'),label:lbl12[i],color:_SC.N}));
 
-  // 공급 아이템
-  const FRT=kpiCnt(asRecs,r=>r.아이템==='FRT'),RR=kpiCnt(asRecs,r=>r.아이템==='RR');
-  const ASSY=asRecs.length;
-  const 리어=kpiCnt(recs,r=>r['단품만 요청']==='리어몰딩');
-  const 스키드=kpiCnt(recs,r=>r['단품만 요청']==='스키드');
-  const 기타=kpiCnt(recs,r=>r['단품만 요청']&&!['리어몰딩','스키드'].includes(r['단품만 요청']));
-  const 기아ASSY=kpiCnt(asRecs,r=>r.귀책==='기아'),기아단품=kpiCnt(recs,r=>r.귀책==='기아'&&r['단품만 요청']);
-  const 캠스ASSY=kpiCnt(asRecs,r=>r.귀책==='캠스'),캠스단품=kpiCnt(recs,r=>r.귀책==='캠스'&&r['단품만 요청']);
-  const 부영ASSY=kpiCnt(asRecs,r=>r.귀책==='부영'),부영단품=kpiCnt(recs,r=>r.귀책==='부영'&&r['단품만 요청']);
+  // 공급 아이템 (FRT/RR × 귀책, ASSY+단품 합산)
+  const 기아FRT=kpiCnt(recs,r=>r.귀책==='기아'&&r.아이템==='FRT');
+  const 기아RR =kpiCnt(recs,r=>r.귀책==='기아'&&r.아이템==='RR');
+  const 캠스FRT=kpiCnt(recs,r=>r.귀책==='캠스'&&r.아이템==='FRT');
+  const 캠스RR =kpiCnt(recs,r=>r.귀책==='캠스'&&r.아이템==='RR');
+  const 부영FRT=kpiCnt(recs,r=>r.귀책==='부영'&&r.아이템==='FRT');
+  const 부영RR =kpiCnt(recs,r=>r.귀책==='부영'&&r.아이템==='RR');
+  const FRTtot=기아FRT+캠스FRT+부영FRT, RRtot=기아RR+캠스RR+부영RR;
 
   // 연 발생 추이: 차종별 YTD grouped(기아/캠스/부영), 그룹합계 라벨
   const vehYtdBars=VEHS.filter(v=>allMons.some(m=>(DB.months[m]||[]).some(r=>r.차종===v))).map(v=>({
@@ -1580,26 +1579,26 @@ function renderKpiSlide1(recs,mon){
           </div>
         </div>
       </div>
-      <!-- RIGHT: 공급 아이템 -->
+      <!-- RIGHT: 공급 아이템 (FRT/RR × 귀책) -->
       <div>
         <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:7px">◎ 공급 아이템 <span style="font-size:10px;color:#666;font-weight:400">단위:개</span></div>
-        <div style="display:flex;gap:10px;align-items:flex-start">
-          <div style="flex:0 0 auto;max-width:130px;overflow:hidden">${_bars([{v:FRT,label:'FRT',color:_SC.G},{v:RR,label:'RR',color:_SC.N}],120,44,14)}</div>
-          <div style="flex:0 0 auto;max-width:165px;overflow:hidden">${_bars([{v:ASSY,label:'ASSY',color:_SC.N},{v:리어,label:'리어',color:_SC.G},{v:스키드,label:'스키드',color:'#BBB'},{v:기타,label:'기타',color:'#DDD'}],120,24,6)}</div>
+        <div style="display:flex;gap:14px;align-items:flex-end">
           <div>
-            <div style="font-size:10px;color:#555;margin-bottom:4px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])}</div>
-            <div style="display:flex;gap:8px;align-items:flex-start">
-              <div style="flex:0 0 auto;max-width:220px;overflow:hidden">
-                ${_gbars([{label:'ASSY',v:[기아ASSY,캠스ASSY,부영ASSY]},{label:'단품',v:[기아단품,캠스단품,부영단품]}],[_SC.N,_SC.G,'#AAA'],120,22,6,14)}
-              </div>
-              <table style="border-collapse:collapse;align-self:flex-end">
-                <tr><th style="background:${_SC.H};border:1px solid #aaa;padding:3px 7px;font-size:11px;color:#111">구분</th><th style="background:${_SC.H};border:1px solid #aaa;padding:3px 7px;font-size:11px;color:#111">ASSY</th><th style="background:${_SC.H};border:1px solid #aaa;padding:3px 7px;font-size:11px;color:#111">단품</th></tr>
-                <tr><td style="border:1px solid #ccc;padding:3px 7px;font-size:11px;color:#111">기아</td><td style="border:1px solid #ccc;padding:3px 7px;font-size:11px;text-align:center;color:#111">${기아ASSY}</td><td style="border:1px solid #ccc;padding:3px 7px;font-size:11px;text-align:center;color:#111">${기아단품}</td></tr>
-                <tr><td style="border:1px solid #ccc;padding:3px 7px;font-size:11px;color:#111">캠스</td><td style="border:1px solid #ccc;padding:3px 7px;font-size:11px;text-align:center;color:#111">${캠스ASSY}</td><td style="border:1px solid #ccc;padding:3px 7px;font-size:11px;text-align:center;color:#111">${캠스단품}</td></tr>
-                <tr><td style="border:1px solid #ccc;padding:3px 7px;font-size:11px;color:#111">부영</td><td style="border:1px solid #ccc;padding:3px 7px;font-size:11px;text-align:center;color:#111">${부영ASSY}</td><td style="border:1px solid #ccc;padding:3px 7px;font-size:11px;text-align:center;color:#111">${부영단품}</td></tr>
-              </table>
-            </div>
+            <div style="font-size:10px;color:#555;margin-bottom:3px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])}</div>
+            ${_gbars([{label:'FRT',v:[기아FRT,캠스FRT,부영FRT]},{label:'RR',v:[기아RR,캠스RR,부영RR]}],[_SC.N,_SC.G,'#AAA'],120,26,6,20)}
           </div>
+          <table style="border-collapse:collapse;align-self:flex-end;margin-bottom:22px">
+            <tr>
+              <th style="background:${_SC.H};border:1px solid #aaa;padding:4px 9px;font-size:12px;color:#111">구분</th>
+              <th style="background:${_SC.H};border:1px solid #aaa;padding:4px 9px;font-size:12px;color:#111">FRT</th>
+              <th style="background:${_SC.H};border:1px solid #aaa;padding:4px 9px;font-size:12px;color:#111">RR</th>
+              <th style="background:${_SC.H};border:1px solid #aaa;padding:4px 9px;font-size:12px;color:#111">계</th>
+            </tr>
+            <tr><td style="border:1px solid #ccc;padding:4px 9px;font-size:12px;color:#111">기아</td><td style="border:1px solid #ccc;padding:4px 9px;font-size:12px;text-align:center;color:#111">${기아FRT}</td><td style="border:1px solid #ccc;padding:4px 9px;font-size:12px;text-align:center;color:#111">${기아RR}</td><td style="border:1px solid #ccc;padding:4px 9px;font-size:12px;text-align:center;font-weight:700;color:#111">${기아FRT+기아RR}</td></tr>
+            <tr><td style="border:1px solid #ccc;padding:4px 9px;font-size:12px;color:#111">캠스</td><td style="border:1px solid #ccc;padding:4px 9px;font-size:12px;text-align:center;color:#111">${캠스FRT}</td><td style="border:1px solid #ccc;padding:4px 9px;font-size:12px;text-align:center;color:#111">${캠스RR}</td><td style="border:1px solid #ccc;padding:4px 9px;font-size:12px;text-align:center;font-weight:700;color:#111">${캠스FRT+캠스RR}</td></tr>
+            <tr><td style="border:1px solid #ccc;padding:4px 9px;font-size:12px;color:#111">부영</td><td style="border:1px solid #ccc;padding:4px 9px;font-size:12px;text-align:center;color:#111">${부영FRT}</td><td style="border:1px solid #ccc;padding:4px 9px;font-size:12px;text-align:center;color:#111">${부영RR}</td><td style="border:1px solid #ccc;padding:4px 9px;font-size:12px;text-align:center;font-weight:700;color:#111">${부영FRT+부영RR}</td></tr>
+            <tr><td style="background:${_SC.T};border:1px solid #aaa;padding:4px 9px;font-size:12px;font-weight:700;color:#111">합계</td><td style="background:${_SC.T};border:1px solid #aaa;padding:4px 9px;font-size:12px;text-align:center;font-weight:700;color:#111">${FRTtot}</td><td style="background:${_SC.T};border:1px solid #aaa;padding:4px 9px;font-size:12px;text-align:center;font-weight:700;color:#111">${RRtot}</td><td style="background:${_SC.T};border:1px solid #aaa;padding:4px 9px;font-size:12px;text-align:center;font-weight:700;color:#CC4400">${FRTtot+RRtot}</td></tr>
+          </table>
         </div>
       </div>
     </div>
