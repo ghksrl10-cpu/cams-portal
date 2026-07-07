@@ -382,7 +382,7 @@
             <thead><tr>
               <th>일자</th><th>발생</th><th>차종</th><th>아이템</th><th>귀책</th>
               <th>평동</th><th>경산</th><th>목포항</th><th>충주</th><th>신태인</th><th>오토큐</th><th>덕평</th>
-              <th>단품만 요청</th><th>불량 사유</th>
+              <th>단품만 요청</th><th>불량 사유</th><th>삭제</th>
             </tr></thead>
             <tbody id="mgmtBody"></tbody>
           </table>
@@ -1181,12 +1181,12 @@ function applyFix(i){
 // ─── 종합 관리 ───────────────────────────────────────────
 function renderMgmt(){
   const mon=document.getElementById('mgmtMonSel').value;
-  let recs=[];
-  if(mon==='all'){for(const m of monthList())recs.push(...(DB.months[m]||[]));}
-  else recs=DB.months[mon]||[];
-  document.getElementById('mgmtStat').textContent='총 '+recs.length+'건';
+  let rows=[];
+  if(mon==='all'){for(const m of monthList())(DB.months[m]||[]).forEach((r,i)=>rows.push({r,m,i}));}
+  else (DB.months[mon]||[]).forEach((r,i)=>rows.push({r,m:mon,i}));
+  document.getElementById('mgmtStat').textContent='총 '+rows.length+'건';
   let prev=null,html='';
-  for(const r of recs){
+  for(const {r,m,i} of rows){
     const sd=r.일자!==prev?r.일자:'';prev=r.일자;
     html+='<tr>';
     for(const c of REC_COLS){
@@ -1198,9 +1198,17 @@ function renderMgmt(){
       else if(c==='불량 사유'&&v)cls='def-c';
       html+=`<td class="${cls}">${v===''||v===null?'':v}</td>`;
     }
+    html+=`<td><button onclick="deleteRec('${m}',${i})" style="background:#7f1d1d;border:none;color:#fca5a5;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:12px">삭제</button></td>`;
     html+='</tr>';
   }
   document.getElementById('mgmtBody').innerHTML=html;
+}
+function deleteRec(mon,idx){
+  const recs=DB.months[mon]||[];
+  const r=recs[idx];if(!r)return;
+  const desc=`${r.일자||'?'}일 / ${r.차종||''} ${r.아이템||''} / ${r.귀책||''}`;
+  if(!confirm(`삭제할까요?\n${desc}`))return;
+  recs.splice(idx,1);saveDB();renderMgmt();
 }
 function delMonth(){
   const mon=document.getElementById('mgmtMonSel').value;
