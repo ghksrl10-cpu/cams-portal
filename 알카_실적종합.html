@@ -1512,9 +1512,9 @@ function renderKpiSlide1(recs,mon){
   const VEHS=['NQ5','SP2','OV1','SP3'];
   const asRecs=recs.filter(r=>!r['단품만 요청']);
 
-  // 월별 발생 추이: 차종별 당월 합계 단일 바
+  // 월별 발생 추이: 차종별 당월 귀책별 grouped
   const vehGbars=VEHS.filter(v=>kpiCnt(recs,r=>r.차종===v)>0).map(v=>({
-    label:v,v:kpiCnt(recs,r=>r.차종===v),color:_SC.N
+    label:v,v:[kpiCnt(recs,r=>r.차종===v&&r.귀책==='기아'),kpiCnt(recs,r=>r.차종===v&&r.귀책==='캠스'),kpiCnt(recs,r=>r.차종===v&&r.귀책==='부영')]
   }));
   const monBars=mon12.map((m,i)=>({v:_get(m,'total'),label:lbl12[i],color:_SC.N}));
 
@@ -1528,9 +1528,9 @@ function renderKpiSlide1(recs,mon){
   const 캠스ASSY=kpiCnt(asRecs,r=>r.귀책==='캠스'),캠스단품=kpiCnt(recs,r=>r.귀책==='캠스'&&r['단품만 요청']);
   const 부영ASSY=kpiCnt(asRecs,r=>r.귀책==='부영'),부영단품=kpiCnt(recs,r=>r.귀책==='부영'&&r['단품만 요청']);
 
-  // 연 발생 추이: 차종별 YTD grouped(기아/캠스/부영), 그룹합계 라벨
+  // 연 발생 추이: 차종별 YTD 귀책별 grouped
   const vehYtdBars=VEHS.filter(v=>allMons.some(m=>(DB.months[m]||[]).some(r=>r.차종===v))).map(v=>({
-    label:v,v:sum(allMons.map(m=>kpiCnt(DB.months[m]||[],r=>r.차종===v))),color:_SC.N
+    label:v,v:[sum(allMons.map(m=>kpiCnt(DB.months[m]||[],r=>r.차종===v&&r.귀책==='기아'))),sum(allMons.map(m=>kpiCnt(DB.months[m]||[],r=>r.차종===v&&r.귀책==='캠스'))),sum(allMons.map(m=>kpiCnt(DB.months[m]||[],r=>r.차종===v&&r.귀책==='부영')))]
   }));
 
   // 귀책/공장 월별 grouped bars
@@ -1579,11 +1579,11 @@ function renderKpiSlide1(recs,mon){
       <!-- 좌: 발생 추이 2차트 -->
       <div>
         <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 월별 발생 추이</div>
-        <div style="font-size:10px;color:#555;margin-bottom:4px">차종별(당월)</div>
-        <div style="max-width:320px">${_bars(vehGbars,80,72,24)}</div>
+        <div style="font-size:10px;color:#555;margin-bottom:4px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])} 차종별(당월)</div>
+        ${_gbarsI(vehGbars,[_SC.N,_SC.G,'#AAA'],80,14,2,10)}
         <div style="font-size:13px;font-weight:700;color:#111;margin:14px 0 6px">◎ 연 발생 추이</div>
-        <div style="font-size:10px;color:#555;margin-bottom:4px">차종별(누계)</div>
-        <div style="max-width:340px">${_bars(vehYtdBars,70,66,22)}</div>
+        <div style="font-size:10px;color:#555;margin-bottom:4px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])} 자종별(누계)</div>
+        ${_gbarsI(vehYtdBars,[_SC.N,_SC.G,'#AAA'],70,12,2,8)}
       </div>
 
       <!-- 우: 월별 합계 + 알카비용 -->
