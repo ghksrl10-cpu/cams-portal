@@ -1664,7 +1664,7 @@ function renderKpiSlide1(recs,mon){
 
 function renderKpiSlide2(recs,mon){
   const total=recs.length;
-  const VEHS=['NQ5','SP2','OV1','SP3'];
+  const VEHS=['NQ5','SP2','SP3','OV1'];
   const vd={};
   VEHS.forEach(v=>{vd[v]={K1:0,K2:0};LOCS.forEach(l=>vd[v][l]=0);});
   recs.forEach(r=>{
