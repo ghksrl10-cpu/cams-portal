@@ -833,12 +833,17 @@ function renderDal(recs){
   const target=DB.targetCount||155;
   const camsTotal=recs.filter(r=>r.귀책==='캠스'&&!r['단품만 요청']).length;
   const dal=camsTotal?Math.round(target/camsTotal*10000)/100:0;
-  const p5=Math.round(dal/20*100)/100;
+  const over=camsTotal>target;
+  const dalDisp=over?'-'+Math.round((100-dal)*100)/100:dal;
+  const p5Raw=Math.round(dal/20*100)/100;
+  const p5=over?'-'+Math.round((5-p5Raw)*100)/100:Math.min(p5Raw,5);
+  const dalColor=over?'#e55':'';
+  const p5Color=over?'#e55':'';
   document.getElementById('dalGrid').innerHTML=`
     <div class="dal-cell"><div class="dal-h">계획수량</div><div class="dal-v">${target}</div><div class="dal-u">건</div></div>
     <div class="dal-cell"><div class="dal-h">월 알카(캠스)</div><div class="dal-v">${camsTotal}</div><div class="dal-u">건</div></div>
-    <div class="dal-cell"><div class="dal-h">달성률</div><div class="dal-v">${dal}</div><div class="dal-u">%</div></div>
-    <div class="dal-cell"><div class="dal-h">5점 만점 기준</div><div class="dal-v">${p5}</div><div class="dal-u">점</div></div>`;
+    <div class="dal-cell"><div class="dal-h">달성률</div><div class="dal-v" style="color:${dalColor||'inherit'}">${dalDisp}</div><div class="dal-u">%</div></div>
+    <div class="dal-cell"><div class="dal-h">5점 만점 기준</div><div class="dal-v" style="color:${p5Color||'inherit'}">${p5}</div><div class="dal-u">점</div></div>`;
 }
 
 function renderHist(curMon){
