@@ -1514,7 +1514,7 @@ function renderKpiSlide1(recs,mon){
 
   // 월별 발생 추이: 차종별 당월 합계 단일 바
   const vehGbars=VEHS.filter(v=>kpiCnt(recs,r=>r.차종===v)>0).map(v=>({
-    label:v,v:kpiCnt(recs,r=>r.차종===v)
+    label:v,v:kpiCnt(recs,r=>r.차종===v),color:_SC.N
   }));
   const monBars=mon12.map((m,i)=>({v:_get(m,'total'),label:lbl12[i],color:_SC.N}));
 
@@ -1530,7 +1530,7 @@ function renderKpiSlide1(recs,mon){
 
   // 연 발생 추이: 차종별 YTD grouped(기아/캠스/부영), 그룹합계 라벨
   const vehYtdBars=VEHS.filter(v=>allMons.some(m=>(DB.months[m]||[]).some(r=>r.차종===v))).map(v=>({
-    label:v,v:sum(allMons.map(m=>kpiCnt(DB.months[m]||[],r=>r.차종===v)))
+    label:v,v:sum(allMons.map(m=>kpiCnt(DB.months[m]||[],r=>r.차종===v))),color:_SC.N
   }));
 
   // 귀책/공장 월별 grouped bars
@@ -1580,10 +1580,10 @@ function renderKpiSlide1(recs,mon){
       <div>
         <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 월별 발생 추이</div>
         <div style="font-size:10px;color:#555;margin-bottom:4px">차종별(당월)</div>
-        ${_bars(vehGbars,80,28,12)}
+        <div style="max-width:320px">${_bars(vehGbars,80,72,24)}</div>
         <div style="font-size:13px;font-weight:700;color:#111;margin:14px 0 6px">◎ 연 발생 추이</div>
         <div style="font-size:10px;color:#555;margin-bottom:4px">차종별(누계)</div>
-        ${_bars(vehYtdBars,70,24,10)}
+        <div style="max-width:340px">${_bars(vehYtdBars,70,66,22)}</div>
       </div>
 
       <!-- 우: 월별 합계 + 알카비용 -->
@@ -1603,29 +1603,29 @@ function renderKpiSlide1(recs,mon){
         <div style="font-size:11px;color:#888">단위 : 개</div>
       </div>
       <div style="display:flex;gap:10px;align-items:stretch">
-        <div style="flex:0 0 85px;border:1px solid #bbb;padding:8px 10px;display:flex;flex-direction:column;justify-content:flex-end">
-          ${_bars([{v:FRT,label:'FRT',color:_SC.N},{v:RR,label:'RR',color:_SC.G}],83,25,10)}
-          <div style="display:grid;grid-template-columns:repeat(2,35px);gap:14px;border-top:1px solid #ddd;margin-top:3px">
-            <div style="text-align:center;font-size:11px;font-weight:700;color:#111">${FRT}</div>
-            <div style="text-align:center;font-size:11px;font-weight:700;color:#111">${RR}</div>
+        <div style="flex:0 0 115px;border:1px solid #bbb;padding:8px 10px;display:flex;flex-direction:column;justify-content:flex-end">
+          ${_bars([{v:FRT,label:'FRT',color:_SC.N},{v:RR,label:'RR',color:_SC.G}],150,40,16)}
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);border-top:1px solid #ddd;margin-top:3px">
+            <div style="text-align:center;font-size:12px;font-weight:700;color:#111">${FRT}</div>
+            <div style="text-align:center;font-size:12px;font-weight:700;color:#111">${RR}</div>
           </div>
         </div>
-        <div style="flex:0 0 140px;border:1px solid #bbb;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between">
+        <div style="flex:0 0 195px;border:1px solid #bbb;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between">
           <div style="font-size:9px;color:#CC4400;text-align:right;white-space:nowrap">기타: 그릴/어퍼가니쉬</div>
           <div>
-            ${_bars([{v:ASSY,label:'ASSY',color:_SC.N},{v:리어,label:'몰딩',color:_SC.G},{v:스키드,label:'스키드',color:'#BBB'},{v:기타,label:'기타',color:'#DDD'}],84,26,6)}
-            <div style="display:grid;grid-template-columns:repeat(4,30px);gap:7px;border-top:1px solid #ddd;margin-top:3px">
-              <div style="text-align:center;font-size:11px;font-weight:700;color:#111">${ASSY}</div>
-              <div style="text-align:center;font-size:11px;font-weight:700;color:#111">${리어}</div>
-              <div style="text-align:center;font-size:11px;font-weight:700;color:#111">${스키드}</div>
-              <div style="text-align:center;font-size:11px;font-weight:700;color:#111">${기타}</div>
+            ${_bars([{v:ASSY,label:'ASSY',color:_SC.N},{v:리어,label:'몰딩',color:_SC.G},{v:스키드,label:'스키드',color:'#BBB'},{v:기타,label:'기타',color:'#DDD'}],150,36,10)}
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #ddd;margin-top:3px">
+              <div style="text-align:center;font-size:12px;font-weight:700;color:#111">${ASSY}</div>
+              <div style="text-align:center;font-size:12px;font-weight:700;color:#111">${리어}</div>
+              <div style="text-align:center;font-size:12px;font-weight:700;color:#111">${스키드}</div>
+              <div style="text-align:center;font-size:12px;font-weight:700;color:#111">${기타}</div>
             </div>
           </div>
         </div>
-        <div style="flex:0 0 280px;border:1px solid #bbb;padding:8px 10px">
+        <div style="flex:0 0 340px;border:1px solid #bbb;padding:8px 10px">
           <div style="font-size:10px;color:#555;margin-bottom:3px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])}</div>
-          <div style="display:grid;grid-template-columns:170px 1fr;gap:8px;align-items:stretch">
-            <div>${_gbars([{label:'ASSY',v:[기아ASSY,캠스ASSY,부영ASSY]},{label:'단품',v:[기아단품,캠스단품,부영단품]}],[_SC.N,_SC.G,'#AAA'],145,16,3,10)}</div>
+          <div style="display:grid;grid-template-columns:220px 1fr;gap:8px;align-items:stretch">
+            <div>${_gbars([{label:'ASSY',v:[기아ASSY,캠스ASSY,부영ASSY]},{label:'단품',v:[기아단품,캠스단품,부영단품]}],[_SC.N,_SC.G,'#AAA'],170,22,4,14)}</div>
             <div style="height:100%">
               <table style="border-collapse:collapse;width:100%;line-height:1.0;table-layout:fixed;height:100%">
                 <tr><th style="background:${_SC.H};border:1px solid #bbb;padding:0 3px;font-size:11px;color:#555">구분</th><th style="background:${_SC.H};border:1px solid #bbb;padding:0 3px;font-size:11px;color:#555">ASSY</th><th style="background:${_SC.H};border:1px solid #bbb;padding:0 3px;font-size:11px;color:#555">단품</th></tr>
