@@ -1476,9 +1476,9 @@ function _vbar(items,total,maxH){
 }
 function _th(t,cs,rs){
   const a=cs>1?` colspan="${cs}"`:'',b=rs>1?` rowspan="${rs}"`:'';
-  return`<th${a}${b} style="background:${_SC.H};border:1px solid #aaa;padding:3px 6px;font-size:11px;text-align:center;white-space:nowrap">${t}</th>`;
+  return`<th${a}${b} style="background:${_SC.H};border:1px solid #aaa;padding:2px 5px;font-size:14px;text-align:center;white-space:nowrap">${t}</th>`;
 }
-function _td(t,extra){return`<td style="border:1px solid #ccc;padding:3px 6px;font-size:11px;text-align:center${extra||''}">${t===0?'':t||''}</td>`;}
+function _td(t,extra){return`<td style="border:1px solid #ccc;padding:2px 5px;font-size:14px;text-align:center${extra||''}">${t===0?'':t||''}</td>`;}
 function _tdr(t){return _td(t,`;background:${_SC.T};font-weight:700`);}
 
 function renderKpiSlide1(recs,mon){
@@ -1621,15 +1621,19 @@ function renderKpiSlide1(recs,mon){
             </div>
           </div>
         </div>
-        <div style="flex:0 0 200px;border:1px solid #bbb;padding:8px 10px">
+        <div style="flex:0 0 280px;border:1px solid #bbb;padding:8px 10px">
           <div style="font-size:10px;color:#555;margin-bottom:3px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])}</div>
-          <div style="width:175px">${_gbars([{label:'ASSY',v:[기아ASSY,캠스ASSY,부영ASSY]},{label:'단품',v:[기아단품,캠스단품,부영단품]}],[_SC.N,_SC.G,'#AAA'],145,16,3,10)}</div>
-          <table style="border-collapse:collapse;margin-top:4px;width:100%;line-height:1.2">
-            <tr><th style="background:${_SC.H};border:1px solid #bbb;padding:0 4px;font-size:8px;color:#555">구분</th><th style="background:${_SC.H};border:1px solid #bbb;padding:0 4px;font-size:8px;color:#555">ASSY</th><th style="background:${_SC.H};border:1px solid #bbb;padding:0 4px;font-size:8px;color:#555">단품</th></tr>
-            <tr><td style="border:1px solid #ddd;padding:0 4px;font-size:9px;color:#111">기아</td><td style="border:1px solid #ddd;padding:0 4px;font-size:9px;text-align:center;color:#111">${기아ASSY}</td><td style="border:1px solid #ddd;padding:0 4px;font-size:9px;text-align:center;color:#111">${기아단품}</td></tr>
-            <tr><td style="border:1px solid #ddd;padding:0 4px;font-size:9px;color:#111">캠스</td><td style="border:1px solid #ddd;padding:0 4px;font-size:9px;text-align:center;color:#111">${캠스ASSY}</td><td style="border:1px solid #ddd;padding:0 4px;font-size:9px;text-align:center;color:#111">${캠스단품}</td></tr>
-            <tr><td style="border:1px solid #ddd;padding:0 4px;font-size:9px;color:#111">부영</td><td style="border:1px solid #ddd;padding:0 4px;font-size:9px;text-align:center;color:#111">${부영ASSY}</td><td style="border:1px solid #ddd;padding:0 4px;font-size:9px;text-align:center;color:#111">${부영단품}</td></tr>
-          </table>
+          <div style="display:grid;grid-template-columns:170px 1fr;gap:8px;align-items:end">
+            <div>${_gbars([{label:'ASSY',v:[기아ASSY,캠스ASSY,부영ASSY]},{label:'단품',v:[기아단품,캠스단품,부영단품]}],[_SC.N,_SC.G,'#AAA'],145,16,3,10)}</div>
+            <div>
+              <table style="border-collapse:collapse;width:100%;line-height:1.0;table-layout:fixed">
+                <tr style="height:18px"><th style="background:${_SC.H};border:1px solid #bbb;padding:0 3px;font-size:11px;color:#555">구분</th><th style="background:${_SC.H};border:1px solid #bbb;padding:0 3px;font-size:11px;color:#555">ASSY</th><th style="background:${_SC.H};border:1px solid #bbb;padding:0 3px;font-size:11px;color:#555">단품</th></tr>
+                <tr style="height:18px"><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;color:#111">기아</td><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;text-align:center;color:#111">${기아ASSY}</td><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;text-align:center;color:#111">${기아단품}</td></tr>
+                <tr style="height:18px"><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;color:#111">캠스</td><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;text-align:center;color:#111">${캠스ASSY}</td><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;text-align:center;color:#111">${캠스단품}</td></tr>
+                <tr style="height:18px"><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;color:#111">부영</td><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;text-align:center;color:#111">${부영ASSY}</td><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;text-align:center;color:#111">${부영단품}</td></tr>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1688,19 +1692,19 @@ function renderKpiSlide2(recs,mon){
       ${nUL?_th('출하장',nUL,1):''}
       ${_th('TOTAL',1,2)}
     </tr>
-    ${nUL?`<tr>${usedLocs.map(l=>`<th style="background:${_SC.H};border:1px solid #aaa;padding:5px 8px;font-size:13px;text-align:center;white-space:nowrap">${l}</th>`).join('')}</tr>`:''}
+    ${nUL?`<tr>${usedLocs.map(l=>`<th style="background:${_SC.H};border:1px solid #aaa;padding:2px 5px;font-size:14px;text-align:center;white-space:nowrap">${l}</th>`).join('')}</tr>`:''}
     ${VEHS.map(v=>{
       const rt=[vd[v].K1,vd[v].K2,...usedLocs.map(l=>vd[v][l])].reduce((a,b)=>a+b,0);
       if(!rt)return'';
-      return`<tr><td style="border:1px solid #ccc;padding:5px 8px;font-size:13px;font-weight:700">${v==='NQ5'?'NQ':v}</td>
+      return`<tr><td style="border:1px solid #ccc;padding:2px 5px;font-size:14px;font-weight:700">${v==='NQ5'?'NQ':v}</td>
         ${_td(vd[v].K1||'')}${_td(vd[v].K2||'')}
         ${usedLocs.map(l=>_td(vd[v][l]||'')).join('')}
         ${_td(`<b>${rt}</b>`)}</tr>`;
     }).join('')}
-    <tr><td style="background:${_SC.T};border:1px solid #aaa;padding:5px 8px;font-size:13px;font-weight:700">TOTAL</td>
+    <tr><td style="background:${_SC.T};border:1px solid #aaa;padding:2px 5px;font-size:14px;font-weight:700">TOTAL</td>
       ${_tdr(k1t||'')}${_tdr(k2t||'')}
       ${usedLocs.map(l=>_tdr(VEHS.reduce((a,v)=>a+(vd[v][l]||0),0)||'')).join('')}
-      <td style="background:${_SC.T};border:1px solid #aaa;padding:5px 8px;font-size:13px;text-align:center;font-weight:700;color:#CC4400">${total}</td>
+      <td style="background:${_SC.T};border:1px solid #aaa;padding:2px 5px;font-size:14px;text-align:center;font-weight:700;color:#CC4400">${total}</td>
     </tr>
   </table>`;
 
@@ -1709,16 +1713,16 @@ function renderKpiSlide2(recs,mon){
     ${['기아','캠스','부영'].map(gn=>[1,2,'계'].map((k,ki)=>{
       const d=tbl[gn][k],bg=k==='계'?_SC.A:'#fff';
       return`<tr style="background:${bg}">
-        ${ki===0?`<td rowspan="3" style="border:1px solid #ccc;padding:5px 8px;font-size:13px;font-weight:700;text-align:center;vertical-align:middle">${gn}</td>`:''}
-        <td style="border:1px solid #ccc;padding:5px 8px;font-size:13px;text-align:center">${k==='계'?'계':k}</td>
+        ${ki===0?`<td rowspan="3" style="border:1px solid #ccc;padding:2px 5px;font-size:14px;font-weight:700;text-align:center;vertical-align:middle">${gn}</td>`:''}
+        <td style="border:1px solid #ccc;padding:2px 5px;font-size:14px;text-align:center">${k==='계'?'계':k}</td>
         ${_td(d.FRT||'-')}${_td(d.RR||'-')}
-        <td style="border:1px solid #ccc;padding:5px 8px;font-size:13px;text-align:center${k==='계'?';font-weight:700':''}">${d.tot||'-'}</td>
+        <td style="border:1px solid #ccc;padding:2px 5px;font-size:14px;text-align:center${k==='계'?';font-weight:700':''}">${d.tot||'-'}</td>
       </tr>`;
     }).join('')).join('')}
-    <tr><td colspan="2" style="background:${_SC.T};border:1px solid #aaa;padding:5px 8px;font-size:13px;font-weight:700;text-align:center">TOTAL</td>
-      <td style="background:${_SC.T};border:1px solid #aaa;padding:5px 8px;font-size:13px;text-align:center;font-weight:700;color:#CC4400">${frtT}</td>
-      <td style="background:${_SC.T};border:1px solid #aaa;padding:5px 8px;font-size:13px;text-align:center;font-weight:700;color:#CC4400">${rrT}</td>
-      <td style="background:${_SC.T};border:1px solid #aaa;padding:5px 8px;font-size:13px;text-align:center;font-weight:700;color:#CC4400">${total}</td>
+    <tr><td colspan="2" style="background:${_SC.T};border:1px solid #aaa;padding:2px 5px;font-size:14px;font-weight:700;text-align:center">TOTAL</td>
+      <td style="background:${_SC.T};border:1px solid #aaa;padding:2px 5px;font-size:14px;text-align:center;font-weight:700;color:#CC4400">${frtT}</td>
+      <td style="background:${_SC.T};border:1px solid #aaa;padding:2px 5px;font-size:14px;text-align:center;font-weight:700;color:#CC4400">${rrT}</td>
+      <td style="background:${_SC.T};border:1px solid #aaa;padding:2px 5px;font-size:14px;text-align:center;font-weight:700;color:#CC4400">${total}</td>
     </tr>
   </table>`;
 
