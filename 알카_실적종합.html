@@ -1628,14 +1628,14 @@ function renderKpiSlide1(recs,mon){
         </div>
         <div style="flex:0 0 280px;border:1px solid #bbb;padding:8px 10px">
           <div style="font-size:10px;color:#555;margin-bottom:3px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])}</div>
-          <div style="display:grid;grid-template-columns:170px 1fr;gap:8px;align-items:end">
+          <div style="display:grid;grid-template-columns:170px 1fr;gap:8px;align-items:stretch">
             <div>${_gbars([{label:'ASSY',v:[기아ASSY,캠스ASSY,부영ASSY]},{label:'단품',v:[기아단품,캠스단품,부영단품]}],[_SC.N,_SC.G,'#AAA'],145,16,3,10)}</div>
-            <div>
-              <table style="border-collapse:collapse;width:100%;line-height:1.0;table-layout:fixed">
-                <tr style="height:18px"><th style="background:${_SC.H};border:1px solid #bbb;padding:0 3px;font-size:11px;color:#555">구분</th><th style="background:${_SC.H};border:1px solid #bbb;padding:0 3px;font-size:11px;color:#555">ASSY</th><th style="background:${_SC.H};border:1px solid #bbb;padding:0 3px;font-size:11px;color:#555">단품</th></tr>
-                <tr style="height:18px"><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;color:#111">기아</td><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;text-align:center;color:#111">${기아ASSY}</td><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;text-align:center;color:#111">${기아단품}</td></tr>
-                <tr style="height:18px"><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;color:#111">캠스</td><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;text-align:center;color:#111">${캠스ASSY}</td><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;text-align:center;color:#111">${캠스단품}</td></tr>
-                <tr style="height:18px"><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;color:#111">부영</td><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;text-align:center;color:#111">${부영ASSY}</td><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;text-align:center;color:#111">${부영단품}</td></tr>
+            <div style="height:100%">
+              <table style="border-collapse:collapse;width:100%;line-height:1.0;table-layout:fixed;height:100%">
+                <tr><th style="background:${_SC.H};border:1px solid #bbb;padding:0 3px;font-size:11px;color:#555">구분</th><th style="background:${_SC.H};border:1px solid #bbb;padding:0 3px;font-size:11px;color:#555">ASSY</th><th style="background:${_SC.H};border:1px solid #bbb;padding:0 3px;font-size:11px;color:#555">단품</th></tr>
+                <tr><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;color:#111;vertical-align:middle">기아</td><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;text-align:center;color:#111;vertical-align:middle">${기아ASSY}</td><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;text-align:center;color:#111;vertical-align:middle">${기아단품}</td></tr>
+                <tr><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;color:#111;vertical-align:middle">캠스</td><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;text-align:center;color:#111;vertical-align:middle">${캠스ASSY}</td><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;text-align:center;color:#111;vertical-align:middle">${캠스단품}</td></tr>
+                <tr><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;color:#111;vertical-align:middle">부영</td><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;text-align:center;color:#111;vertical-align:middle">${부영ASSY}</td><td style="border:1px solid #ddd;padding:0 3px;font-size:11px;text-align:center;color:#111;vertical-align:middle">${부영단품}</td></tr>
               </table>
             </div>
           </div>
