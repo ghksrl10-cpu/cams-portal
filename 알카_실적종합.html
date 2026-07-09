@@ -1387,6 +1387,10 @@ function renderKpiData(){
   const recs=DB.months[mon];
   renderKpiSlide1(recs,mon);
   renderKpiSlide2(recs,mon);
+  setTimeout(()=>{
+    const lSvg=document.querySelector('#r2L svg'),rSvg=document.querySelector('#r2R svg');
+    if(lSvg&&rSvg){const h=lSvg.getBoundingClientRect().height;if(h>0)rSvg.style.height=h+'px';}
+  },50);
 }
 function kpiCnt(recs,pred){return recs.filter(pred).length;}
 function pct(n,t){return t?Math.round(n/t*100):0;}
@@ -1596,21 +1600,21 @@ function renderKpiSlide1(recs,mon){
       </div>
 
       <!-- row2 좌: 연 발생 추이 -->
-      <div>
+      <div id="r2L">
         <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 연 발생 추이</div>
         <div style="font-size:10px;color:#555;margin-bottom:4px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])} 차종별(누계)</div>
         <div style="position:relative;padding-bottom:20px">
-          ${_gbarsI(vehYtdBars,[_SC.N,_SC.G,'#AAAAAA'],70,16,3,10,undefined,92,true)}
+          ${_gbarsI(vehYtdBars,[_SC.N,_SC.G,'#AAAAAA'],70,16,3,10,undefined,0,true)}
           ${_gbarsIX(vehYtdBars,3,16,3,10)}
         </div>
       </div>
 
       <!-- row2 우: 알카비용 추이 -->
-      <div>
+      <div id="r2R">
         <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 알카비용 추이</div>
         <div style="font-size:10px;color:#555;margin-bottom:4px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스']])} 단위:만원</div>
         <div style="position:relative;padding-bottom:20px">
-          ${_gbarsI(g금액,[_SC.N,_SC.G],70,16,2,6,1,92,true)}
+          ${_gbarsI(g금액,[_SC.N,_SC.G],70,16,2,6,1,0,true)}
           ${_gbarsIX(g금액,2,16,2,6)}
         </div>
       </div>
