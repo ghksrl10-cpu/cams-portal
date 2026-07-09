@@ -1444,12 +1444,12 @@ function _gbarsT(groups,colors,maxH,bw,gp,gg){
   });
   return s+'</svg>';
 }
-function _gbarsI(groups,colors,maxH,bw,gp,gg,redIdx){
+function _gbarsI(groups,colors,maxH,bw,gp,gg,redIdx,fixH){
   if(!groups.length)return'';
   const nS=colors.length,mx=Math.max(...groups.flatMap(g=>g.v),1);
   const GW=nS*bw+(nS-1)*gp,SH=maxH+26;
   const W=groups.length*(GW+gg)+gg;
-  let s=`<svg viewBox="0 -16 ${W} ${SH+16}" style="width:100%;height:auto;display:block;overflow:visible">`;
+  let s=`<svg viewBox="0 -16 ${W} ${SH+16}" style="width:100%;${fixH?`height:${fixH}px`:'height:auto'};display:block;overflow:visible">`;
   groups.forEach(({label,v},gi)=>{
     const gx=gg+gi*(GW+gg);
     v.forEach((val,si)=>{
@@ -1574,25 +1574,33 @@ function renderKpiSlide1(recs,mon){
     <div style="border-top:2px solid #222;margin-bottom:14px"></div>
 
     <!-- 상단 2컬럼 50/50: 좌=발생추이, 우=월별합계+알카비용 -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:14px;align-items:end">
 
-      <!-- 좌: 발생 추이 2차트 -->
+      <!-- row1 좌: 월별 발생 추이 -->
       <div>
         <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 월별 발생 추이</div>
         <div style="font-size:10px;color:#555;margin-bottom:4px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])} 차종별(당월)</div>
         ${_gbarsI(vehGbars,[_SC.N,_SC.G,'#AAAAAA'],80,18,4,12)}
-        <div style="font-size:13px;font-weight:700;color:#111;margin:14px 0 6px">◎ 연 발생 추이</div>
-        <div style="font-size:10px;color:#555;margin-bottom:4px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])} 차종별(누계)</div>
-        ${_gbarsI(vehYtdBars,[_SC.N,_SC.G,'#AAAAAA'],70,16,3,10)}
       </div>
 
-      <!-- 우: 월별 합계 + 알카비용 -->
+      <!-- row1 우: 월별 합계(연간) -->
       <div>
         <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 월별 합계(연간)</div>
         ${_bars(monBars,200,30,5)}
-        <div style="font-size:13px;font-weight:700;color:#111;margin:14px 0 6px">◎ 알카비용 추이</div>
+      </div>
+
+      <!-- row2 좌: 연 발생 추이 -->
+      <div style="display:flex;flex-direction:column;justify-content:flex-end;height:270px">
+        <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 연 발생 추이</div>
+        <div style="font-size:10px;color:#555;margin-bottom:4px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])} 차종별(누계)</div>
+        ${_gbarsI(vehYtdBars,[_SC.N,_SC.G,'#AAAAAA'],150,16,3,10,undefined,220)}
+      </div>
+
+      <!-- row2 우: 알카비용 추이 -->
+      <div style="display:flex;flex-direction:column;justify-content:flex-end;height:270px">
+        <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 알카비용 추이</div>
         <div style="font-size:10px;color:#555;margin-bottom:4px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스']])} 단위:만원</div>
-        ${_gbarsI(g금액,[_SC.N,_SC.G],150,16,2,6,1)}
+        ${_gbarsI(g금액,[_SC.N,_SC.G],150,16,2,6,1,220)}
       </div>
     </div>
 
