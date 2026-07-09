@@ -1388,7 +1388,8 @@ function renderKpiData(){
   renderKpiSlide1(recs,mon);
   renderKpiSlide2(recs,mon);
   setTimeout(()=>{
-    const sync=(lId,rId)=>{const l=document.querySelector(lId+' svg'),r=document.querySelector(rId+' svg');if(l&&r){const h=l.getBoundingClientRect().height;if(h>0){r.style.height=h+'px';r.setAttribute('preserveAspectRatio','none');}}};
+    const lastSvg=id=>{const nl=document.querySelectorAll(id+' svg');return nl[nl.length-1]||null;};
+    const sync=(lId,rId)=>{const l=lastSvg(lId),r=lastSvg(rId);if(l&&r){const h=l.getBoundingClientRect().height;if(h>0){r.style.height=h+'px';r.setAttribute('preserveAspectRatio','none');}}};
     sync('#r1L','#r1R');
     sync('#r2L','#r2R');
   },50);
@@ -1400,8 +1401,9 @@ function pct(n,t){return t?Math.round(n/t*100):0;}
 const _SC={R:'#7B1C20',N:'#1F3864',G:'#D4900C',B:'#2D5F9B',H:'#DEEAF1',T:'#C5DCF0',A:'#EEF6FB'};
 function _bars(data,maxH,bw,gp,noXLabel){
   const mx=Math.max(...data.map(d=>d.v),1);
-  const W=data.length*(bw+gp)-gp,SH=maxH+(noXLabel?0:28);
-  let s=`<svg viewBox="0 -18 ${W} ${SH+18}" style="width:100%;height:auto;display:block;overflow:visible">`;
+  const W=data.length*(bw+gp)-gp;
+  const SH=noXLabel?maxH+6:maxH+28,vbTop=noXLabel?-16:-18;
+  let s=`<svg viewBox="0 ${vbTop} ${W} ${SH-vbTop}" style="width:100%;height:auto;display:block;overflow:visible">`;
   data.forEach(({v,label,color},i)=>{
     const h=v?Math.max(2,Math.round(v/mx*maxH)):0;
     const x=i*(bw+gp),y=maxH-h;
@@ -1607,7 +1609,7 @@ function renderKpiSlide1(recs,mon){
       <div id="r1R">
         <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 월별 합계(연간)</div>
         <div style="position:relative;padding-bottom:22px">
-          ${_bars(monBars,200,30,5,true)}
+          ${_bars(monBars,80,30,5,true)}
           ${_barsX(monBars,30,5)}
         </div>
       </div>
