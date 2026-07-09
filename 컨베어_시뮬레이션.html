@@ -3854,8 +3854,8 @@ async function generateReportV2(){
       lines.push(`보고일: ${d.dateStr}  |  생산팀`);
       _pptSetLines(doc,6,lines);
     });
-    // 슬라이드8: 재배분 시나리오 분석 (11공정+13공정 → 8공정+16공정)
-    if(d.redistAnalysis){
+    // 슬라이드8: 재배분 시나리오 분석은 PPTX 구조 조작 위험으로 HTML 모달로만 제공
+    if(false && d.redistAnalysis){
       const ra=d.redistAnalysis;
       await _pptAddSlide8(zip);
       await mod(8,doc=>{
