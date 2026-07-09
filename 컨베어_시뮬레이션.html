@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -6,11 +6,17 @@
 <title>컨베어 라인 시뮬레이션</title>
 <style>
   :root{
-    --bd:#2a2d35;--line:#23262f;--hd:#1a1d24;--hd2:#20232b;
+    --bd:#dde1e7;--line:#e8ebf0;--hd:#eef0f3;--hd2:#e4e7ec;
     --blue:#3b82f6;--blue2:#2563eb;
+    --ok:#16a34a;--okbg:#dcfce7;--ng:#dc2626;--ngbg:#fee2e2;
+    --warn:#d97706;--warnbg:#fef3c7;
+    --mut:#6b7280;--ink:#111827;--side:#1e3a5f;--bg:#f8fafc;--card:#ffffff;
+  }
+  body.dark{
+    --bd:#2a2d35;--line:#23262f;--hd:#1a1d24;--hd2:#20232b;
     --ok:#22c55e;--okbg:#052e16;--ng:#ef4444;--ngbg:#2d0a0a;
     --warn:#f59e0b;--warnbg:#2d1800;
-    --mut:#9ca3af;--ink:#f1f5f9;--side:#13151c;--bg:#0f1117;
+    --mut:#9ca3af;--ink:#f1f5f9;--side:#13151c;--bg:#0f1117;--card:#1a1d24;
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:"맑은 고딕","Malgun Gothic",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
@@ -21,11 +27,11 @@
   .brand{display:flex;align-items:center;gap:10px;padding:18px 16px;border-bottom:1px solid var(--line)}
   .brand .logo{width:44px;height:44px;flex-shrink:0}
   .brand b{font-size:15px;display:block}
-  .brand small{display:block;color:var(--mut);font-size:12px;margin-top:1px}
+  .brand small{display:block;color:#94a3b8;font-size:12px;margin-top:1px}
   .nav{padding:10px;flex:1;overflow-y:auto}
-  .nav-group{font-size:11px;font-weight:700;color:var(--mut);padding:10px 10px 4px;letter-spacing:1px}
-  .nav-item{display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:9px;cursor:pointer;color:#94a3b8;font-weight:600;font-size:14px;margin-bottom:2px;transition:background .15s}
-  .nav-item:hover{background:#20232b}
+  .nav-group{font-size:11px;font-weight:700;color:#94a3b8;padding:10px 10px 4px;letter-spacing:1px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:9px;cursor:pointer;color:#cbd5e1;font-weight:600;font-size:14px;margin-bottom:2px;transition:background .15s}
+  .nav-item:hover{background:rgba(255,255,255,0.08)}
   .nav-item.active{background:var(--blue);color:#fff}
   .nav-item .ic{width:20px;text-align:center}
   .side-foot{padding:14px 16px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px}
@@ -188,6 +194,36 @@
     .stat-cards{grid-template-columns:repeat(2,1fr)}
     .kpi-row{grid-template-columns:repeat(2,1fr)}
   }
+  body:not(.dark) .btn{background:#fff;color:#374151;border-color:#d1d5db}
+  body:not(.dark) .btn:hover{background:#f3f4f6}
+  body:not(.dark) .btn.pri{background:var(--blue);color:#fff;border-color:var(--blue)}
+  body:not(.dark) .btn.grn{background:#16a34a;color:#fff;border-color:#16a34a}
+  body:not(.dark) .bar{background:var(--hd);border-color:var(--bd)}
+  body:not(.dark) .bar label{color:#374151}
+  body:not(.dark) .bar input,body:not(.dark) .bar select{background:#fff;color:#111827;border-color:var(--bd)}
+  body:not(.dark) .sec,body:not(.dark) .stat-card,body:not(.dark) .line-card,body:not(.dark) .modal{background:#fff;border-color:var(--bd)}
+  body:not(.dark) .stab{background:#fff;color:#374151;border-color:var(--bd)}
+  body:not(.dark) .stab:hover{background:#f3f4f6}
+  body:not(.dark) .kpi{background:#fff;border-color:var(--bd)}
+  body:not(.dark) .kpi .kl{color:#6b7280}
+  body:not(.dark) .fnode{background:#fff;border-color:var(--bd)}
+  body:not(.dark) .line-card .lc-badge{background:var(--hd);border-color:var(--bd)}
+  body:not(.dark) .sic.b{background:#dbeafe;color:#2563eb}
+  body:not(.dark) .sic.y{background:#fef3c7;color:#b45309}
+  body:not(.dark) .brow .bn{color:#4b5563}
+  body:not(.dark) .brow .bo{background:#e5e8ef}
+  body:not(.dark) tr:hover td{background:#eef2ff}
+  body:not(.dark) td input:focus{background:#eff6ff}
+  body:not(.dark) td.off{background:#f0f0f3}
+  body:not(.dark) td.off input{color:#9ca3af;background:#f0f0f3}
+  body:not(.dark) td.empty-c{background:#f0ebff}
+  body:not(.dark) td.empty-c input{color:#7c3aed}
+  body:not(.dark) .dist-row .dadd{background:#fff;color:#111827;border-color:var(--bd)}
+  body:not(.dark) .dist-total{background:var(--hd)}
+  body:not(.dark) .hamb{background:#fff}
+  body:not(.dark) .nav-item{color:#cbd5e1}
+  body:not(.dark) input,body:not(.dark) select{background:#fff;color:#111827;border-color:var(--bd)}
+  body:not(.dark) .sec-h{background:var(--hd);color:var(--ink)}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -226,6 +262,14 @@
     <div class="nav-item" id="nl3" onclick="gotoSim(3)"><span class="ic">🏗</span> 함평</div>
     <div class="nav-item" id="nl4" onclick="gotoSim(4)"><span class="ic">🏗</span> 전주</div>
   </nav>
+  <div style="padding:8px 14px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.08)">
+    <span style="font-size:12px;color:#64748b">다크모드</span>
+    <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer">
+      <input type="checkbox" id="darkToggle" onchange="(function(){const on=document.getElementById('darkToggle').checked;document.body.classList.toggle('dark',on);localStorage.setItem('conv_darkMode',on?'1':'0')})()" style="opacity:0;width:0;height:0;position:absolute">
+      <span id="darkTrack" style="position:absolute;inset:0;background:#334155;border-radius:11px;transition:background .2s"></span>
+      <span id="darkThumb" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,0.4)"></span>
+    </label>
+  </div>
   <div class="side-foot">
     <div class="av" id="userAv">?</div>
     <div><b style="font-size:14px" id="userName">-</b><small id="userDept">캠스 담당자</small></div>
@@ -300,6 +344,10 @@
       <span class="grow"></span>
       <button class="btn pri" onclick="runSim()">▶ 시뮬레이션</button>
       <button class="btn" onclick="saveScenario()">💾 저장</button>
+      <div style="position:relative;display:inline-block">
+        <button class="btn" style="background:#1e2d1e;border-color:#166534;color:#4ade80" onclick="openSimScenPicker();event.stopPropagation()">📋 불러오기 ▼</button>
+        <div id="simScenMenu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#1a1d24;border:1px solid #2a2d35;border-radius:8px;min-width:260px;z-index:500;box-shadow:0 4px 16px rgba(0,0,0,0.6);max-height:320px;overflow-y:auto"></div>
+      </div>
       <span class="save-note" id="saveNote" style="margin-left:6px"></span>
     </div>
 
@@ -472,8 +520,11 @@
         <button class="btn" style="font-size:13px;padding:6px 14px" onclick="exportSimConfig()">💾 내보내기</button>
         <label class="btn" style="font-size:13px;padding:6px 14px;cursor:pointer">📂 가져오기<input type="file" accept=".json" style="display:none" onchange="importSimConfig(this)"></label>
         <button class="btn" style="font-size:13px;padding:6px 14px" onclick="gotoSim(2)">📋 공정입력</button>
+        <button class="btn" style="font-size:13px;padding:6px 14px;background:#1e3a5f;border-color:#2563eb;color:#93c5fd" onclick="generateReportV1()">📋 원본형 보고서</button>
+        <button class="btn" style="font-size:13px;padding:6px 14px;background:#312e81;border-color:#4f46e5;color:#a5b4fc" onclick="generateReportV2()">📊 데이터형 보고서</button>
+        <button class="btn" style="font-size:13px;padding:6px 14px;background:#1a3a2a;border-color:#16a34a;color:#86efac" onclick="showRedistModal()">🔄 재배분 시나리오</button>
       </div>
-      <script>document.addEventListener('click',()=>{['recoverMenu','scenPickMenu'].forEach(id=>{const m=document.getElementById(id);if(m)m.style.display='none';});});</script>
+      <script>document.addEventListener('click',()=>{['recoverMenu','scenPickMenu','simScenMenu'].forEach(id=>{const m=document.getElementById(id);if(m)m.style.display='none';});});</script>
     </div>
     <div style="padding:12px 16px 16px">
       <canvas id="cv2d" style="display:block;width:100%;border-radius:8px;background:#0f172a"></canvas>
@@ -495,15 +546,28 @@
         </span>
       </div>
 
+      <!-- ── 재배분 시나리오 모달 ── -->
+      <div id="redistModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100000;overflow-y:auto">
+        <div style="max-width:820px;margin:40px auto;background:#1a1d24;border:1px solid #2a2d35;border-radius:14px;padding:20px 24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <span style="font-size:18px;font-weight:800;color:#86efac">🔄 공정 재배분 시나리오 분석</span>
+            <button class="btn" onclick="document.getElementById('redistModal').style.display='none'" style="font-size:13px;padding:4px 12px">✕ 닫기</button>
+          </div>
+          <div id="redistModalContent" style="font-size:13px;line-height:1.8;color:#cbd5e1"></div>
+        </div>
+      </div>
+
       <!-- ── 과부하 분석 패널 ── -->
       <div id="overloadPanel" style="margin-top:12px;display:none">
         <div style="background:#1a1d24;border:1px solid #2a2d35;border-radius:12px;overflow:hidden">
-          <div style="background:#20232b;padding:10px 14px;font-weight:800;font-size:14px;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="document.getElementById('overloadBody').style.display=document.getElementById('overloadBody').style.display==='none'?'block':'none'">
+          <div style="background:#20232b;padding:10px 14px;font-weight:800;font-size:20px;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="document.getElementById('overloadBody').style.display=document.getElementById('overloadBody').style.display==='none'?'block':'none'">
             ⚠️ 과부하 · 납품 영향 분석
-            <span id="overloadBadge" style="font-size:12px;margin-left:auto"></span>
+            <span id="overloadBadge" style="font-size:16px;margin-left:auto"></span>
+            <button class="btn" style="font-size:12px;padding:5px 12px;background:#1e3a5f;border-color:#2563eb;color:#93c5fd;margin-left:8px" onclick="event.stopPropagation();generateReportV1()">📋 원본형</button>
+            <button class="btn" style="font-size:12px;padding:5px 12px;background:#312e81;border-color:#4f46e5;color:#a5b4fc;margin-left:4px" onclick="event.stopPropagation();generateReportV2()">📊 데이터형</button>
           </div>
           <div id="overloadBody">
-            <div id="overloadContent" style="padding:12px 14px;font-size:13px;line-height:1.9"></div>
+            <div id="overloadContent" style="padding:12px 14px;font-size:20px;line-height:1.7"></div>
           </div>
         </div>
       </div>
@@ -740,9 +804,27 @@ const state=LINE_DEF.map((l,li)=>l.subs.map((_,si)=>({rows:makeRows(li,si)})));
 let curLine=0,curSub=0;
 let scenarios=JSON.parse(localStorage.getItem('conv_scen4')||'[]');
 function G(){return state[curLine][curSub];}
+var _currentUser={name:'',dept:''};
+function _syncDarkToggle(){
+  const on=document.body.classList.contains('dark');
+  const cb=document.getElementById('darkToggle');
+  const track=document.getElementById('darkTrack');
+  const thumb=document.getElementById('darkThumb');
+  if(cb)cb.checked=on;
+  if(track)track.style.background=on?'#2563eb':'#334155';
+  if(thumb)thumb.style.transform=on?'translateX(18px)':'translateX(0)';
+}
+// 저장된 다크모드 복원 (포털 외 단독 접속 시)
+(function(){
+  if(localStorage.getItem('conv_darkMode')==='1')document.body.classList.add('dark');
+  setTimeout(_syncDarkToggle,0);
+})();
 
 /* ─── 뷰 전환 ────────────────────────────────── */
 function showView(v){
+  // 뷰 전환 시 열린 모달 모두 닫기
+  ['distModal','distModal2','ctcModal','ctcModal3'].forEach(id=>{const m=document.getElementById(id);if(m)m.classList.remove('show');});
+  document.querySelectorAll('#floatSave,#odBtn').forEach(el=>el.style.display='');
   if(v!=='2d'&&typeof _raf2d!=='undefined'&&_raf2d){cancelAnimationFrame(_raf2d);_raf2d=null;}
   document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
@@ -911,6 +993,7 @@ function calcPitch(){
   document.getElementById('targetUPH').value=uph;
   const label=n===0?'공피치 없음':n+':1';
   document.getElementById('uphHint').textContent='→ 실생산 '+actualProd+'대/일 · '+label+' · 피치 '+pitchSec+'초';
+  if(typeof renderOverloadPanel==='function')renderOverloadPanel();
 }
 function syncFromUPH(){
   const uph=+document.getElementById('targetUPH').value||1;
@@ -994,7 +1077,7 @@ function render(){
     // 개별 공정: 실C/T = C/T ÷ 인원
     const groupCT=r.ct;
     const effectivePitch=pitch*origSpan; // 작업자 허용시간 = 공피치 × 공정 수
-    const realCT=groupCT>0?(isGroup?groupCT:groupCT/(r.workers||1)):0;
+    const realCT=groupCT>0?(isGroup||r.sync?groupCT:groupCT/(r.workers||1)):0;
     const load=realCT>0?realCT/effectivePitch*100:0;
     const slackPct=realCT>0?((effectivePitch-realCT)/effectivePitch*100).toFixed(1):null;
     let ctCls='';
@@ -1018,15 +1101,15 @@ function render(){
       ${_effTS[di]===0?'':`<td class="val ${r.empty?'off':ctCls}" ${span>1?`rowspan="${span}" style="vertical-align:middle;text-align:center;color:${r.empty?'var(--mut)':''}"`:''}>${r.empty?'공백':realCT>0?realCT.toFixed(1)+'초':''}</td>`}
       ${_effTS[di]===0?'':`<td class="val" ${span>1?`rowspan="${span}" style="vertical-align:middle;text-align:center;color:${slColor}"`:`style="color:${slColor}"`}>${r.empty?'—':slackPct!==null?slackPct+'%':''}</td>`}
       ${_effTS[di]===0?'':(curLine===2?`<td class="ltxt ${emC}" ${span>1?`rowspan="${span}" style="vertical-align:middle;padding:6px 8px"`:'style="padding:6px 8px"'}><div style="display:flex;flex-direction:column;gap:5px">
-        <div style="display:flex;align-items:center;gap:2px"><span style="font-size:11px;width:30px;color:var(--mut)">너트</span><input type="number" value="${r.fNut||0}" min="0" onchange="updNum(${i},'fNut',+this.value)" style="width:38px;text-align:right;font-size:12px" ${r.empty?'disabled':''}><span style="font-size:10px;color:var(--mut)">EA</span></div>
-        <div style="display:flex;align-items:center;gap:2px"><span style="font-size:11px;width:30px;color:var(--mut)">스크류</span><input type="number" value="${r.fScrew||0}" min="0" onchange="updNum(${i},'fScrew',+this.value)" style="width:38px;text-align:right;font-size:12px" ${r.empty?'disabled':''}><span style="font-size:10px;color:var(--mut)">EA</span></div>
-        <div style="display:flex;align-items:center;gap:2px"><span style="font-size:11px;width:30px;color:var(--mut)">S육각</span><input type="number" value="${r.fShex||0}" min="0" onchange="updNum(${i},'fShex',+this.value)" style="width:38px;text-align:right;font-size:12px" ${r.empty?'disabled':''}><span style="font-size:10px;color:var(--mut)">EA</span></div>
-        <div style="display:flex;align-items:center;gap:2px"><span style="font-size:11px;width:30px;color:var(--mut)">B육각</span><input type="number" value="${r.fBhex||0}" min="0" onchange="updNum(${i},'fBhex',+this.value)" style="width:38px;text-align:right;font-size:12px" ${r.empty?'disabled':''}><span style="font-size:10px;color:var(--mut)">EA</span></div>
+        <div style="display:flex;align-items:center;gap:2px"><span style="font-size:11px;width:30px;color:var(--mut)">너트</span><input type="number" value="${r.fNut||0}" min="0" onchange="updNum(${i},'fNut',+this.value)" style="width:48px;text-align:right;font-size:12px" ${r.empty?'disabled':''}><span style="font-size:10px;color:var(--mut)">EA</span></div>
+        <div style="display:flex;align-items:center;gap:2px"><span style="font-size:11px;width:30px;color:var(--mut)">스크류</span><input type="number" value="${r.fScrew||0}" min="0" onchange="updNum(${i},'fScrew',+this.value)" style="width:48px;text-align:right;font-size:12px" ${r.empty?'disabled':''}><span style="font-size:10px;color:var(--mut)">EA</span></div>
+        <div style="display:flex;align-items:center;gap:2px"><span style="font-size:11px;width:30px;color:var(--mut)">S육각</span><input type="number" value="${r.fShex||0}" min="0" onchange="updNum(${i},'fShex',+this.value)" style="width:48px;text-align:right;font-size:12px" ${r.empty?'disabled':''}><span style="font-size:10px;color:var(--mut)">EA</span></div>
+        <div style="display:flex;align-items:center;gap:2px"><span style="font-size:11px;width:30px;color:var(--mut)">B육각</span><input type="number" value="${r.fBhex||0}" min="0" onchange="updNum(${i},'fBhex',+this.value)" style="width:48px;text-align:right;font-size:12px" ${r.empty?'disabled':''}><span style="font-size:10px;color:var(--mut)">EA</span></div>
       </div></td>`:`<td class="ltxt ${emC}" ${span>1?`rowspan="${span}" style="vertical-align:middle"`:''}><input value="${esc(r.fastener||'')}" oninput="upd(${i},'fastener',this.value)" placeholder="너트/스크류/육각 등"></td>`)}
       ${_effTS[di]===0?'':`<td class="ltxt ${emC}" ${span>1?`rowspan="${span}" style="vertical-align:middle"`:''}><textarea style="width:100%;height:${span>1?span*52:52}px;max-height:${span>1?span*52:52}px;background:transparent;border:none;color:inherit;font:inherit;resize:none;padding:2px 4px;overflow-y:auto;font-size:12px" oninput="upd(${i},'note',this.value);autoSaveCT()" placeholder="관리항목">${esc(r.note)}</textarea></td>`}
       <td style="text-align:center;white-space:nowrap;vertical-align:middle">
         <button class="btn sml" onclick="insertRow(${i})" style="margin-bottom:3px;width:52px">+ 삽입</button><br>
-        <button class="btn sml" onclick="openDist(${i})" style="margin-bottom:3px;width:52px">🔀 배분</button><br>
+        <button class="btn sml" onclick="curLine===2?openDistPanel('ct'):openDist(${i})" style="margin-bottom:3px;width:52px">🔀 배분</button><br>
         <button class="btn sml warn" onclick="delRow(${i})" style="width:52px">삭제</button>
       </td>`;
     tbody.appendChild(tr);
@@ -1172,6 +1255,7 @@ function loadLineData(){
 }
 function saveLineData(){saveCTData();}
 function toggleEmpty(i,v){G().rows[i].empty=v;saveRowStructure();render();}
+function toggleSync(i){const r=G().rows[i];r.sync=!r.sync;saveRowStructure();render();}
 function addRow(){const s=G();s.rows.push({conv:s.rows.length+1,name:'',task:'',empty:false,ct:0,workers:1,group:'',fastener:'',note:'',fNut:0,fScrew:0,fShex:0,fBhex:0});saveRowStructure();render();}
 function insertRow(i){const s=G();s.rows.splice(i,0,{conv:0,name:'',task:'',empty:false,ct:0,workers:1,group:'',fastener:'',note:'',fNut:0,fScrew:0,fShex:0,fBhex:0});s.rows.forEach((r,idx)=>r.conv=idx+1);saveRowStructure();render();}
 let _delUndo=null;
@@ -1322,6 +1406,7 @@ function openCTCalc3(i){
   document.getElementById('ctcShex').value=r.fShex||0;
   document.getElementById('ctcBhex').value=r.fBhex||0;
   document.getElementById('ctcFastenerNote3').style.display='none';
+  document.getElementById('ctcSync3').checked=!!(r.sync);
   calcCTC3();
   document.getElementById('ctcModal3').classList.add('show');
 }
@@ -1389,6 +1474,7 @@ function applyCTC3(){
   row.ctFormula=collectFormula3();
   const v=id=>+(document.getElementById(id)?.value||0);
   row.fNut=v('ctcNut');row.fScrew=v('ctcScrew');row.fShex=v('ctcShex');row.fBhex=v('ctcBhex');
+  row.sync=document.getElementById('ctcSync3').checked;
   autoSaveCT();
   autoSaveWorkers();
   closeCTCalc3();
@@ -1399,6 +1485,11 @@ function closeCTCalc3(){document.getElementById('ctcModal3').classList.remove('s
 /* ─── 공수 배분 ───────────────────────────────── */
 let _distIdx=-1;
 function openDist(i){
+  // 2D 레이아웃 스냅샷
+  const _cv=document.getElementById('cv2d');
+  const _snap=document.getElementById('distLayoutSnap');
+  const _img=document.getElementById('distLayoutImg');
+  if(_cv&&_snap&&_img){try{_img.src=_cv.toDataURL();_snap.style.display='block';}catch(e){_snap.style.display='none';}}
   const rows=G().rows;
   const src=rows[i];
   _distIdx=i;
@@ -1421,7 +1512,7 @@ function openDist(i){
     list.appendChild(div);
   });
   updateDistTotal();
-  document.getElementById('distModal').classList.add('show');
+  document.getElementById('distModal2').classList.add('show');
 }
 function updateDistTotal(){
   const rows=G().rows;
@@ -1471,7 +1562,7 @@ function applyDist(){
   closeDist();
   render();
 }
-function closeDist(){document.getElementById('distModal').classList.remove('show');}
+function closeDist(){document.getElementById('distModal2').classList.remove('show');}
 
 /* ─── 시뮬레이션 ─────────────────────────────── */
 function runSim(){
@@ -1484,7 +1575,7 @@ function runSim(){
   const lbl=LINE_DEF[curLine].name+' '+LINE_DEF[curLine].subs[curSub];
   const active=s.rows.filter(r=>!r.empty&&r.ct>0);
   if(!active.length){alert('C/T가 입력된 유효 공정이 없습니다.');return;}
-  const res=active.map(r=>{const sp=(r.taskSpan||1);const ep=pitch*sp;const rt=(sp>1)?r.ct:r.ct/(r.workers||1);const rpp=rt/sp;return{...r,realCT:rt,effPitch:ep,rpp,load:rt/ep*100,isBN:rt>ep};});
+  const res=active.map(r=>{const sp=(r.taskSpan||1);const ep=pitch*sp;const rt=(sp>1)||r.sync?r.ct:r.ct/(r.workers||1);const rpp=rt/sp;return{...r,realCT:rt,effPitch:ep,rpp,load:rt/ep*100,isBN:rt>ep};});
   const bn=res.reduce((a,b)=>a.rpp>b.rpp?a:b); // 병목: 컨베어 위치당 점유시간 기준
   const bnRate=Math.max(bn.rpp,pitch); // 컨베이어 피치 이상이어야 의미있음
   const lbEff=res.reduce((a,r)=>a+r.realCT,0)/(bn.realCT*res.length)*100;
@@ -1594,24 +1685,48 @@ function runSim(){
 
 /* ─── 시나리오 ───────────────────────────────── */
 function saveScenario(){
-  const name=prompt('시나리오 이름:','시나리오 '+(scenarios.length+1));
-  if(!name)return;
-  const s=G(),pitch=getPitchSec(),wm=+document.getElementById('workMin').value||460,tU=getActualProd();
-  const n=+document.getElementById('pitchRatio').value||1,base=+document.getElementById('baseProd').value||205;
-  const lbl=LINE_DEF[curLine].name+' '+LINE_DEF[curLine].subs[curSub];
-  const active=s.rows.filter(r=>!r.empty&&r.ct>0);
-  let bnCT=0;const pc=active.map(r=>{const sp=(r.taskSpan||1);const ep=pitch*sp;const rt=(sp>1)?r.ct:r.ct/(r.parallel||1)/(r.workers||1);if(rt>bnCT)bnCT=rt;return rt;});
-  const uph=bnCT>0?Math.round(3600/bnCT):0,daily=bnCT>0?Math.floor(wm*60/bnCT):0;
-  const lb=active.length>0?pc.reduce((a,v)=>a+v,0)/(bnCT*active.length)*100:0;
-  const rowsSnap=JSON.parse(JSON.stringify(s.rows));
-  scenarios.push({id:Date.now(),name,lbl,ratio:n+':1',base,pitch:pitch.toFixed(1),cnt:active.length,uph,daily,lb:lb.toFixed(1),bnCT:bnCT.toFixed(1),at:new Date().toLocaleString('ko'),savedBy:_currentUser.name||'',rows:rowsSnap,line:curLine,sub:curSub});
-  localStorage.setItem('conv_scen4',JSON.stringify(scenarios));
-  if(typeof _simPushCloud==='function')_simPushCloud();
-  document.getElementById('saveNote').innerHTML='<b>저장됨</b> · '+name;
+  const defaultName='시나리오 '+(scenarios.length+1);
+  const ov=document.createElement('div');
+  ov.id='_scenSaveOv';
+  ov.style.cssText='position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center';
+  ov.innerHTML=`<div style="background:#1a1d24;border:1px solid #2a2d35;border-radius:12px;padding:24px;width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.6)">
+    <div style="font-weight:700;font-size:15px;margin-bottom:14px;color:#e2e8f0">💾 시나리오 이름</div>
+    <input id="_scenNameInput" type="text" value="${defaultName}" style="width:100%;padding:10px 12px;border:1px solid #3a3d4a;border-radius:8px;background:#0f1117;color:#f1f5f9;font-size:14px;outline:none" />
+    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+      <button onclick="document.getElementById('_scenSaveOv').remove()" style="padding:8px 16px;border:1px solid #3a3d4a;border-radius:8px;background:transparent;color:#9ca3af;cursor:pointer;font-size:13px">취소</button>
+      <button id="_scenSaveBtn" style="padding:8px 16px;border:none;border-radius:8px;background:#2563eb;color:#fff;cursor:pointer;font-size:13px;font-weight:600">저장</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  const inp=ov.querySelector('#_scenNameInput');
+  inp.focus();inp.select();
+  const doSave=()=>{
+    const name=inp.value.trim();
+    if(!name)return;
+    ov.remove();
+    try{
+      const s=G(),pitch=getPitchSec(),wm=+document.getElementById('workMin').value||460;
+      const n=+document.getElementById('pitchRatio').value||1,base=+document.getElementById('baseProd').value||205;
+      const lbl=LINE_DEF[curLine].name+' '+LINE_DEF[curLine].subs[curSub];
+      const active=s.rows.filter(r=>!r.empty&&r.ct>0);
+      let bnCT=0;const pc=active.map(r=>{const sp=(r.taskSpan||1);const rt=(sp>1)||r.sync?r.ct:r.ct/(r.parallel||1)/(r.workers||1);if(rt>bnCT)bnCT=rt;return rt;});
+      const uph=bnCT>0?Math.round(3600/bnCT):0,daily=bnCT>0?Math.floor(wm*60/bnCT):0;
+      const lb=active.length>0?pc.reduce((a,v)=>a+v,0)/(bnCT*active.length)*100:0;
+      const rowsSnap=JSON.parse(JSON.stringify(s.rows));
+      scenarios.push({id:Date.now(),name,lbl,ratio:n+':1',base,pitch:pitch.toFixed(1),cnt:active.length,uph,daily,lb:lb.toFixed(1),bnCT:bnCT.toFixed(1),at:new Date().toLocaleString('ko'),savedBy:(_currentUser&&_currentUser.name)||'',rows:rowsSnap,line:curLine,sub:curSub});
+      localStorage.setItem('conv_scen4',JSON.stringify(scenarios));
+      renderScen();
+      if(typeof _simPushCloud==='function')_simPushCloud();
+      document.getElementById('saveNote').innerHTML='<b>저장됨</b> · '+name;
+      setTimeout(()=>document.getElementById('saveNote').textContent='',3000);
+    }catch(e){_toast('저장 오류: '+e.message);}
+  };
+  ov.querySelector('#_scenSaveBtn').addEventListener('click',doSave);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')doSave();if(e.key==='Escape')ov.remove();});
 }
 function renderScen(){
   if(!scenarios.length){document.getElementById('scenArea').innerHTML='<div style="padding:30px;text-align:center;color:var(--mut)">저장된 시나리오가 없습니다.</div>';return;}
-  const mU=Math.max(...scenarios.map(s=>s.uph)),mD=Math.max(...scenarios.map(s=>s.daily)),mL=Math.max(...scenarios.map(s=>+s.lb));
+  const mU=Math.max(...scenarios.map(s=>s.uph||0)),mD=Math.max(...scenarios.map(s=>s.daily||0)),mL=Math.max(...scenarios.map(s=>+s.lb||0));
   let html=`<table class="scen-table"><thead><tr>
     <th>시나리오</th><th>라인</th><th>저장일시</th><th>저장자</th><th>공피치</th><th>기준생산</th><th>공정수</th>
     <th>실UPH</th><th>병목C/T</th><th>일생산량</th><th>밸런스</th><th>삭제</th>
@@ -1619,10 +1734,10 @@ function renderScen(){
   scenarios.forEach(s=>{
     html+=`<tr>
       <td style="font-weight:700">${esc(s.name)}</td><td style="color:var(--blue)">${esc(s.lbl)}</td>
-      <td style="font-size:11px;color:var(--mut)">${s.at}</td><td style="font-size:11px;color:var(--mut)">${s.savedBy||'-'}</td><td>${s.ratio||''} (${s.pitch}초)</td><td>${s.base||'-'}대</td><td>${s.cnt}</td>
-      <td class="${s.uph===mU?'best':''}">${s.uph}</td><td>${s.bnCT}초</td>
-      <td class="${s.daily===mD?'best':''}">${s.daily.toLocaleString()}</td>
-      <td class="${+s.lb===mL?'best':''}">${s.lb}%</td>
+      <td style="font-size:11px;color:var(--mut)">${s.at||'-'}</td><td style="font-size:11px;color:var(--mut)">${s.savedBy||'-'}</td><td>${s.ratio||'-'} (${s.pitch||'-'}초)</td><td>${s.base||'-'}대</td><td>${s.cnt||0}</td>
+      <td class="${(s.uph||0)===mU?'best':''}">${s.uph||0}</td><td>${s.bnCT||'-'}초</td>
+      <td class="${(s.daily||0)===mD?'best':''}">${(s.daily||0).toLocaleString()}</td>
+      <td class="${(+s.lb||0)===mL?'best':''}">${s.lb||0}%</td>
       <td style="text-align:center;white-space:nowrap">
         <button class="btn sml" style="background:#1e3a5f;color:#60a5fa;margin-right:4px" onclick="apply2DScen(${s.id})">📺 2D</button>
         <button class="btn sml warn" onclick="delScen(${s.id})">삭제</button>
@@ -1634,17 +1749,93 @@ function renderScen(){
 }
 function delScen(id){scenarios=scenarios.filter(s=>s.id!==id);localStorage.setItem('conv_scen4',JSON.stringify(scenarios));renderScen();}
 function clearScen(){if(!confirm('모두 삭제?'))return;scenarios=[];localStorage.setItem('conv_scen4','[]');renderScen();}
+function openSimScenPicker(){
+  const menu=document.getElementById('simScenMenu');
+  if(menu.style.display==='block'){menu.style.display='none';return;}
+  const btn=menu.previousElementSibling;
+  if(btn)_positionDropdown(menu,btn);
+  const list=scenarios.filter(s=>s.rows&&s.rows.length);
+  if(!list.length){menu.innerHTML='<div style="padding:12px 14px;color:#64748b;font-size:12px">저장된 시나리오 없음</div>';menu.style.display='block';return;}
+  let html='';
+  list.slice().reverse().forEach(s=>{
+    const lineName=s.lbl||'';
+    html+=`<div style="padding:10px 14px;border-bottom:1px solid #2a2d35;cursor:pointer;transition:background 0.15s"
+      onmouseover="this.style.background='#1e2d3d'" onmouseout="this.style.background=''"
+      onclick="document.getElementById('simScenMenu').style.display='none';applySimScen(${s.id})">
+      <div style="font-weight:700;color:#e2e8f0;font-size:13px">${esc(s.name)}${lineName?` <span style="font-size:10px;color:#60a5fa;font-weight:400">${esc(lineName)}</span>`:''}</div>
+      <div style="font-size:11px;color:#64748b;margin-top:2px">${s.at} &nbsp;|&nbsp; 공피치 ${s.ratio||'-'} &nbsp;|&nbsp; 일 ${s.daily}대</div>
+    </div>`;
+  });
+  menu.innerHTML=html;
+  menu.style.display='block';
+}
+function applySimScen(id){
+  const sc=scenarios.find(s=>s.id===id);
+  if(!sc||!sc.rows){_toast('공정 데이터가 없는 시나리오입니다.');return;}
+  _confirm(`[${sc.name}] 불러오면 현재 데이터가 덮어씌워집니다. 계속할까요?`,()=>{
+    state[curLine][curSub].rows=JSON.parse(JSON.stringify(sc.rows));
+    localStorage.setItem('conv_struct_'+curLine+'_'+curSub,JSON.stringify(sc.rows));
+    if(sc.ratio){const n=parseInt(sc.ratio);if(!isNaN(n)){document.getElementById('pitchRatio').value=n;}}
+    if(sc.base){document.getElementById('baseProd').value=sc.base;}
+    loadLineData();
+    calcPitch();
+    if(typeof init2D==='function')init2D();
+    document.getElementById('saveNote').textContent='✅ 불러오기 완료';
+    setTimeout(()=>document.getElementById('saveNote').textContent='',2000);
+  });
+}
+function _toast(msg){
+  const d=document.createElement('div');
+  d.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e2d3d;color:#e2e8f0;padding:10px 20px;border-radius:8px;font-size:13px;z-index:999999;box-shadow:0 4px 12px rgba(0,0,0,0.5)';
+  d.textContent=msg;document.body.appendChild(d);
+  setTimeout(()=>d.remove(),3000);
+}
+function _confirm(msg,onOk){
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center';
+  ov.innerHTML=`<div style="background:#1a1d24;border:1px solid #2a2d35;border-radius:12px;padding:24px;width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.6)">
+    <div style="font-size:14px;color:#e2e8f0;margin-bottom:18px;line-height:1.5">${msg}</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button id="_cfmNo" style="padding:8px 16px;border:1px solid #3a3d4a;border-radius:8px;background:transparent;color:#9ca3af;cursor:pointer;font-size:13px">취소</button>
+      <button id="_cfmOk" style="padding:8px 16px;border:none;border-radius:8px;background:#2563eb;color:#fff;cursor:pointer;font-size:13px;font-weight:600">확인</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.querySelector('#_cfmNo').addEventListener('click',()=>ov.remove());
+  ov.querySelector('#_cfmOk').addEventListener('click',()=>{ov.remove();onOk();});
+}
+function _positionDropdown(menu, anchorEl){
+  if(menu.parentElement!==document.body)document.body.appendChild(menu);
+  const r=anchorEl.getBoundingClientRect();
+  const spaceBelow=window.innerHeight-r.bottom-8;
+  const spaceAbove=r.top-8;
+  menu.style.position='fixed';
+  menu.style.right=(window.innerWidth-r.right)+'px';
+  menu.style.left='auto';
+  menu.style.zIndex='999999';
+  if(spaceBelow<150&&spaceAbove>spaceBelow){
+    menu.style.top='auto';
+    menu.style.bottom=(window.innerHeight-r.top+4)+'px';
+    menu.style.maxHeight=Math.min(400,spaceAbove)+'px';
+  }else{
+    menu.style.top=(r.bottom+4)+'px';
+    menu.style.bottom='auto';
+    menu.style.maxHeight=Math.max(200,spaceBelow)+'px';
+  }
+}
 function openScenPicker(){
   const menu=document.getElementById('scenPickMenu');
   if(menu.style.display==='block'){menu.style.display='none';return;}
-  const list=scenarios.filter(s=>s.rows);
-  if(!list.length){menu.innerHTML='<div style="padding:12px 14px;color:#64748b;font-size:12px">저장된 2D 시나리오 없음</div>';menu.style.display='block';return;}
+  const btn=document.querySelector('#scenPickWrap > button');
+  if(btn)_positionDropdown(menu,btn);
+  const list=scenarios.slice();
+  if(!list.length){menu.innerHTML='<div style="padding:12px 14px;color:#64748b;font-size:12px">저장된 시나리오 없음</div>';menu.style.display='block';return;}
   let html='';
   list.slice().reverse().forEach(s=>{
-    html+=`<div style="padding:10px 14px;border-bottom:1px solid #2a2d35;cursor:pointer;transition:background 0.15s"
-      onmouseover="this.style.background='#1e2d3d'" onmouseout="this.style.background=''"
-      onclick="document.getElementById('scenPickMenu').style.display='none';apply2DScen(${s.id})">
-      <div style="font-weight:700;color:#e2e8f0;font-size:13px">${esc(s.name)}</div>
+    const hasRows=!!(s.rows&&s.rows.length);
+    html+=`<div style="padding:10px 14px;border-bottom:1px solid #2a2d35;cursor:${hasRows?'pointer':'default'};transition:background 0.15s;opacity:${hasRows?1:0.45}"
+      ${hasRows?`onmouseover="this.style.background='#1e2d3d'" onmouseout="this.style.background=''" onclick="document.getElementById('scenPickMenu').style.display='none';apply2DScen(${s.id})"`:''}>
+      <div style="font-weight:700;color:#e2e8f0;font-size:13px">${esc(s.name)}${hasRows?'':' <span style="font-size:10px;color:#64748b">(공정없음)</span>'}</div>
       <div style="font-size:11px;color:#64748b;margin-top:2px">${s.at} &nbsp;|&nbsp; 공피치 ${s.ratio||'-'} &nbsp;|&nbsp; 일 ${s.daily}대</div>
     </div>`;
   });
@@ -1654,10 +1845,13 @@ function openScenPicker(){
 function apply2DScen(id){
   const sc=scenarios.find(s=>s.id===id);
   if(!sc){return;}
-  if(!sc.rows){alert('이 시나리오는 공정 데이터 없이 저장됐습니다.\n다시 저장하면 2D로 볼 수 있습니다.');return;}
+  if(!sc.rows){_toast('이 시나리오는 공정 데이터 없이 저장됐습니다.');return;}
   state[sc.line||2][sc.sub||0].rows=JSON.parse(JSON.stringify(sc.rows));
   localStorage.setItem('conv_struct_'+(sc.line||2)+'_'+(sc.sub||0),JSON.stringify(sc.rows));
   curLine=sc.line||2;curSub=sc.sub||0;
+  if(sc.ratio){const n=parseInt(sc.ratio);if(!isNaN(n))document.getElementById('pitchRatio').value=n;}
+  if(sc.base)document.getElementById('baseProd').value=sc.base;
+  calcPitch();
   goto2D();
 }
 
@@ -1931,21 +2125,25 @@ function renderOverloadPanel(){
   const perPersonSaved=+(document.getElementById('perPersonProd')||{}).value||35;
   const fixedWSaved=+(document.getElementById('fixedWorkers')||{}).value||0;
   if(!window._workerOvr) window._workerOvr={};
-  const COL_W=['90px','55px','85px','80px','65px','80px','65px','80px'];
+  const COL_W=['120px','75px','110px','100px','90px','110px','90px','110px'];
   const colgroup=`<colgroup>${COL_W.map(w=>`<col style="width:${w}">`).join('')}</colgroup>`;
   function renderTable(scList,title,color,isCtBased){
     const tkey=isCtBased?'ct':'cams';
-    let t=`<div style="margin:0 0 6px;font-size:12px;font-weight:700;color:${color}">${title}</div>`;
-    t+=`<table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed">${colgroup}
+    const FS='font-size:20px';
+    let t=`<div style="margin:0 0 6px;display:flex;align-items:center;gap:10px">
+      <span style="${FS};font-weight:700;color:${color}">${title}</span>
+      <button onclick="openDistPanel('${tkey}')" style="margin-left:auto;padding:4px 12px;background:#0f4c81;border:1px solid #1d6fa5;border-radius:6px;color:#93c5fd;font-size:15px;font-weight:700;cursor:pointer">🔀 공수 분배</button>
+    </div>`;
+    t+=`<table style="width:100%;border-collapse:collapse;${FS};table-layout:fixed">${colgroup}
       <tr style="background:#20232b;color:#94a3b8">
-        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">공피치<br><span style="font-weight:400;font-size:10px">공:실제</span></th>
-        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">UPH</th>
-        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">피치<br><span style="font-weight:400;font-size:10px">유효주기</span></th>
-        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">인원</th>
-        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">부하율</th>
-        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">일 생산량</th>
-        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">인당<br><span style="font-weight:400;font-size:10px">대/인/일</span></th>
-        <th style="padding:5px 8px;text-align:center;border-bottom:1px solid #2a2d35">고객사 대비</th>
+        <th style="padding:8px;text-align:center;border-bottom:1px solid #2a2d35;${FS}">공피치<br><span style="font-weight:400;font-size:14px">공:실제</span></th>
+        <th style="padding:8px;text-align:center;border-bottom:1px solid #2a2d35;${FS}">UPH</th>
+        <th style="padding:8px;text-align:center;border-bottom:1px solid #2a2d35;${FS}">피치<br><span style="font-weight:400;font-size:14px">유효주기</span></th>
+        <th style="padding:8px;text-align:center;border-bottom:1px solid #2a2d35;${FS}">인원</th>
+        <th style="padding:8px;text-align:center;border-bottom:1px solid #2a2d35;${FS}">부하율</th>
+        <th style="padding:8px;text-align:center;border-bottom:1px solid #2a2d35;${FS}">일 생산량</th>
+        <th style="padding:8px;text-align:center;border-bottom:1px solid #2a2d35;${FS}">인당<br><span style="font-weight:400;font-size:14px">대/인/일</span></th>
+        <th style="padding:8px;text-align:center;border-bottom:1px solid #2a2d35;${FS}">고객사 대비</th>
       </tr>`;
     let prevMinW=null;
     scList.forEach(sc=>{
@@ -1971,26 +2169,26 @@ function renderOverloadPanel(){
       const leftBorder=isCur?'border-left:3px solid #0284c7;':is6boundary?'border-left:3px solid #ef4444;':'border-left:3px solid transparent;';
       const topBorder=workerChanged?'border-top:2px solid #334155;':'';
       t+=`<tr style="${rowBg}${leftBorder}${topBorder}border-bottom:1px solid #1e2128;">
-        <td style="padding:5px 8px;text-align:center;color:${isCur?'#38bdf8':is6boundary?'#fca5a5':'#cbd5e1'};font-weight:${isCur||is6boundary?'700':'400'}">${sc.pn===0?'없음':`1:${sc.pn}`}${isCur?' ◀':''}${is6boundary?' ⚠️':''}</td>
-        <td style="padding:5px 8px;text-align:center;color:#fbbf24;font-weight:700">${uph}</td>
-        <td style="padding:5px 8px;text-align:center;color:#60a5fa">${sc.pitchEff.toFixed(1)}초</td>
-        <td style="padding:4px 6px;text-align:center">
+        <td style="padding:6px 8px;text-align:center;${FS};color:${isCur?'#38bdf8':is6boundary?'#fca5a5':'#cbd5e1'};font-weight:${isCur||is6boundary?'700':'400'}">${sc.pn===0?'없음':`1:${sc.pn}`}${isCur?' ◀':''}${is6boundary?' ⚠️':''}</td>
+        <td style="padding:6px 8px;text-align:center;${FS};color:#fbbf24;font-weight:700">${uph}</td>
+        <td style="padding:6px 8px;text-align:center;${FS};color:#60a5fa">${sc.pitchEff.toFixed(1)}초</td>
+        <td style="padding:4px 6px;text-align:center;${FS}">
           <input type="number" value="${w}" min="1" max="20"
-            style="width:46px;padding:2px 4px;background:#1e293b;border:1px solid ${wColor};border-radius:4px;color:${wColor};font-weight:700;text-align:center;font-size:12px"
+            style="width:52px;padding:3px 4px;background:#1e293b;border:1px solid ${wColor};border-radius:4px;color:${wColor};font-weight:700;text-align:center;font-size:18px"
             onchange="window._workerOvr['${ovrKey}']=+this.value||0;renderOverloadPanel()">
-          ${ovr>0&&ovr<minW?`<div style="font-size:9px;color:#64748b">최소${minW}</div>`:''}
+          ${ovr>0&&ovr<minW?`<div style="font-size:12px;color:#64748b">최소${minW}</div>`:''}
         </td>
-        <td style="padding:5px 8px;text-align:center;font-weight:700;color:${loadColor}">${load}%</td>
-        <td style="padding:5px 8px;text-align:center;font-weight:700;color:#e2e8f0">${prod}대</td>
-        <td style="padding:5px 8px;text-align:center;color:#a78bfa;font-weight:700">${perHead}대</td>
-        <td style="padding:5px 8px;text-align:center">${diffStr}</td>
+        <td style="padding:6px 8px;text-align:center;${FS};font-weight:700;color:${loadColor}">${load}%</td>
+        <td style="padding:6px 8px;text-align:center;${FS};font-weight:700;color:#e2e8f0">${prod}대</td>
+        <td style="padding:6px 8px;text-align:center;${FS};color:#a78bfa;font-weight:700">${perHead}대</td>
+        <td style="padding:6px 8px;text-align:center;${FS}">${diffStr}</td>
       </tr>`;
     });
     t+='</table>';
     return t;
   }
 
-  const infoBar=`<div style="margin:12px 0 8px;font-size:11px;color:#94a3b8;display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+  const infoBar=`<div style="margin:12px 0 8px;font-size:20px;color:#94a3b8;display:flex;gap:16px;flex-wrap:wrap;align-items:center">
     <span>고객사 목표: <b style="color:#f8fafc">${base}대/일</b></span>
     <span>총 C/T: <b style="color:#60a5fa">${grpCTTotal.toFixed(1)}초</b></span>
     <span>가동: <b style="color:#f8fafc">${wm}분/일</b></span>
@@ -2004,7 +2202,7 @@ function renderOverloadPanel(){
 
   let html=renderTable(scenarios,`📐 C/T 기반 분석 (1~${MN}공정+SUB에어백 총 ${grpCTTotal.toFixed(1)}초)`,'#60a5fa',true);
   if(firstSix){
-    html+=`<div style="margin:8px 0;padding:6px 12px;background:#2d0a0a;border:1px solid #7f1d1d;border-radius:6px;font-size:12px;color:#fca5a5">
+    html+=`<div style="margin:8px 0;padding:6px 12px;background:#2d0a0a;border:1px solid #7f1d1d;border-radius:6px;font-size:20px;color:#fca5a5">
       ⚠️ <b>공피치 1:${firstSix.pn} 이상</b>부터 최소 작업자 <b style="color:#ef4444">6명</b> 필요 (현재 5명 → 1명 증원 필요)
     </div>`;
   }
@@ -2012,6 +2210,266 @@ function renderOverloadPanel(){
   html+=renderTable(camsSc,`🏭 캠스 UPH 기반 분석 (1인 평균 ${perPersonSaved}대/일 기준)`,'#a78bfa',false);
 
   content.innerHTML=html;
+}
+
+/* ─── 공수 분배 ─────────────────────────────── */
+// 작업 항목 정의: {key, label, unit(초), type}
+const DIST_ITEMS=[
+  {key:'ctcMove3',    label:'이동',        unit:10,  type:'cnt'},
+  {key:'ctcUnpack3',  label:'포장해체',    unit:10,  type:'cnt'},
+  {key:'ctcDanpum',   label:'단품',        unit:6,   type:'cnt'},
+  {key:'ctcHarness',  label:'하네스',      unit:6,   type:'cnt'},
+  {key:'ctcHook3',    label:'HOOK',        unit:1.8, type:'cnt'},
+  {key:'ctcBarcode3', label:'바코드스캔',  unit:3,   type:'cnt'},
+  {key:'ctcDong',     label:'동선',        unit:5,   type:'cnt'},
+  {key:'ctcAirbag',   label:'에어백/CPAD', unit:10,  type:'cnt'},
+  {key:'ctcTorque3',  label:'토크/임팩',   unit:8,   type:'cnt'},
+  {key:'ctcNut',      label:'너트',        unit:4.5, type:'cnt'},
+  {key:'ctcScrew',    label:'스크류',      unit:4.5, type:'cnt'},
+  {key:'ctcShex',     label:'S육각',       unit:4.5, type:'cnt'},
+  {key:'ctcBhex',     label:'B육각',       unit:4.5, type:'cnt'},
+  {key:'ctcWireSensor3',label:'WIRING센서',unit:3,   type:'cnt'},
+  {key:'ctcWireClip3',  label:'WIRING클립',unit:1.8, type:'cnt'},
+  {key:'ctcTestItem3',  label:'전장TEST',   unit:1.5, type:'cnt'},
+  {key:'ctcPadCnt3',    label:'PAD',        unit:3,   type:'cnt'},
+  {key:'ctcBrktCnt3',   label:'BRKT',       unit:4.5, type:'cnt'},
+  {key:'ctcMldgCnt3',   label:'MLDG',       unit:5,   type:'cnt'},
+];
+let _distSuspended=-1;
+let _distAssign={};  // {itemKey: {toRowIdx: count}}
+
+let _distTkey='ct';
+function openDistPanel(tkey){
+  _distTkey=tkey||'ct';
+  _distSuspended=-1;
+  _distAssign={};
+  // 캔버스 스냅샷 (이미 렌더된 경우만)
+  const snap=document.getElementById('distCanvasSnap');
+  const img=document.getElementById('distCanvasImg');
+  try{
+    const cv=document.getElementById('cv2d');
+    if(snap&&img&&cv&&cv.width>0&&cv.height>0){img.src=cv.toDataURL();snap.style.display='block';}
+    else if(snap){snap.style.display='none';}
+  }catch(e){if(snap)snap.style.display='none';}
+  // 고정 버튼 숨김
+  document.querySelectorAll('#floatSave,#odBtn').forEach(el=>el.style.display='none');
+  document.getElementById('distModal').style.zIndex='999999';
+  // 내용 렌더
+  const dc=document.getElementById('distContent');
+  try{renderDistPanel();}catch(e){if(dc)dc.innerHTML=`<div style="color:#ef4444;padding:16px">⚠️ ${e.message}</div>`;}
+  document.getElementById('distModal').classList.add('show');
+}
+function closeDistPanel(){
+  document.getElementById('distModal').classList.remove('show');
+  document.getElementById('distModal').style.zIndex='';
+  document.querySelectorAll('#floatSave,#odBtn').forEach(el=>el.style.display='');
+}
+function resetDist(){_distSuspended=-1;_distAssign={};renderDistPanel();}
+
+function _distRows(){
+  const isSUB=r=>r.group==='SUB'||(r.name||'').toUpperCase().startsWith('SUB')||(r.name||'').includes('서브');
+  return G().rows.map((r,i)=>({r,i})).filter(({r})=>!isSUB(r)&&(r.ct>0||r.ctFormula));
+}
+function _calcCTfromFormula(f,extra){
+  // extra: {itemKey: addedCount}
+  if(!f||f._type!=='line3') return 0;
+  const v=k=>(+(f[k]||0))+(extra?+(extra[k]||0):0);
+  let t=0;
+  t+=v('ctcMove3')*10+v('ctcUnpack3')*10;
+  t+=+(f.ctcBase3||0);
+  t+=v('ctcDanpum')*6+v('ctcHarness')*6;
+  t+=v('ctcHook3')*1.8+v('ctcBarcode3')*3;
+  t+=v('ctcDong')*5+v('ctcAirbag')*10;
+  const nut=v('ctcNut'),scr=v('ctcScrew'),sh=v('ctcShex'),bh=v('ctcBhex');
+  t+=(nut+scr+sh+bh)*4.5;
+  const ws=v('ctcWireSensor3'),wc=v('ctcWireClip3');
+  if(ws||wc) t+=5+ws*3+wc*1.8;
+  const ti=v('ctcTestItem3'); if(ti) t+=3+1.5*ti;
+  t+=v('ctcTorque3')*8;
+  const pc=v('ctcPadCnt3');
+  if(pc) t+=4+3*(pc-1);
+  const bc=v('ctcBrktCnt3'),bhw=v('ctcBrktHW3');
+  if(bc||bhw) t+=(f.ctcBrktType3==='hw'?4.5*bc+3*bhw:4.5*(bc+bhw));
+  const mc=v('ctcMldgCnt3'),mh=v('ctcMldgHW3');
+  if(mc||mh) t+=5*(mc+mh);
+  return Math.round(t*10)/10;
+}
+
+function renderDistPanel(){
+  const rows=_distRows();
+  const isSUB=r=>r.group==='SUB'||(r.name||'').toUpperCase().startsWith('SUB')||(r.name||'').includes('서브');
+  const subRows=G().rows.filter(r=>isSUB(r)&&((r.name||'').includes('에어백')||(r.task||'').includes('에어백')));
+  const subCT=subRows.reduce((s,r)=>s+(r.ct||0),0);
+
+  const base=+document.getElementById('baseProd').value||205;
+  const curPn=+document.getElementById('pitchRatio').value||0;
+  const wm=+document.getElementById('workMin').value||460;
+  const pitchFull=wm*60/base;
+  const pitchEff=curPn===0?pitchFull:pitchFull*(curPn+1)/curPn;
+  const beforeProd=curPn===0?base:Math.round(base*curPn/(curPn+1));
+
+  const suspRow=_distSuspended>=0?rows.find(({i})=>i===_distSuspended):null;
+  const suspF=suspRow?suspRow.r.ctFormula:null;
+
+  // 중단 공정의 각 항목 원본 갯수
+  const suspItems=suspF?DIST_ITEMS.filter(it=>+(suspF[it.key]||0)>0):[];
+
+  // 각 항목 배분된 총량
+  const assignedTotal=it=>Object.values(_distAssign[it.key]||{}).reduce((a,b)=>a+b,0);
+
+  // 각 수신 공정의 추가 C/T 계산
+  function extraCTforRow(ri){
+    let ct=0;
+    DIST_ITEMS.forEach(it=>{
+      const cnt=(_distAssign[it.key]||{})[ri]||0;
+      if(cnt>0) ct+=cnt*it.unit;
+    });
+    return Math.round(ct*10)/10;
+  }
+
+  // 전/후 총 CT
+  const beforeCT=rows.reduce((s,{r})=>s+(r.ct||0),0)+subCT;
+  const afterCT=rows.reduce((s,{r,i})=>{
+    if(i===_distSuspended) return s;
+    return s+(r.ct||0)+extraCTforRow(i);
+  },0)+subCT;
+
+  const beforeMinW=Math.ceil(beforeCT/pitchEff);
+  const afterMinW=Math.ceil(afterCT/pitchEff);
+  const beforeLoad=Math.round(beforeCT/(beforeMinW*pitchEff)*100);
+  const afterLoad=afterMinW>0?Math.round(afterCT/(afterMinW*pitchEff)*100):0;
+  const afterProd=afterMinW>beforeMinW?Math.floor(wm*60*afterMinW/afterCT*(curPn===0?1:curPn/(curPn+1))):beforeProd;
+
+  let html='';
+
+  // ── 비교 카드
+  html+=`<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;margin-bottom:14px;align-items:center">
+    <div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 14px;text-align:center">
+      <div style="font-size:10px;color:#64748b;margin-bottom:2px">변경 전</div>
+      <div style="font-size:20px;font-weight:800;color:#60a5fa">${beforeCT.toFixed(1)}초</div>
+      <div style="font-size:11px;color:#94a3b8">${beforeMinW}명 · ${beforeLoad}% · ${beforeProd}대/일</div>
+    </div>
+    <div style="font-size:22px;color:#475569;text-align:center">→</div>
+    <div style="background:#0f172a;border:1px solid ${afterCT<beforeCT?'#22c55e':'#334155'};border-radius:8px;padding:10px 14px;text-align:center">
+      <div style="font-size:10px;color:#64748b;margin-bottom:2px">변경 후</div>
+      <div style="font-size:20px;font-weight:800;color:${afterCT>beforeCT?'#f97316':afterCT<beforeCT?'#34d399':'#e2e8f0'}">${afterCT.toFixed(1)}초</div>
+      <div style="font-size:11px;color:#94a3b8">${afterMinW}명 · ${afterLoad}% · ${afterProd}대/일</div>
+    </div>
+  </div>`;
+
+  // ── 공정 선택 (중단할 공정)
+  html+=`<div style="margin-bottom:12px">
+    <div style="font-size:11px;color:#64748b;margin-bottom:6px">▸ 중단할 공정 선택</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">`;
+  rows.forEach(({r,i})=>{
+    const sel=i===_distSuspended;
+    html+=`<button onclick="toggleDistSusp(${i},${!sel})"
+      style="padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;
+        background:${sel?'#7f1d1d':'#1e293b'};border:1px solid ${sel?'#ef4444':'#334155'};
+        color:${sel?'#fca5a5':'#94a3b8'}">${r.name||'공정'+(i+1)} <span style="font-size:10px">${(+(r.ct||0)).toFixed(0)}초</span></button>`;
+  });
+  html+=`</div></div>`;
+
+  if(!suspRow){
+    html+=`<div style="color:#64748b;font-size:12px;padding:20px;text-align:center">중단할 공정을 선택하세요</div>`;
+    document.getElementById('distContent').innerHTML=html;
+    return;
+  }
+
+  if(suspItems.length===0){
+    html+=`<div style="color:#f59e0b;font-size:12px;padding:12px">⚠️ 선택한 공정에 C/T 계산기 항목이 없습니다. C/T 계산기에서 먼저 공수를 입력해주세요.</div>`;
+    document.getElementById('distContent').innerHTML=html;
+    return;
+  }
+
+  // ── 항목별 분배 테이블
+  const activeRows=rows.filter(({i})=>i!==_distSuspended);
+  html+=`<div style="font-size:11px;color:#64748b;margin-bottom:6px">▸ 항목별 배분 (갯수 초과 불가)</div>`;
+  html+=`<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:12px;min-width:100%">
+    <tr style="background:#20232b;color:#94a3b8">
+      <th style="padding:6px 8px;text-align:left;border-bottom:1px solid #2a2d35;white-space:nowrap">작업 항목</th>
+      <th style="padding:6px 8px;text-align:center;border-bottom:1px solid #2a2d35">원본</th>`;
+  activeRows.forEach(({r})=>{
+    html+=`<th style="padding:6px 8px;text-align:center;border-bottom:1px solid #2a2d35;white-space:nowrap">${r.name||'공정'}</th>`;
+  });
+  html+=`<th style="padding:6px 8px;text-align:center;border-bottom:1px solid #2a2d35;color:#f59e0b">잔량</th></tr>`;
+
+  suspItems.forEach(it=>{
+    const orig=+(suspF[it.key]||0);
+    const totalAssigned=assignedTotal(it);
+    const rem=orig-totalAssigned;
+    const remColor=rem<0?'#ef4444':rem===0?'#22c55e':'#f59e0b';
+    html+=`<tr style="border-bottom:1px solid #1e2128">
+      <td style="padding:5px 8px;color:#e2e8f0;white-space:nowrap">${it.label} <span style="color:#64748b;font-size:10px">×${it.unit}초</span></td>
+      <td style="padding:5px 8px;text-align:center;font-weight:700;color:#60a5fa">${orig}</td>`;
+    activeRows.forEach(({i})=>{
+      const cur=(_distAssign[it.key]||{})[i]||0;
+      html+=`<td style="padding:3px 5px;text-align:center">
+        <input type="number" value="${cur||''}" placeholder="0" min="0" max="${orig}" step="1"
+          style="width:52px;padding:2px 4px;background:#1e293b;border:1px solid #334155;border-radius:4px;
+            color:#fbbf24;font-weight:700;text-align:center;font-size:12px"
+          oninput="setDistItem('${it.key}',${i},Math.min(+this.value||0,${orig}));this.value=(_distAssign['${it.key}']||{})[${i}]||0;renderDistPanel()">
+      </td>`;
+    });
+    html+=`<td style="padding:5px 8px;text-align:center;font-weight:800;color:${remColor}">${rem}</td></tr>`;
+  });
+  html+=`</table></div>`;
+
+  // ── 공정별 변경 후 C/T 요약
+  html+=`<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px">`;
+  activeRows.forEach(({r,i})=>{
+    const extra=extraCTforRow(i);
+    const newCT=(+(r.ct||0))+extra;
+    html+=`<div style="background:#0f172a;border:1px solid ${extra>0?'#fb923c':'#1e293b'};border-radius:6px;padding:6px 10px;text-align:center;font-size:11px">
+      <div style="color:#94a3b8">${r.name||'공정'+(i+1)}</div>
+      <div style="font-weight:700;color:${extra>0?'#fb923c':'#e2e8f0'}">${newCT.toFixed(1)}초</div>
+      ${extra>0?`<div style="color:#64748b;font-size:10px">+${extra.toFixed(1)}</div>`:''}
+    </div>`;
+  });
+  html+=`</div>`;
+
+  document.getElementById('distContent').innerHTML=html;
+}
+
+function toggleDistSusp(idx,on){
+  _distSuspended=on?idx:-1;
+  if(!on) _distAssign={};
+  renderDistPanel();
+}
+function setDistItem(key,toIdx,val){
+  if(!_distAssign[key]) _distAssign[key]={};
+  _distAssign[key][toIdx]=val>0?val:0;
+}
+function applyDist(){
+  const rows=_distRows();
+  rows.forEach(({r,i})=>{
+    if(i===_distSuspended){
+      r.ct=0;r.empty=true;
+      if(r.ctFormula){
+        DIST_ITEMS.forEach(it=>{
+          const assigned=Object.values(_distAssign[it.key]||{}).reduce((a,b)=>a+b,0);
+          if(assigned>0) r.ctFormula[it.key]=Math.max(0,(+(r.ctFormula[it.key]||0))-assigned);
+        });
+      }
+      return;
+    }
+    let extra=0;
+    DIST_ITEMS.forEach(it=>{
+      const cnt=(_distAssign[it.key]||{})[i]||0;
+      if(cnt>0){
+        extra+=cnt*it.unit;
+        if(r.ctFormula&&r.ctFormula._type==='line3'){
+          r.ctFormula[it.key]=(+(r.ctFormula[it.key]||0))+cnt;
+        }
+      }
+    });
+    if(extra>0) r.ct=Math.round((r.ct+extra)*10)/10;
+  });
+  autoSaveCT&&autoSaveCT();
+  renderTableView&&renderTableView();
+  renderOverloadPanel();
+  closeDistPanel();
+  _toast('✅ 공수 분배가 공정입력에 반영됐습니다.');
 }
 
 function init2D(){
@@ -2572,10 +3030,10 @@ buildStabs();render();loadLineData();renderMain();renderScen();calcPitch();rende
   else{showView(lv);}
 })();
 
-let _currentUser = { name: '', dept: '' };
-
 window.addEventListener('message', e => {
-  if (e.data && e.data.type === 'cams_auth') {
+  if (!e.data) return;
+  if (e.data.type === 'cams_theme') { document.body.classList.toggle('dark', !!e.data.dark); _syncDarkToggle(); return; }
+  if (e.data.type === 'cams_auth') {
     const { name, dept } = e.data;
     _currentUser = { name: name || '', dept: dept || '' };
     const av = name ? name.charAt(0) : '?';
@@ -2730,6 +3188,26 @@ window.addEventListener('message', e => {
   </div>
 </div>
 
+<!-- ===== 공수 분배 모달 ===== -->
+<div class="modal-bg" id="distModal" onclick="if(event.target===this)closeDistPanel()" style="z-index:10000">
+  <div class="modal" style="width:99vw;max-width:100%;height:96vh;display:flex;flex-direction:column;overflow:hidden;padding:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0">
+      <h2 style="margin:0">🔀 공수 분배 시뮬레이션</h2>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="applyDist()" style="background:#0f4c81;border-color:#1d6fa5;color:#93c5fd;font-size:12px;padding:5px 12px">✅ 적용</button>
+        <button class="btn" onclick="resetDist()" style="background:#2d1a0a;border-color:#78350f;color:#fbbf24;font-size:12px;padding:5px 12px">↩ 초기화</button>
+        <button class="btn" onclick="closeDistPanel()" style="font-size:12px;padding:5px 12px">닫기</button>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;gap:12px;overflow:hidden;min-height:0">
+      <div id="distCanvasSnap" style="flex:1.4;min-width:0;display:none;border-radius:8px;overflow:hidden;background:#0a0d14;border:1px solid #2a2d35;position:relative">
+        <img id="distCanvasImg" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:fill;display:block">
+      </div>
+      <div id="distContent" style="flex:1;min-width:0;overflow-y:auto;padding-right:4px"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ===== 3라인 C/T 계산기 모달 ===== -->
 <div class="modal-bg" id="ctcModal3" onclick="if(event.target===this)closeCTCalc3()">
   <div class="modal" style="width:600px">
@@ -2872,8 +3350,17 @@ window.addEventListener('message', e => {
       </div>
     </div>
 
+    <!-- 동시작업 -->
+    <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 14px;background:#0f1117;border:1px solid #2a2d35;border-radius:8px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:600;color:#e2e8f0">
+        <input type="checkbox" id="ctcSync3" onchange="calcCTC3()" style="width:16px;height:16px;cursor:pointer">
+        동시작업
+      </label>
+      <span style="font-size:12px;color:#64748b">체크 시 인원수로 나누지 않고 C/T 그대로 적용 (두 명이 같은 동작을 동시에 수행)</span>
+    </div>
+
     <!-- 결과 -->
-    <div class="dist-total" style="margin-top:18px">
+    <div class="dist-total" style="margin-top:14px">
       <span style="font-size:15px;font-weight:700">계산 결과</span>
       <b id="ctcResult3" style="font-size:24px;color:var(--ok)">0.0초</b>
     </div>
@@ -2889,8 +3376,11 @@ window.addEventListener('message', e => {
 </div>
 
 <!-- ===== 공수 배분 모달 ===== -->
-<div class="modal-bg" id="distModal" onclick="if(event.target===this)closeDist()">
-  <div class="modal">
+<div class="modal-bg" id="distModal2" onclick="if(event.target===this)closeDist()">
+  <div class="modal" style="width:92vw;max-width:1200px;max-height:92vh">
+    <div id="distLayoutSnap" style="display:none;margin-bottom:12px;border-radius:8px;overflow:hidden">
+      <img id="distLayoutImg" style="width:100%;display:block;border-radius:8px;border:1px solid #2a2d35">
+    </div>
     <h2>🔀 공수 재배분</h2>
     <div class="msub">
       <b id="distSrcName"></b> 공정의 C/T
@@ -2935,6 +3425,7 @@ window.addEventListener('message', e => {
   async function odLoad(){if(!dir)return null;try{const fh=await dir.getFileHandle(FILE);return JSON.parse(await(await fh.getFile()).text());}catch(e){return null;}}
 
   const btn=document.createElement('button');
+  btn.id='odBtn';
   btn.style.cssText='position:fixed;bottom:64px;right:24px;z-index:9999;padding:6px 14px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;color:#fff;';
   document.body.appendChild(btn);
 
@@ -2960,6 +3451,580 @@ window.addEventListener('message', e => {
   const _origSet=localStorage.setItem.bind(localStorage);
   localStorage.setItem=function(k,v){_origSet(k,v);if(k&&k.startsWith('conv_'))odSave();};
 })();
+</script>
+
+<!-- ===== 보고서 작성 ===== -->
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script>
+// ── JSZip PPTX 헬퍼 ──────────────────────────────────
+function _pptFindShape(doc, id){
+  const all=doc.getElementsByTagName('*');
+  for(const el of all){
+    if(el.localName==='cNvPr'&&String(el.getAttribute('id'))===String(id)){
+      let p=el.parentElement;
+      while(p&&p.localName!=='sp'&&p.localName!=='graphicFrame'&&p.localName!=='pic') p=p.parentElement;
+      return p||null;
+    }
+  }
+  return null;
+}
+function _pptDesc(el,name){const all=el.getElementsByTagName('*');for(const c of all)if(c.localName===name)return c;return null;}
+function _pptParaText(para,text){
+  const rs=[...para.childNodes].filter(n=>n.localName==='r');
+  rs.slice(1).forEach(r=>para.removeChild(r));
+  if(rs[0]){const t=_pptDesc(rs[0],'t');if(t)t.textContent=text;}
+}
+function _pptSetText(doc,id,text){
+  const sp=_pptFindShape(doc,id);if(!sp)return;
+  const tb=_pptDesc(sp,'txBody');if(!tb)return;
+  const ps=[...tb.childNodes].filter(n=>n.localName==='p');
+  ps.slice(1).forEach(p=>tb.removeChild(p));
+  _pptParaText(ps[0],text);
+}
+function _pptSetLines(doc,id,lines){
+  if(!lines||!lines.length)return;
+  const sp=_pptFindShape(doc,id);if(!sp)return;
+  const tb=_pptDesc(sp,'txBody');if(!tb)return;
+  const ps=[...tb.childNodes].filter(n=>n.localName==='p');
+  ps.slice(1).forEach(p=>tb.removeChild(p));
+  _pptParaText(ps[0],lines[0]);
+  for(let i=1;i<lines.length;i++){
+    const np=ps[0].cloneNode(true);
+    _pptParaText(np,lines[i]);
+    tb.appendChild(np);
+  }
+}
+function _pptCellText(cell,text){
+  const tb=_pptDesc(cell,'txBody');if(!tb)return;
+  const p=[...tb.childNodes].find(n=>n.localName==='p');if(!p)return;
+  const r=[...p.childNodes].find(n=>n.localName==='r');
+  if(r){const t=_pptDesc(r,'t');if(t)t.textContent=text;}
+}
+function _pptFillTable(doc,id,headers,rows){
+  const frame=_pptFindShape(doc,id);if(!frame)return;
+  const tbl=_pptDesc(frame,'tbl');if(!tbl)return;
+  const trs=[...tbl.childNodes].filter(n=>n.localName==='tr');
+  if(trs[0]){
+    const cells=[...trs[0].childNodes].filter(n=>n.localName==='tc');
+    headers.forEach((h,j)=>{if(cells[j])_pptCellText(cells[j],h);});
+  }
+  rows.forEach((row,i)=>{
+    if(!trs[i+1])return;
+    const cells=[...trs[i+1].childNodes].filter(n=>n.localName==='tc');
+    row.forEach((v,j)=>{if(cells[j])_pptCellText(cells[j],String(v));});
+  });
+  for(let i=rows.length+1;i<trs.length;i++){
+    const cells=[...trs[i].childNodes].filter(n=>n.localName==='tc');
+    cells.forEach(c=>_pptCellText(c,''));
+  }
+}
+
+// ── 공통 데이터 계산 ────────────────────────────────
+// ── 재배분 시나리오 분석 (ctFormula 기반 CT 재계산) ──────────────────────
+function _calcRedistAnalysis(rows, base, wm){
+  const isSUB=r=>r.group==='SUB'||(r.name||'').toUpperCase().startsWith('SUB')||(r.name||'').includes('서브');
+  const mainRows=rows.filter(r=>!isSUB(r));
+
+  // 공정 번호로 행 찾기
+  const findByNum=num=>mainRows.find(r=>{
+    const n=r.name||'';
+    return n.match(new RegExp('(^|[^\\d])'+num+'(공정|\\s|$|[^\\d])'));
+  });
+
+  const r8=findByNum(8), r11=findByNum(11), r13=findByNum(13), r16=findByNum(16);
+  if(!r8||!r11||!r16) return null;
+
+  // ctFormula에서 합산 가능한 항목만 추출 (extra 객체 생성)
+  const formulaExtra=f=>{
+    if(!f||f._type!=='line3') return null;
+    const keys=['ctcMove3','ctcUnpack3','ctcDanpum','ctcHarness','ctcHook3','ctcBarcode3',
+      'ctcDong','ctcAirbag','ctcTorque3','ctcNut','ctcScrew','ctcShex','ctcBhex',
+      'ctcWireSensor3','ctcWireClip3','ctcTestItem3','ctcPadCnt3','ctcPadLen3',
+      'ctcBrktCnt3','ctcBrktHW3','ctcMldgCnt3','ctcMldgHW3'];
+    const ex={};
+    keys.forEach(k=>{const v=+(f[k]||0);if(v>0)ex[k]=v;});
+    return ex;
+  };
+
+  // CT 재계산: 8공정 ← 11공정 공수 흡수
+  let new8CT, new16CT, hasFormula=false;
+  const f8=r8.ctFormula, f11=r11.ctFormula;
+  if(f8&&f8._type==='line3'&&f11&&f11._type==='line3'){
+    hasFormula=true;
+    const ex11=formulaExtra(f11);
+    new8CT=_calcCTfromFormula(f8, ex11||{});
+    new8CT+=+(f11.ctcBase3||0); // ctcBase3는 _calcCTfromFormula에서 extra 미처리 → 별도 가산
+    new8CT=Math.round(new8CT*10)/10;
+  } else {
+    new8CT=Math.round(((r8.ct||0)+(r11.ct||0))*10)/10;
+  }
+
+  // CT 재계산: 16공정 ← 13공정 공수 흡수
+  const f16=r16.ctFormula;
+  if(r13){
+    const f13=r13.ctFormula;
+    if(f16&&f16._type==='line3'&&f13&&f13._type==='line3'){
+      hasFormula=true;
+      const ex13=formulaExtra(f13);
+      new16CT=_calcCTfromFormula(f16, ex13||{});
+      new16CT+=+(f13.ctcBase3||0);
+      new16CT=Math.round(new16CT*10)/10;
+    } else {
+      new16CT=Math.round(((r16.ct||0)+(r13.ct||0))*10)/10;
+    }
+  } else {
+    new16CT=r16.ct||0;
+  }
+
+  // 인원 재배분: 제거 공정의 작업자를 수신 공정에 추가
+  const new8Workers=(r8.workers||1)+(r11.workers||1);
+  const new16Workers=(r16.workers||1)+(r13?r13.workers||1:0);
+
+  // 수정된 행 목록 (11공정·13공정 제거, 8공정·16공정 CT/인원 업데이트)
+  const modRows=mainRows
+    .filter(r=>r!==r11&&r!==r13)
+    .map(r=>{
+      if(r===r8) return {...r, ct:new8CT, workers:new8Workers};
+      if(r===r16) return {...r, ct:new16CT, workers:new16Workers};
+      return r;
+    });
+
+  const pitchFull=wm*60/base;
+  const KIA_PROD8=224;
+
+  const results=[0,1,2,3,4,5].map(pn=>{
+    const pitch=pn===0?pitchFull:pitchFull*(pn+1)/pn;
+    const uphRaw=pn===0?base/(wm/60):base*pn/(pn+1)/(wm/60);
+    const uph=Math.round(uphRaw*10)/10;
+    const prod8=Math.round(uphRaw*8);
+
+    const loads=modRows.map(r=>{
+      if(!r.ct||r.ct<=0) return null;
+      const sp=r.taskSpan||1;
+      const realCT=(sp>1)||r.sync?r.ct:r.ct/(r.workers||1);
+      const effPitch=pitch*sp;
+      const load=Math.round(realCT/effPitch*100);
+      return {name:r.name||'',ct:r.ct,realCT,sp,load,effPitch,workers:r.workers||1};
+    }).filter(Boolean);
+
+    const overloaded=loads.filter(p=>p.load>100).sort((a,b)=>b.load-a.load);
+    const bottleneck=overloaded.length>0?overloaded[0]:null;
+    const shortage=KIA_PROD8-prod8;
+    const feasible=overloaded.length===0&&shortage<=0;
+
+    return {
+      pn, label:pn===0?'공피치 없음':pn+':1',
+      pitch:Math.round(pitch*10)/10, uph, prod8,
+      overloaded, bottleneck, shortage, feasible
+    };
+  });
+
+  return {
+    r8name:r8.name, r11name:r11.name,
+    r13name:r13?r13.name:'없음', r16name:r16.name,
+    orig8CT:r8.ct||0, orig16CT:r16.ct||0,
+    orig11CT:r11.ct||0, orig13CT:r13?r13.ct:0,
+    new8CT, new16CT, new8Workers, new16Workers, hasFormula,
+    results
+  };
+}
+
+function _rptCalcData(){
+  const base=+document.getElementById('baseProd').value||205;
+  const wm=+document.getElementById('workMin').value||460;
+  const curPn=+document.getElementById('pitchRatio').value||0;
+  const isSUB=r=>r.group==='SUB'||(r.name||'').toUpperCase().startsWith('SUB')||(r.name||'').includes('서브');
+  const rows=G().rows;
+  const mainRows=rows.filter(r=>!isSUB(r));
+  const totalCT=rows.reduce((s,r)=>s+(r.ct||0),0);
+  const pitchFull=wm*60/base;
+  const calcUPH=pn=>pn===0?Math.round(base/wm*60*10)/10:Math.round(base*pn/(pn+1)/(wm/60)*10)/10;
+  const calcPitch=pn=>pn===0?Math.round(pitchFull*10)/10:Math.round(pitchFull*(pn+1)/pn*10)/10;
+  const calcW=pn=>Math.ceil(totalCT/calcPitch(pn));
+  const calcP8=pn=>Math.round(calcUPH(pn)*8);
+  const KIA_UPH=28, KIA_PROD8=224;
+  const pitchRows=[0,1,2,3,4,5].map(pn=>({
+    pn,label:pn===0?'공피치 없음':pn+':1',
+    uph:calcUPH(pn),pitch:calcPitch(pn),prod8:calcP8(pn),
+    workers:calcW(pn),gap:calcP8(pn)-KIA_PROD8
+  }));
+  const baseWorkers=calcW(0);
+  // 현재 선택 공피치 기준 수치 (0=미선택 시 3:1 기본값)
+  const curEffPn=curPn===0?3:curPn;
+  const curPitch=calcPitch(curEffPn);
+  const curUPH=calcUPH(curEffPn), curProd8=calcP8(curEffPn);
+  const curShortage=KIA_PROD8-curProd8;
+  const curAddMin=curShortage>0?Math.ceil(curShortage/curUPH*60):0;
+  const curShortRnd=curShortage>0?Math.ceil(curShortage/6):0;
+  // 3:1 기준 수치 (하위 호환)
+  const uph3=calcUPH(3),prod3=calcP8(3),shortage=KIA_PROD8-prod3;
+  const overRows=mainRows.map(r=>{
+    if(!r.ct||r.ct<=0)return null;
+    const sp=r.taskSpan||1;
+    const realCT=(sp>1)||r.sync?r.ct:r.ct/(r.workers||1);
+    const effPitch=curPitch*sp;
+    const load=Math.round(realCT/effPitch*100);
+    const excess=Math.round(realCT-effPitch);
+    return {name:r.name||'공정',ct:r.ct,realCT,workers:r.workers||1,load,excess,sp,effPitch};
+  }).filter(Boolean).sort((a,b)=>b.load-a.load);
+  // 병목 분석: load>100인 공정 중 실질 UPH를 가장 낮게 만드는 공정
+  const overloadedProcs=overRows.filter(r=>r.load>100);
+  // 각 과부하 공정의 병목 기준 UPH = 3600 / (realCT/sp)
+  const bottleneck=overloadedProcs.length>0
+    ?overloadedProcs.reduce((worst,r)=>{
+        const bn=3600/(r.realCT/r.sp);
+        const bw=3600/(worst.realCT/worst.sp);
+        return bn<bw?r:worst;
+      })
+    :null;
+  const effectiveUPH=bottleneck
+    ?Math.round(3600/(bottleneck.realCT/bottleneck.sp)*10)/10
+    :curUPH;
+  const effectiveProd8=Math.round(effectiveUPH*8);
+  const effectiveShortage=Math.max(0,KIA_PROD8-effectiveProd8);
+  const today=new Date();
+  const dateStr=today.getFullYear()+'. '+(today.getMonth()+1)+'. '+today.getDate()+'.';
+  const dateTag=String(today.getFullYear())+String(today.getMonth()+1).padStart(2,'0')+String(today.getDate()).padStart(2,'0');
+  // 재배분 분석: 현재 행 우선, 없으면 저장 시나리오 탐색
+  let redistAnalysis=_calcRedistAnalysis(rows,base,wm);
+  if(!redistAnalysis){
+    const _isSUBr=r=>r.group==='SUB'||(r.name||'').toUpperCase().startsWith('SUB')||(r.name||'').includes('서브');
+    const _hasPNs=(rs,ns)=>ns.every(n=>rs.filter(r=>!_isSUBr(r)).some(r=>(r.name||'').match(new RegExp('(^|[^\\d])'+n+'(공정|\\s|$|[^\\d])'))));
+    const _saved=JSON.parse(localStorage.getItem('conv_scen4')||'[]');
+    const _cand=_saved.find(s=>(s.rows||[]).length>0&&_hasPNs(s.rows||[],[8,11,16]));
+    if(_cand) redistAnalysis=_calcRedistAnalysis(_cand.rows,_cand.base||base,_cand.wm||wm);
+  }
+  return {base,wm,curPn,curEffPn,pitchRows,baseWorkers,curPitch,
+    curUPH,curProd8,curShortage,curAddMin,curShortRnd,
+    uph3,prod3,shortage,overRows,KIA_UPH,KIA_PROD8,
+    bottleneck,overloadedProcs,effectiveUPH,effectiveProd8,effectiveShortage,
+    addMin:Math.ceil(shortage/uph3*60),shortRnd:shortage>0?Math.ceil(shortage/6):0,
+    redistAnalysis,dateStr,dateTag};
+}
+
+async function _rptLoadZip(toast){
+  if(toast)_toast('보고서 생성 중...');
+  const resp=await fetch('./template.pptx');
+  if(!resp.ok)throw new Error('template.pptx 로드 실패 ('+resp.status+')');
+  const ab=await resp.arrayBuffer();
+  return JSZip.loadAsync(ab);
+}
+
+async function _rptDownload(zip,dateTag,suffix){
+  const blob=await zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.presentationml.presentation'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`컨베어_운영현황_보고_${dateTag}${suffix}.pptx`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── V1: 원본형 (템플릿 그대로 + 날짜/제목만 업데이트) ─────
+async function generateReportV1(){
+  try{
+    const d=_rptCalcData();
+    const zip=await _rptLoadZip(true);
+    const parser=new DOMParser(), ser=new XMLSerializer();
+    async function mod(n,fn){
+      const k=`ppt/slides/slide${n}.xml`;
+      const doc=parser.parseFromString(await zip.file(k).async('string'),'application/xml');
+      fn(doc); zip.file(k,ser.serializeToString(doc));
+    }
+    // 표지만 날짜/보고일 업데이트
+    await mod(1,doc=>{
+      _pptSetText(doc,1107,`공피치 관련 공정 공수 변경 및 인원 대체 운영 계획  |  보고일: ${d.dateStr}`);
+    });
+    // 슬라이드 2~7: 원본 내용 그대로 유지 (수정 없음)
+    await _rptDownload(zip,d.dateTag,'_원본형');
+    _toast('원본형 보고서 다운로드 완료!');
+  }catch(e){_toast('오류: '+e.message);}
+}
+
+// ── V2: 데이터형 (시뮬레이션 수치로 채움) ─────────────────
+async function generateReportV2(){
+  try{
+    const d=_rptCalcData();
+    const zip=await _rptLoadZip(true);
+    const parser=new DOMParser(), ser=new XMLSerializer();
+    const gapStr=g=>g<0?`▼${Math.abs(g)}대`:g>0?`▲${g}대`:'동일';
+    const curLabel=d.curEffPn===0?'공피치 없음':d.curEffPn+':1';
+    const markCur=r=>r.pn===d.curEffPn?'★ '+r.label:r.label;
+    async function mod(n,fn){
+      const k=`ppt/slides/slide${n}.xml`;
+      const doc=parser.parseFromString(await zip.file(k).async('string'),'application/xml');
+      fn(doc); zip.file(k,ser.serializeToString(doc));
+    }
+    // 슬라이드1: 표지
+    await mod(1,doc=>{
+      _pptSetLines(doc,1104,['컨베어 라인 운영 현황','보고서']);
+      _pptSetText(doc,1105,'컨베어 라인 공피치 적용 영향 분석');
+      _pptSetText(doc,1106,'PU LINE C/PAD');
+      _pptSetText(doc,1107,`공피치별 UPH·생산량·필요 인원 분석  |  보고일: ${d.dateStr}`);
+      _pptSetLines(doc,1108,['1) 공피치별 생산성 현황','2) 공정 부하 및 납품 영향','3) 결론 및 건의사항']);
+    });
+    // 슬라이드2: 현황 요약 섹션 타이틀
+    await mod(2,doc=>{ _pptSetText(doc,11,'공피치 적용 현황 요약'); });
+    // 슬라이드3: 공피치별 UPH/생산량 (★ 현재 기준 표시)
+    await mod(3,doc=>{
+      _pptSetText(doc,20,'공피치별 UPH 및 8시간 생산량 현황');
+      _pptFillTable(doc,2,
+        ['구분','UPH','8시간 생산','기아 대비'],
+        d.pitchRows.map(r=>[markCur(r),String(r.uph),r.prod8+'대',gapStr(r.gap)])
+      );
+    });
+    // 슬라이드4: 공정별 공수 부하 현황 (CT·피치초과분 포함)
+    await mod(4,doc=>{
+      _pptSetText(doc,20,`공정별 공수 부하 현황 (${curLabel} 기준 · 피치 ${Math.round(d.curPitch)}초)`);
+      _pptFillTable(doc,4,
+        ['공정명','CT(초)','부하율','피치 대비'],
+        d.overRows.slice(0,9).map(r=>[
+          r.name, r.ct.toFixed(1), r.load+'%',
+          r.excess>0?`+${r.excess}초 초과`:r.load>85?'주의':'-'
+        ])
+      );
+    });
+    // 슬라이드5: 공피치별 필요 인원 (공피치 초 포함, ★ 표시)
+    await mod(5,doc=>{
+      _pptSetText(doc,20,'공피치별 필요 인원 현황');
+      _pptFillTable(doc,4,
+        ['구분','공피치(초)','필요 인원','기준 대비'],
+        d.pitchRows.map(r=>[
+          markCur(r),
+          Math.round(r.pitch)+'초',
+          r.workers+'명',
+          r.workers>d.baseWorkers?`+${r.workers-d.baseWorkers}명`:'기준'
+        ])
+      );
+    });
+    // 슬라이드6: 납품 일정 영향 (공피치 손실 + 병목 손실 분리)
+    await mod(6,doc=>{
+      _pptSetText(doc,20,'납품 일정 영향 분석');
+      const lines=[
+        `■ 기아 목표: ${d.KIA_UPH} UPH / 8시간 ${d.KIA_PROD8}대`,
+        `■ 공피치(${curLabel}) 적용 손실: ${d.curUPH} UPH → 8시간 ${d.curProd8}대 (부족 ${d.curShortage}대)`,
+      ];
+      if(d.bottleneck&&d.bottleneck.load>100){
+        lines.push(`■ 병목 추가 손실: ${d.bottleneck.name} CT ${d.bottleneck.ct.toFixed(1)}초 > 피치 ${Math.round(d.curPitch)}초`);
+        lines.push(`  → 병목 기준 실현 UPH: ${d.effectiveUPH} / 8시간 ${d.effectiveProd8}대 (부족 ${d.effectiveShortage}대)`);
+      }
+      lines.push('');
+      lines.push(`■ 추가 가동 필요: 약 ${d.curAddMin}분  (1조당 ${d.curShortRnd}회 납품분 미달)`);
+      lines.push('');
+      lines.push('■ 납품 구성 (1조 기준): 5~7회 / 회당 C/PAD 6대 + 범퍼 6대');
+      lines.push('');
+      if(d.bottleneck&&d.bottleneck.load>100){
+        lines.push(`■ 결론: 공피치 + 병목(${d.bottleneck.name}) 복합 요인 → 목표 대비 ${d.effectiveShortage}대 부족`);
+      } else {
+        lines.push(d.curShortage>0
+          ?`■ 결론: ${curLabel} 유지 시 매 조 ${d.curShortage}대 부족 → 납품 일정 미충족 반복`
+          :`■ 결론: 공피치 해소 시 기아 목표 충족 가능 (${d.pitchRows[0]?.prod8}대)`);
+      }
+      _pptSetLines(doc,6,lines);
+    });
+    // 슬라이드7: 결론 및 건의사항 (병목 포함 구체 수치)
+    await mod(7,doc=>{
+      _pptSetText(doc,20,'결론 및 건의사항');
+      const curWorkers=d.pitchRows.find(r=>r.pn===d.curEffPn)?.workers||'-';
+      const lines=[
+        '① 공피치 적용 → 즉각 UPH 저하',
+        `   기아 ${d.KIA_UPH} UPH  vs  캠스(${curLabel}) ${d.curUPH} UPH → 매 조 ${d.curShortage}대 부족`,
+        '',
+      ];
+      if(d.bottleneck&&d.bottleneck.load>100){
+        lines.push('② 공수 증가 → 병목 과부하 발생');
+        lines.push(`   ${d.bottleneck.name}  CT ${d.bottleneck.ct.toFixed(1)}초 / 피치 ${Math.round(d.curPitch)}초 → ${d.bottleneck.load}% 과부하`);
+        lines.push(`   병목 기준 실현 UPH ${d.effectiveUPH} → 8시간 ${d.effectiveShortage}대 추가 손실`);
+        lines.push('');
+        lines.push('③ 납품 일정 위협 (복합)');
+        lines.push(`   공피치 손실 ${d.curShortage}대 + 병목 손실 → 총 ${d.effectiveShortage}대 미달`);
+        lines.push(`   납품 ${Math.ceil(d.effectiveShortage/6)}회분 충족 불가 (회당 6대 기준)`);
+        lines.push('');
+        lines.push('④ 개선 필요 사항');
+        lines.push(`   - 병목 공정(${d.bottleneck.name}) CT ${d.bottleneck.ct.toFixed(1)}초 → ${Math.round(d.curPitch)}초 이하로 개선 필요`);
+        lines.push(`   - 공피치 해소: 기준 ${d.baseWorkers}명 → 현재 ${curWorkers}명`);
+        lines.push(`   - 1:1 적용 시: ${d.pitchRows[1]?.uph} UPH / ${d.pitchRows[1]?.prod8}대 가능`);
+      } else {
+        lines.push('② 납품 일정 위협');
+        lines.push(`   1조당 ${d.curShortage}대 미달 → 납품 ${d.curShortRnd}회분 충족 불가 (회당 6대 기준)`);
+        lines.push('');
+        lines.push('③ 개선 필요 사항');
+        lines.push(`   - 공피치 해소: 기준 ${d.baseWorkers}명 → 현재 ${curWorkers}명 운영 중`);
+        lines.push(`   - 1:1 적용 시: ${d.pitchRows[1]?.uph} UPH / ${d.pitchRows[1]?.prod8}대 생산 가능`);
+      }
+      lines.push('');
+      lines.push(`보고일: ${d.dateStr}  |  생산팀`);
+      _pptSetLines(doc,6,lines);
+    });
+    // 슬라이드8: 재배분 시나리오 분석 (11공정+13공정 → 8공정+16공정)
+    if(d.redistAnalysis){
+      const ra=d.redistAnalysis;
+      await _pptAddSlide8(zip);
+      await mod(8,doc=>{
+        _pptSetText(doc,20,`공정 재배분 시나리오: ${ra.r11name}·${ra.r13name} 제거 후 가능 여부`);
+        const lines=[
+          `■ 조건: ${ra.r11name}(${ra.orig11CT}초) + ${ra.r13name}(${ra.orig13CT}초) 제거`,
+          `  → ${ra.r8name}: ${ra.orig8CT}초 + ${ra.orig11CT}초 = ${ra.new8CT}초 (${ra.new8Workers}명) ${ra.hasFormula?'[공수식 계산]':'[단순합산]'}`,
+          `  → ${ra.r16name}: ${ra.orig16CT}초 + ${ra.orig13CT}초 = ${ra.new16CT}초 (${ra.new16Workers}명) ${ra.hasFormula?'[공수식 계산]':'[단순합산]'}`,
+          '',
+          ...ra.results.map(r=>{
+            const gap=r.shortage<=0?`▲${Math.abs(r.shortage)}대 여유`:`▼${r.shortage}대 부족`;
+            if(r.feasible){
+              return `  ✓ ${r.label}: 피치 ${r.pitch}초 / UPH ${r.uph} / ${r.prod8}대 → ${gap} [가능]`;
+            } else {
+              const bn=r.bottleneck;
+              const reason=bn?`${bn.name} ${bn.load}%`:'UPH 부족';
+              return `  ✗ ${r.label}: 피치 ${r.pitch}초 → ${reason} / ${gap} [불가]`;
+            }
+          }),
+          '',
+          `■ ${ra.hasFormula?'ctFormula 기반 정밀 계산 (스크류/하네스/브라켓 등 개별 공수 합산)':'CT 단순 합산 (ctFormula 미설정 — 공수 재입력 권장)'}`,
+          `보고일: ${d.dateStr}  |  생산팀`
+        ];
+        _pptSetLines(doc,6,lines);
+      });
+    }
+    await _rptDownload(zip,d.dateTag,'_데이터형');
+    _toast('데이터형 보고서 다운로드 완료!');
+  }catch(e){_toast('오류: '+e.message);}
+}
+
+// ── 재배분 시나리오 모달 표시 ──────────────────────────────
+function showRedistModal(){
+  const base=+document.getElementById('baseProd').value||205;
+  const wm=+document.getElementById('workMin').value||460;
+
+  // 1) 현재 활성 행에서 먼저 시도
+  let ra=_calcRedistAnalysis(G().rows,base,wm);
+  let sourceLabel='현재 활성 시나리오';
+
+  // 2) 현재 행이 비어있으면 저장된 시나리오 중 8·11·16공정이 있는 것 탐색
+  if(!ra){
+    const saved=JSON.parse(localStorage.getItem('conv_scen4')||'[]');
+    const isSUB=r=>r.group==='SUB'||(r.name||'').toUpperCase().startsWith('SUB')||(r.name||'').includes('서브');
+    const hasProcNums=(rows,nums)=>nums.every(n=>
+      rows.filter(r=>!isSUB(r)).some(r=>(r.name||'').match(new RegExp('(^|[^\\d])'+n+'(공정|\\s|$|[^\\d])')))
+    );
+    const candidate=saved.find(s=>(s.rows||[]).length>0&&hasProcNums(s.rows||[],[8,11,16]));
+    if(candidate){
+      ra=_calcRedistAnalysis(candidate.rows,
+        candidate.base||base, candidate.wm||wm);
+      sourceLabel='저장 시나리오: '+candidate.name;
+    }
+  }
+
+  const el=document.getElementById('redistModalContent');
+  if(!ra){
+    el.innerHTML='<div style="color:#f87171">분석 불가: 8공정/11공정/16공정 데이터를 찾을 수 없습니다.<br>해당 공정이 저장된 시나리오에 포함되어 있는지 확인하세요.</div>';
+    document.getElementById('redistModal').style.display='block';
+    return;
+  }
+
+  const formulaNote=ra.hasFormula
+    ?'<span style="color:#86efac">✓ ctFormula 기반 정밀 계산 적용</span>'
+    :'<span style="color:#fbbf24">⚠ ctFormula 미설정 — 단순 CT 합산 (오차 있음)</span>';
+
+  let html=`
+    <div style="background:#0f1a0f;border:1px solid #166534;border-radius:8px;padding:12px 16px;margin-bottom:14px">
+      <div style="color:#64748b;font-size:11px;margin-bottom:6px">📂 데이터 출처: ${sourceLabel}</div>
+      <b style="color:#4ade80">조건:</b> 11공정 + 13공정 제거 →
+        <b>${ra.r8name}</b>(${ra.orig8CT}초) + <b>${ra.r11name}</b>(${ra.orig11CT}초) 합산 /
+        <b>${ra.r16name}</b>(${ra.orig16CT}초) + <b>${ra.r13name}</b>(${ra.orig13CT}초) 합산<br>
+      <b style="color:#4ade80">재계산 CT:</b>
+        ${ra.r8name} <span style="color:#93c5fd">${ra.new8CT}초</span> (${ra.new8Workers}명) /
+        ${ra.r16name} <span style="color:#93c5fd">${ra.new16CT}초</span> (${ra.new16Workers}명) &nbsp;${formulaNote}
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead>
+        <tr style="background:#1e293b;color:#94a3b8;font-weight:700">
+          <th style="padding:7px 10px;text-align:left;border-bottom:1px solid #334155">구분</th>
+          <th style="padding:7px 10px;text-align:center;border-bottom:1px solid #334155">피치(초)</th>
+          <th style="padding:7px 10px;text-align:center;border-bottom:1px solid #334155">UPH</th>
+          <th style="padding:7px 10px;text-align:center;border-bottom:1px solid #334155">8시간 생산</th>
+          <th style="padding:7px 10px;text-align:center;border-bottom:1px solid #334155">기아 대비</th>
+          <th style="padding:7px 10px;text-align:left;border-bottom:1px solid #334155">병목 / 과부하</th>
+          <th style="padding:7px 10px;text-align:center;border-bottom:1px solid #334155">가능?</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+  ra.results.forEach(r=>{
+    const okBg=r.feasible?'#0f2a0f':'#2a0f0f';
+    const okColor=r.feasible?'#4ade80':'#f87171';
+    const gapStr=r.shortage<=0?`▲${Math.abs(r.shortage)}대`:`▼${r.shortage}대`;
+    const gapColor=r.shortage<=0?'#4ade80':'#f87171';
+    const bnInfo=r.overloaded.length>0
+      ?r.overloaded.slice(0,2).map(p=>`<span style="color:#fca5a5">${p.name} ${p.load}%</span>`).join(', ')
+      :'<span style="color:#4ade80">과부하 없음</span>';
+    html+=`<tr style="background:${okBg};border-bottom:1px solid #1e293b">
+      <td style="padding:6px 10px;font-weight:700;color:#e2e8f0">${r.label}</td>
+      <td style="padding:6px 10px;text-align:center">${r.pitch}초</td>
+      <td style="padding:6px 10px;text-align:center">${r.uph}</td>
+      <td style="padding:6px 10px;text-align:center">${r.prod8}대</td>
+      <td style="padding:6px 10px;text-align:center;color:${gapColor};font-weight:700">${gapStr}</td>
+      <td style="padding:6px 10px">${bnInfo}</td>
+      <td style="padding:6px 10px;text-align:center;font-weight:800;font-size:16px;color:${okColor}">${r.feasible?'✓':'✗'}</td>
+    </tr>`;
+  });
+
+  html+=`</tbody></table>`;
+
+  // 불가 이유 상세 (첫 번째 불가 케이스)
+  const firstFail=ra.results.find(r=>!r.feasible);
+  if(firstFail&&firstFail.overloaded.length>0){
+    html+=`<div style="margin-top:12px;background:#1a0a0a;border:1px solid #7f1d1d;border-radius:8px;padding:12px 16px">
+      <b style="color:#fca5a5">불가 사유 (예: ${firstFail.label}):</b><br>`;
+    firstFail.overloaded.forEach(p=>{
+      const uphBn=Math.round(3600/(p.realCT/p.sp)*10)/10;
+      const prod8Bn=Math.round(uphBn*8);
+      html+=`&bull; <b>${p.name}</b>: realCT ${p.realCT.toFixed(1)}초 vs 피치 ${p.effPitch.toFixed(1)}초 → <b style="color:#ef4444">${p.load}% 과부하</b>
+        (병목 UPH ${uphBn} → 8시간 ${prod8Bn}대, 기아 목표 대비 ${224-prod8Bn}대 부족)<br>`;
+    });
+    html+=`</div>`;
+  }
+
+  el.innerHTML=html;
+  document.getElementById('redistModal').style.display='block';
+}
+
+// ── PPTX 슬라이드 8 추가 (slide7 복사 후 신규 구조 등록) ──
+async function _pptAddSlide8(zip){
+  zip.file('ppt/slides/slide8.xml', await zip.file('ppt/slides/slide7.xml').async('string'));
+  const relSrc=zip.file('ppt/slides/_rels/slide7.xml.rels');
+  if(relSrc) zip.file('ppt/slides/_rels/slide8.xml.rels', await relSrc.async('string'));
+
+  // Content_Types.xml
+  let ct=await zip.file('[Content_Types].xml').async('string');
+  if(!ct.includes('slide8.xml')){
+    ct=ct.replace(
+      /(<Override[^>]*slide7\.xml[^>]*\/>)/,
+      '$1<Override PartName="/ppt/slides/slide8.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>'
+    );
+    zip.file('[Content_Types].xml',ct);
+  }
+
+  // presentation.xml.rels
+  let pr=await zip.file('ppt/_rels/presentation.xml.rels').async('string');
+  const m7=pr.match(/Id="(rId(\d+))"[^>]+Target="slides\/slide7\.xml"/);
+  const newRid=m7?'rId'+(parseInt(m7[2])+50):'rId108';
+  if(!pr.includes('slide8.xml')){
+    const slideType='http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide';
+    pr=pr.replace('</Relationships>',
+      `<Relationship Id="${newRid}" Type="${slideType}" Target="slides/slide8.xml"/></Relationships>`);
+    zip.file('ppt/_rels/presentation.xml.rels',pr);
+  }
+
+  // presentation.xml: sldId 추가
+  let pxml=await zip.file('ppt/presentation.xml').async('string');
+  if(!pxml.includes(newRid)){
+    const allIds=[...pxml.matchAll(/\bid="(\d+)"\s+r:id=/g)].map(m=>parseInt(m[1]));
+    const maxId=allIds.length?Math.max(...allIds):262;
+    pxml=pxml.replace('</p:sldIdLst>',
+      `<p:sldId id="${maxId+1}" r:id="${newRid}"/></p:sldIdLst>`);
+    zip.file('ppt/presentation.xml',pxml);
+  }
+  return newRid;
+}
+
+async function generateReport(){ await generateReportV2(); }
 </script>
 </body>
 </html>
