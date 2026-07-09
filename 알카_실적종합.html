@@ -1387,10 +1387,6 @@ function renderKpiData(){
   const recs=DB.months[mon];
   renderKpiSlide1(recs,mon);
   renderKpiSlide2(recs,mon);
-  setTimeout(()=>{
-    const lSvg=document.querySelector('#r2L svg'),rSvg=document.querySelector('#r2R svg');
-    if(lSvg&&rSvg){const h=lSvg.getBoundingClientRect().height;if(h>0){rSvg.style.height=h+'px';rSvg.setAttribute('preserveAspectRatio','none');}}
-  },50);
 }
 function kpiCnt(recs,pred){return recs.filter(pred).length;}
 function pct(n,t){return t?Math.round(n/t*100):0;}
@@ -1583,7 +1579,7 @@ function renderKpiSlide1(recs,mon){
     </div>
     <div style="border-top:2px solid #222;margin-bottom:14px"></div>
 
-    <!-- 상단 2컬럼 50/50: 좌=발생추이, 우=월별합계+알카비용 -->
+    <!-- 상단 2컬럼 50/50: row1 -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:14px;align-items:end">
 
       <!-- row1 좌: 월별 발생 추이 -->
@@ -1598,9 +1594,13 @@ function renderKpiSlide1(recs,mon){
         <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 월별 합계(연간)</div>
         ${_bars(monBars,200,30,5)}
       </div>
+    </div>
+
+    <!-- row2 비율 그리드: viewBox 너비 비율로 열 설정 → height:auto 시 자동 같은 높이 -->
+    ${(()=>{const WV=vehYtdBars.length*(3*16+2*3+10)+10,WM=g금액.length*(2*16+1*2+6)+6;return`<div style="display:grid;grid-template-columns:${WV}fr ${WM}fr;gap:20px;margin-bottom:14px;align-items:end">
 
       <!-- row2 좌: 연 발생 추이 -->
-      <div id="r2L">
+      <div>
         <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 연 발생 추이</div>
         <div style="font-size:10px;color:#555;margin-bottom:4px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])} 차종별(누계)</div>
         <div style="position:relative;padding-bottom:20px">
@@ -1610,7 +1610,7 @@ function renderKpiSlide1(recs,mon){
       </div>
 
       <!-- row2 우: 알카비용 추이 -->
-      <div id="r2R">
+      <div>
         <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 알카비용 추이</div>
         <div style="font-size:10px;color:#555;margin-bottom:4px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스']])} 단위:만원</div>
         <div style="position:relative;padding-bottom:20px">
@@ -1618,7 +1618,7 @@ function renderKpiSlide1(recs,mon){
           ${_gbarsIX(g금액,2,16,2,6)}
         </div>
       </div>
-    </div>
+    </div>`;})()}
 
     <!-- 중단: 공급 아이템 (전폭) -->
     <div style="border-top:1px solid #ddd;border-bottom:1px solid #ddd;padding:8px 0;margin-bottom:14px">
