@@ -1389,7 +1389,7 @@ function renderKpiData(){
   renderKpiSlide2(recs,mon);
   setTimeout(()=>{
     const lSvg=document.querySelector('#r2L svg'),rSvg=document.querySelector('#r2R svg');
-    if(lSvg&&rSvg){const h=lSvg.getBoundingClientRect().height;if(h>0)rSvg.style.height=h+'px';}
+    if(lSvg&&rSvg){const h=lSvg.getBoundingClientRect().height;if(h>0){rSvg.style.height=h+'px';rSvg.setAttribute('preserveAspectRatio','none');}}
   },50);
 }
 function kpiCnt(recs,pred){return recs.filter(pred).length;}
