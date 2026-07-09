@@ -1388,8 +1388,9 @@ function renderKpiData(){
   renderKpiSlide1(recs,mon);
   renderKpiSlide2(recs,mon);
   setTimeout(()=>{
-    const lSvg=document.querySelector('#r2L svg'),rSvg=document.querySelector('#r2R svg');
-    if(lSvg&&rSvg){const h=lSvg.getBoundingClientRect().height;if(h>0){rSvg.style.height=h+'px';rSvg.setAttribute('preserveAspectRatio','none');}}
+    const sync=(lId,rId)=>{const l=document.querySelector(lId+' svg'),r=document.querySelector(rId+' svg');if(l&&r){const h=l.getBoundingClientRect().height;if(h>0){r.style.height=h+'px';r.setAttribute('preserveAspectRatio','none');}}};
+    sync('#r1L','#r1R');
+    sync('#r2L','#r2R');
   },50);
 }
 function kpiCnt(recs,pred){return recs.filter(pred).length;}
@@ -1397,18 +1398,24 @@ function pct(n,t){return t?Math.round(n/t*100):0;}
 
 // ─── KPI 슬라이드 스타일 헬퍼 ────────────────────────────────
 const _SC={R:'#7B1C20',N:'#1F3864',G:'#D4900C',B:'#2D5F9B',H:'#DEEAF1',T:'#C5DCF0',A:'#EEF6FB'};
-function _bars(data,maxH,bw,gp){
+function _bars(data,maxH,bw,gp,noXLabel){
   const mx=Math.max(...data.map(d=>d.v),1);
-  const W=data.length*(bw+gp)-gp,SH=maxH+28;
+  const W=data.length*(bw+gp)-gp,SH=maxH+(noXLabel?0:28);
   let s=`<svg viewBox="0 -18 ${W} ${SH+18}" style="width:100%;height:auto;display:block;overflow:visible">`;
   data.forEach(({v,label,color},i)=>{
     const h=v?Math.max(2,Math.round(v/mx*maxH)):0;
     const x=i*(bw+gp),y=maxH-h;
     if(h)s+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" fill="${color}" rx="1"/>`;
     if(v)s+=`<text x="${x+bw/2}" y="${y-3}" text-anchor="middle" font-size="13" fill="#333" font-weight="600">${v}</text>`;
-    if(label)s+=`<text x="${x+bw/2}" y="${maxH+20}" text-anchor="middle" font-size="12" fill="#555">${label}</text>`;
+    if(label&&!noXLabel)s+=`<text x="${x+bw/2}" y="${maxH+20}" text-anchor="middle" font-size="12" fill="#555">${label}</text>`;
   });
   return s+'</svg>';
+}
+function _barsX(data,bw,gp){
+  const W=data.length*(bw+gp)-gp;
+  return`<div style="position:absolute;bottom:0;left:0;right:0;height:20px;font-size:12px;color:#555">${
+    data.map(({label},i)=>{const cx=i*(bw+gp)+bw/2;return`<span style="position:absolute;left:${(cx/W*100).toFixed(2)}%;transform:translateX(-50%);white-space:nowrap">${label||''}</span>`;}).join('')
+  }</div>`;
 }
 function _gbars(groups,colors,maxH,bw,gp,gg){
   if(!groups.length)return'';
@@ -1587,16 +1594,22 @@ function renderKpiSlide1(recs,mon){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:14px;align-items:end">
 
       <!-- row1 좌: 월별 발생 추이 -->
-      <div>
+      <div id="r1L">
         <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 월별 발생 추이</div>
         <div style="font-size:10px;color:#555;margin-bottom:4px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])} 차종별(당월)</div>
-        ${_gbarsI(vehGbars,[_SC.N,_SC.G,'#AAAAAA'],80,18,4,12)}
+        <div style="position:relative;padding-bottom:22px">
+          ${_gbarsI(vehGbars,[_SC.N,_SC.G,'#AAAAAA'],80,18,4,12,undefined,0,true)}
+          ${_gbarsIX(vehGbars,3,18,4,12)}
+        </div>
       </div>
 
       <!-- row1 우: 월별 합계(연간) -->
-      <div>
+      <div id="r1R">
         <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 월별 합계(연간)</div>
-        ${_bars(monBars,200,30,5)}
+        <div style="position:relative;padding-bottom:22px">
+          ${_bars(monBars,200,30,5,true)}
+          ${_barsX(monBars,30,5)}
+        </div>
       </div>
     </div>
 
