@@ -1593,14 +1593,14 @@ function renderKpiSlide1(recs,mon){
       <div style="display:flex;flex-direction:column;justify-content:flex-end;height:270px">
         <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 연 발생 추이</div>
         <div style="font-size:10px;color:#555;margin-bottom:4px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])} 차종별(누계)</div>
-        ${_gbarsI(vehYtdBars,[_SC.N,_SC.G,'#AAAAAA'],150,16,3,10,undefined,220)}
+        ${_gbarsI(vehYtdBars,[_SC.N,_SC.G,'#AAAAAA'],70,16,3,10,undefined,220)}
       </div>
 
       <!-- row2 우: 알카비용 추이 -->
       <div style="display:flex;flex-direction:column;justify-content:flex-end;height:270px">
         <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 알카비용 추이</div>
         <div style="font-size:10px;color:#555;margin-bottom:4px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스']])} 단위:만원</div>
-        ${_gbarsI(g금액,[_SC.N,_SC.G],150,16,2,6,1,220)}
+        ${_gbarsI(g금액,[_SC.N,_SC.G],70,16,2,6,1,220)}
       </div>
     </div>
 
