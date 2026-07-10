@@ -3496,9 +3496,15 @@ function _pptSetLines(doc,id,lines){
 }
 function _pptCellText(cell,text){
   const tb=_pptDesc(cell,'txBody');if(!tb)return;
-  const p=[...tb.childNodes].find(n=>n.localName==='p');if(!p)return;
-  const r=[...p.childNodes].find(n=>n.localName==='r');
-  if(r){const t=_pptDesc(r,'t');if(t)t.textContent=text;}
+  const ps=[...tb.childNodes].filter(n=>n.localName==='p');
+  // 첫 번째 단락만 유지, 나머지 제거
+  ps.slice(1).forEach(p=>tb.removeChild(p));
+  if(!ps[0])return;
+  const p=ps[0];
+  const rs=[...p.childNodes].filter(n=>n.localName==='r');
+  // 첫 번째 런만 유지, 나머지 제거
+  rs.slice(1).forEach(r=>p.removeChild(r));
+  if(rs[0]){const t=_pptDesc(rs[0],'t');if(t)t.textContent=text;}
 }
 function _pptFillTable(doc,id,headers,rows){
   const frame=_pptFindShape(doc,id);if(!frame)return;
