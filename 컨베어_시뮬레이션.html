@@ -3767,94 +3767,107 @@ async function generateReportV2(){
       _pptSetText(doc,1107,`공피치별 UPH·생산량·필요 인원 분석  |  보고일: ${d.dateStr}`);
       _pptSetLines(doc,1108,['1) 공피치별 생산성 현황','2) 공정 부하 및 납품 영향','3) 결론 및 건의사항']);
     });
-    // 슬라이드2: 현황 요약 섹션 타이틀
-    await mod(2,doc=>{ _pptSetText(doc,11,'공피치 적용 현황 요약'); });
-    // 슬라이드3: 공피치별 UPH/생산량 (★ 현재 기준 표시)
-    await mod(3,doc=>{
-      _pptSetText(doc,20,'공피치별 UPH 및 8시간 생산량 현황');
-      _pptFillTable(doc,2,
-        ['구분','UPH','8시간 생산','기아 대비'],
-        d.pitchRows.map(r=>[markCur(r),String(r.uph),r.prod8+'대',gapStr(r.gap)])
+    // 슬라이드2: 현황 핵심 요약
+    await mod(2,doc=>{
+      _pptSetText(doc,11,
+        d.curShortage>0
+          ?`현재 ${curLabel} 운영 중 — 기아 목표 대비 매 조 ${d.curShortage}대 부족`
+          :`현재 ${curLabel} 운영 중 — 기아 목표 충족 가능`
       );
     });
-    // 슬라이드4: 공정별 공수 부하 현황 (CT·피치초과분 포함)
-    await mod(4,doc=>{
-      _pptSetText(doc,20,`공정별 공수 부하 현황 (${curLabel} 기준 · 피치 ${Math.round(d.curPitch)}초)`);
-      _pptFillTable(doc,4,
-        ['공정명','CT(초)','부하율','피치 대비'],
-        d.overRows.slice(0,9).map(r=>[
-          r.name, r.ct.toFixed(1), r.load+'%',
-          r.excess>0?`+${r.excess}초 초과`:r.load>85?'주의':'-'
+    // 슬라이드3: 공피치별 생산량 (★ 현재)
+    await mod(3,doc=>{
+      _pptSetText(doc,20,`공피치별 시간당 생산량(UPH) 및 8시간 생산 가능 대수`);
+      _pptFillTable(doc,2,
+        ['구분','UPH','8시간 생산','기아(224대) 대비'],
+        d.pitchRows.map(r=>[
+          markCur(r),
+          r.uph+'대/h',
+          r.prod8+'대',
+          r.gap<0?`${Math.abs(r.gap)}대 부족`:r.gap===0?'목표 충족':`${r.gap}대 여유`
         ])
       );
     });
-    // 슬라이드5: 공피치별 필요 인원 (공피치 초 포함, ★ 표시)
-    await mod(5,doc=>{
-      _pptSetText(doc,20,'공피치별 필요 인원 현황');
+    // 슬라이드4: 공정별 부하 현황
+    await mod(4,doc=>{
+      const overCnt=d.overRows.filter(r=>r.load>100).length;
+      _pptSetText(doc,20,
+        overCnt>0
+          ?`공정별 작업 부하 현황 — ${curLabel} 기준 ${overCnt}개 공정 과부하`
+          :`공정별 작업 부하 현황 — ${curLabel} 기준 과부하 없음`
+      );
       _pptFillTable(doc,4,
-        ['구분','공피치(초)','필요 인원','기준 대비'],
+        ['공정명','작업시간(CT)','피치 대비 부하','상태'],
+        d.overRows.slice(0,9).map(r=>[
+          r.name,
+          r.ct.toFixed(1)+'초',
+          r.load+'%',
+          r.load>100?'과부하':r.load>85?'주의':'정상'
+        ])
+      );
+    });
+    // 슬라이드5: 공피치별 필요 인원
+    await mod(5,doc=>{
+      _pptSetText(doc,20,`공피치별 필요 인원 — 공피치가 클수록 피치 간격이 늘어 필요 인원 감소`);
+      _pptFillTable(doc,4,
+        ['구분','피치 간격','최소 필요 인원','현재 기준 대비'],
         d.pitchRows.map(r=>[
           markCur(r),
           Math.round(r.pitch)+'초',
           r.workers+'명',
-          r.workers>d.baseWorkers?`+${r.workers-d.baseWorkers}명`:'기준'
+          r.workers>d.baseWorkers?`${r.workers-d.baseWorkers}명 증원 필요`:
+          r.workers<d.baseWorkers?`${d.baseWorkers-r.workers}명 여유`:'기준 인원'
         ])
       );
     });
-    // 슬라이드6: 납품 일정 영향 (공피치 손실 + 병목 손실 분리)
+    // 슬라이드6: 납품 영향 — 문장형
     await mod(6,doc=>{
-      _pptSetText(doc,20,'납품 일정 영향 분석');
-      const lines=[
-        `■ 기아 목표: ${d.KIA_UPH} UPH / 8시간 ${d.KIA_PROD8}대`,
-        `■ 공피치(${curLabel}) 적용 손실: ${d.curUPH} UPH → 8시간 ${d.curProd8}대 (부족 ${d.curShortage}대)`,
-      ];
-      if(d.bottleneck&&d.bottleneck.load>100){
-        lines.push(`■ 병목 추가 손실: ${d.bottleneck.name} CT ${d.bottleneck.ct.toFixed(1)}초 > 피치 ${Math.round(d.curPitch)}초`);
-        lines.push(`  → 병목 기준 실현 UPH: ${d.effectiveUPH} / 8시간 ${d.effectiveProd8}대 (부족 ${d.effectiveShortage}대)`);
-      }
-      lines.push('');
-      lines.push(`■ 추가 가동 필요: 약 ${d.curAddMin}분  (1조당 ${d.curShortRnd}회 납품분 미달)`);
-      lines.push('');
-      lines.push('■ 납품 구성 (1조 기준): 5~7회 / 회당 C/PAD 6대 + 범퍼 6대');
+      _pptSetText(doc,20,'공피치 적용이 납품에 미치는 영향');
+      const lines=[];
+      lines.push(`[ 현재 운영 현황 ]`);
+      lines.push(`• 적용 공피치: ${curLabel}  /  피치 간격: ${Math.round(d.curPitch)}초`);
+      lines.push(`• 시간당 생산량(UPH): ${d.curUPH}대  →  8시간 생산: ${d.curProd8}대`);
+      lines.push(`• 기아 납품 목표: 224대  →  매 조 ${d.curShortage}대 부족 발생`);
       lines.push('');
       if(d.bottleneck&&d.bottleneck.load>100){
-        lines.push(`■ 결론: 공피치 + 병목(${d.bottleneck.name}) 복합 요인 → 목표 대비 ${d.effectiveShortage}대 부족`);
-      } else {
-        lines.push(d.curShortage>0
-          ?`■ 결론: ${curLabel} 유지 시 매 조 ${d.curShortage}대 부족 → 납품 일정 미충족 반복`
-          :`■ 결론: 공피치 해소 시 기아 목표 충족 가능 (${d.pitchRows[0]?.prod8}대)`);
+        lines.push(`[ 병목 공정 추가 손실 ]`);
+        lines.push(`• ${d.bottleneck.name} 작업시간 ${d.bottleneck.ct.toFixed(1)}초가 피치 ${Math.round(d.curPitch)}초 초과 (${d.bottleneck.load}% 부하)`);
+        lines.push(`• 이 공정이 라인 전체 속도를 제한 → 실제 UPH ${d.effectiveUPH} / 8시간 ${d.effectiveProd8}대`);
+        lines.push(`• 공피치 손실 + 병목 손실 합산 → 목표 대비 ${d.effectiveShortage}대 미달`);
+        lines.push('');
       }
+      lines.push(`[ 납품 일정 영향 ]`);
+      lines.push(`• 1조당 납품 구성: 총 5~7회 / 1회당 C/PAD 6대 + 범퍼 6대`);
+      const shortage=d.bottleneck&&d.bottleneck.load>100?d.effectiveShortage:d.curShortage;
+      lines.push(`• 매 조 ${shortage}대 부족 → 납품 ${Math.ceil(shortage/6)}회분 정시 납품 불가`);
+      lines.push(`• 목표 달성 위해 매 조 약 ${d.curAddMin}분 추가 가동 필요`);
       _pptSetLines(doc,6,lines);
     });
-    // 슬라이드7: 결론 및 건의사항 (병목 포함 구체 수치)
+    // 슬라이드7: 결론 — 문장형, 행동 중심
     await mod(7,doc=>{
-      _pptSetText(doc,20,'결론 및 건의사항');
-      const curWorkers=d.pitchRows.find(r=>r.pn===d.curEffPn)?.workers||'-';
-      const lines=[
-        '① 공피치 적용 → 즉각 UPH 저하',
-        `   기아 ${d.KIA_UPH} UPH  vs  캠스(${curLabel}) ${d.curUPH} UPH → 매 조 ${d.curShortage}대 부족`,
-        '',
-      ];
+      _pptSetText(doc,20,'종합 결론 및 개선 방향');
+      const curWorkers=d.pitchRows.find(r=>r.pn===d.curEffPn)?.workers||d.baseWorkers;
+      const noGapRow=d.pitchRows[0];
+      const lines=[];
+      lines.push(`[ 문제 요약 ]`);
+      lines.push(`• 공피치(${curLabel}) 적용으로 생산 속도 저하 → 기아 목표 224대 대비 매 조 ${d.curShortage}대 부족`);
       if(d.bottleneck&&d.bottleneck.load>100){
-        lines.push('② 공수 증가 → 병목 과부하 발생');
-        lines.push(`   ${d.bottleneck.name}  CT ${d.bottleneck.ct.toFixed(1)}초 / 피치 ${Math.round(d.curPitch)}초 → ${d.bottleneck.load}% 과부하`);
-        lines.push(`   병목 기준 실현 UPH ${d.effectiveUPH} → 8시간 ${d.effectiveShortage}대 추가 손실`);
-        lines.push('');
-        lines.push('③ 납품 일정 위협 (복합)');
-        lines.push(`   공피치 손실 ${d.curShortage}대 + 병목 손실 → 총 ${d.effectiveShortage}대 미달`);
-        lines.push(`   납품 ${Math.ceil(d.effectiveShortage/6)}회분 충족 불가 (회당 6대 기준)`);
-        lines.push('');
-        lines.push('④ 개선 필요 사항');
-        lines.push(`   - 병목 공정(${d.bottleneck.name}) CT ${d.bottleneck.ct.toFixed(1)}초 → ${Math.round(d.curPitch)}초 이하로 개선 필요`);
-        lines.push(`   - 공피치 해소: 기준 ${d.baseWorkers}명 → 현재 ${curWorkers}명`);
-        lines.push(`   - 1:1 적용 시: ${d.pitchRows[1]?.uph} UPH / ${d.pitchRows[1]?.prod8}대 가능`);
+        lines.push(`• ${d.bottleneck.name} 작업시간 초과(${d.bottleneck.load}%)로 라인 추가 지연 발생`);
+      }
+      lines.push('');
+      lines.push(`[ 공피치 해소 시 기대 효과 ]`);
+      lines.push(`• 공피치 없음 기준: ${noGapRow.uph}대/h → 8시간 ${noGapRow.prod8}대 생산 가능`);
+      lines.push(`• 필요 인원: ${noGapRow.workers}명  (현재 ${curLabel} 기준 ${curWorkers}명)`);
+      lines.push('');
+      lines.push(`[ 개선 방향 ]`);
+      if(d.bottleneck&&d.bottleneck.load>100){
+        lines.push(`• 우선: ${d.bottleneck.name} 작업시간을 피치 ${Math.round(d.curPitch)}초 이내로 개선`);
+      }
+      if(d.curShortage>0){
+        lines.push(`• 공피치 해소 추진 — 인원 ${noGapRow.workers}명 확보 시 목표 달성 가능`);
+        lines.push(`• 단기: 매 조 ${d.curAddMin}분 연장 가동으로 부족분(${d.curShortage}대) 보완`);
       } else {
-        lines.push('② 납품 일정 위협');
-        lines.push(`   1조당 ${d.curShortage}대 미달 → 납품 ${d.curShortRnd}회분 충족 불가 (회당 6대 기준)`);
-        lines.push('');
-        lines.push('③ 개선 필요 사항');
-        lines.push(`   - 공피치 해소: 기준 ${d.baseWorkers}명 → 현재 ${curWorkers}명 운영 중`);
-        lines.push(`   - 1:1 적용 시: ${d.pitchRows[1]?.uph} UPH / ${d.pitchRows[1]?.prod8}대 생산 가능`);
+        lines.push(`• 현재 공피치 조건에서 목표 달성 가능 — 유지 권고`);
       }
       lines.push('');
       lines.push(`보고일: ${d.dateStr}  |  생산팀`);
