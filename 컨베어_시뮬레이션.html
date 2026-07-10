@@ -3509,10 +3509,18 @@ function _pptCellText(cell,text){
 function _pptFillTable(doc,id,headers,rows){
   const frame=_pptFindShape(doc,id);if(!frame)return;
   const tbl=_pptDesc(frame,'tbl');if(!tbl)return;
-  const trs=[...tbl.childNodes].filter(n=>n.localName==='tr');
+  let trs=[...tbl.childNodes].filter(n=>n.localName==='tr');
+  // 헤더 채우기
   if(trs[0]){
     const cells=[...trs[0].childNodes].filter(n=>n.localName==='tc');
     headers.forEach((h,j)=>{if(cells[j])_pptCellText(cells[j],h);});
+  }
+  // 데이터 행이 템플릿보다 많으면 마지막 행 복제해서 확장
+  const lastTplRow=trs[trs.length-1];
+  while(trs.length-1<rows.length&&lastTplRow){
+    const cloned=lastTplRow.cloneNode(true);
+    tbl.appendChild(cloned);
+    trs=[...tbl.childNodes].filter(n=>n.localName==='tr');
   }
   rows.forEach((row,i)=>{
     if(!trs[i+1])return;
