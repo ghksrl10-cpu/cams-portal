@@ -259,6 +259,7 @@
     <div class="nav-item" id="nl0" onclick="gotoSim(0)"><span class="ic">🏭</span> 조립 1라인</div>
     <div class="nav-item" id="nl1" onclick="gotoSim(1)"><span class="ic">🏭</span> 조립 2라인</div>
     <div class="nav-item" id="nl2" onclick="gotoSim(2)"><span class="ic">🏭</span> 조립 3라인</div>
+    <div class="nav-item" id="nl5" onclick="gotoSim(5)"><span class="ic">🏭</span> 조립 3라인 공정별</div>
     <div class="nav-item" id="nl3" onclick="gotoSim(3)"><span class="ic">🏗</span> 함평</div>
     <div class="nav-item" id="nl4" onclick="gotoSim(4)"><span class="ic">🏗</span> 전주</div>
   </nav>
@@ -521,7 +522,7 @@
         <label class="btn" style="font-size:13px;padding:6px 14px;cursor:pointer">📂 가져오기<input type="file" accept=".json" style="display:none" onchange="importSimConfig(this)"></label>
         <button class="btn" style="font-size:13px;padding:6px 14px" onclick="gotoSim(2)">📋 공정입력</button>
         <button class="btn" style="font-size:13px;padding:6px 14px;background:#1e3a5f;border-color:#2563eb;color:#93c5fd" onclick="generateReportV1()">📋 원본형 보고서</button>
-        <button class="btn" style="font-size:13px;padding:6px 14px;background:#312e81;border-color:#4f46e5;color:#a5b4fc" onclick="generateReportV2()">📊 데이터형 보고서</button>
+        <button class="btn" style="font-size:13px;padding:6px 14px;background:#0e3a3f;border-color:#1DA1A8;color:#7de8ed" onclick="generateReportV3()">🎨 신형 보고서</button>
         <button class="btn" style="font-size:13px;padding:6px 14px;background:#1a3a2a;border-color:#16a34a;color:#86efac" onclick="showRedistModal()">🔄 재배분 시나리오</button>
       </div>
       <script>document.addEventListener('click',()=>{['recoverMenu','scenPickMenu','simScenMenu'].forEach(id=>{const m=document.getElementById(id);if(m)m.style.display='none';});});</script>
@@ -564,7 +565,7 @@
             ⚠️ 과부하 · 납품 영향 분석
             <span id="overloadBadge" style="font-size:16px;margin-left:auto"></span>
             <button class="btn" style="font-size:12px;padding:5px 12px;background:#1e3a5f;border-color:#2563eb;color:#93c5fd;margin-left:8px" onclick="event.stopPropagation();generateReportV1()">📋 원본형</button>
-            <button class="btn" style="font-size:12px;padding:5px 12px;background:#312e81;border-color:#4f46e5;color:#a5b4fc;margin-left:4px" onclick="event.stopPropagation();generateReportV2()">📊 데이터형</button>
+            <button class="btn" style="font-size:12px;padding:5px 12px;background:#0e3a3f;border-color:#1DA1A8;color:#7de8ed;margin-left:4px" onclick="event.stopPropagation();generateReportV3()">🎨 신형</button>
           </div>
           <div id="overloadBody">
             <div id="overloadContent" style="padding:12px 14px;font-size:20px;line-height:1.7"></div>
@@ -588,7 +589,7 @@
     messagingSenderId:"404254094434",
     appId:"1:404254094434:web:b4193a15de4153b9aa0d3b"
   };
-  const SYNC_KEYS=['conv_struct_2_0','conv_scen4'];
+  const SYNC_KEYS=['conv_struct_2_0','conv_struct_5_0','conv_scen4'];
   // 추가 conv_struct 키 동적 수집 포함
   function allSyncKeys(){
     const keys=new Set(SYNC_KEYS);
@@ -722,6 +723,7 @@ const LINE_DEF=[
   {name:'조립 3라인',subs:['C/PAD','범퍼']},
   {name:'함평',subs:['FRT','RR']},
   {name:'전주',subs:['FRT','RR']},
+  {name:'조립 3라인 공정별',subs:['C/PAD']},
 ];
 const DEF_LINE12=[
   {name:'101', task:'', group:'', fastener:'', note:'', empty:false},
@@ -767,22 +769,33 @@ const DEF_CPAD=[
   {name:'SUB1',          task:'에어덕트, USB 모듈',                     group:'SUB', fastener:'', note:'', empty:false, workers:1, ct:0},
   {name:'SUB2',          task:'AVN BRKT, LTE 모듈 (AVN 사양)',          group:'SUB', fastener:'', note:'', empty:false, workers:1, ct:0},
 ];
+// 조립 3라인 공정별 — 1~6공정 합치지 않고 한 공정씩 개별 입력
+const DEF_CPAD_SPLIT=DEF_CPAD.map((d,i)=>{
+  const c={...d};
+  delete c.taskSpan;delete c.workerSpan;delete c.ctSpan;
+  if(i<6){c.task='';c.fastener='';c.note=_C3N;c.workers=1;c.ct=0;}
+  return c;
+});
+function _mapCpadRows(defs){
+  return defs.map((d,i)=>{
+    const parseF=(pat)=>{const m=(d.fastener||'').match(pat);return m?parseInt(m[1]):0;};
+    const fShex=parseF(/S육각\s*(\d+)\s*EA/i)||parseF(/(?<![B-Z])육각\s*(\d+)\s*EA/i);
+    const fBhex=parseF(/B육각\s*(\d+)\s*EA/i)||parseF(/융각\s*(\d+)\s*EA/i);
+    return {conv:i+1, parallel:1, fNut:0, fScrew:0, fShex:0, fBhex:0,
+      ...d,  // 정의값 우선 (group, empty, ct, workers, taskSpan 등 보존)
+      fNut:parseF(/너트\s*(\d+)\s*EA/i),
+      fScrew:parseF(/스크류\s*(\d+)\s*EA/i),
+      fShex, fBhex
+    };
+  });
+}
 function makeRows(li,si){
   if(li<2) // 조립 1·2라인
     return DEF_LINE12.map((d,i)=>({conv:i+1,...d,empty:false,ct:0,workers:1,parallel:1}));
-  if(li===2&&si===0){ // 조립 3라인 C/PAD — DEF_CPAD 값 그대로 보존
-    return DEF_CPAD.map((d,i)=>{
-      const parseF=(pat)=>{const m=(d.fastener||'').match(pat);return m?parseInt(m[1]):0;};
-      const fShex=parseF(/S육각\s*(\d+)\s*EA/i)||parseF(/(?<![B-Z])육각\s*(\d+)\s*EA/i);
-      const fBhex=parseF(/B육각\s*(\d+)\s*EA/i)||parseF(/융각\s*(\d+)\s*EA/i);
-      return {conv:i+1, parallel:1, fNut:0, fScrew:0, fShex:0, fBhex:0,
-        ...d,  // DEF_CPAD 값 우선 (group, empty, ct, workers, taskSpan 등 보존)
-        fNut:parseF(/너트\s*(\d+)\s*EA/i),
-        fScrew:parseF(/스크류\s*(\d+)\s*EA/i),
-        fShex, fBhex
-      };
-    });
-  }
+  if(li===2&&si===0) // 조립 3라인 C/PAD — DEF_CPAD 값 그대로 보존
+    return _mapCpadRows(DEF_CPAD);
+  if(li===5&&si===0) // 조립 3라인 공정별 — 1~6공정 개별
+    return _mapCpadRows(DEF_CPAD_SPLIT);
   return[];
 }
 // ── 페이지 로드 즉시 localStorage 검증 (Firebase보다 먼저 실행) ──
@@ -846,7 +859,7 @@ function gotoSim(li){
   showView('sim');
   buildStabs();loadLineData();
   document.getElementById('simTitle').textContent=LINE_DEF[li].name+' — '+LINE_DEF[li].subs[0];
-  document.querySelectorAll('[id^=nl]').forEach((el,i)=>el.classList.toggle('active',i===li));
+  document.querySelectorAll('[id^=nl]').forEach(el=>el.classList.toggle('active',el.id==='nl'+li));
 }
 function recoverFromScenario(){
   // localStorage 또는 Firebase에서 시나리오 찾아 행 데이터 복원
@@ -931,7 +944,7 @@ function importSimConfig(input){
 function goto2D(){
   if(curLine!==2){curLine=2;curSub=0;buildStabs();loadLineData();}
   showView('2d');
-  document.querySelectorAll('[id^=nl]').forEach((el,i)=>el.classList.toggle('active',i===2));
+  document.querySelectorAll('[id^=nl]').forEach(el=>el.classList.toggle('active',el.id==='nl2'));
   toggleNav(false);
 }
 function toggleNav(open){
@@ -1100,7 +1113,7 @@ function render(){
       ${_effWS[di]===0?'':`<td class="${offC}" ${_effWS[di]>1?`rowspan="${_effWS[di]}" style="vertical-align:middle;text-align:center"`:''}><input type="number" value="${r.workers}" min="0" onchange="updNum(${i},'workers',+this.value)" ${r.empty?'disabled':''}></td>`}
       ${_effTS[di]===0?'':`<td class="val ${r.empty?'off':ctCls}" ${span>1?`rowspan="${span}" style="vertical-align:middle;text-align:center;color:${r.empty?'var(--mut)':''}"`:''}>${r.empty?'공백':realCT>0?realCT.toFixed(1)+'초':''}</td>`}
       ${_effTS[di]===0?'':`<td class="val" ${span>1?`rowspan="${span}" style="vertical-align:middle;text-align:center;color:${slColor}"`:`style="color:${slColor}"`}>${r.empty?'—':slackPct!==null?slackPct+'%':''}</td>`}
-      ${_effTS[di]===0?'':(curLine===2?`<td class="ltxt ${emC}" ${span>1?`rowspan="${span}" style="vertical-align:middle;padding:6px 8px"`:'style="padding:6px 8px"'}><div style="display:flex;flex-direction:column;gap:5px">
+      ${_effTS[di]===0?'':((curLine===2||curLine===5)?`<td class="ltxt ${emC}" ${span>1?`rowspan="${span}" style="vertical-align:middle;padding:6px 8px"`:'style="padding:6px 8px"'}><div style="display:flex;flex-direction:column;gap:5px">
         <div style="display:flex;align-items:center;gap:2px"><span style="font-size:11px;width:30px;color:var(--mut)">너트</span><input type="number" value="${r.fNut||0}" min="0" onchange="updNum(${i},'fNut',+this.value)" style="width:48px;text-align:right;font-size:12px" ${r.empty?'disabled':''}><span style="font-size:10px;color:var(--mut)">EA</span></div>
         <div style="display:flex;align-items:center;gap:2px"><span style="font-size:11px;width:30px;color:var(--mut)">스크류</span><input type="number" value="${r.fScrew||0}" min="0" onchange="updNum(${i},'fScrew',+this.value)" style="width:48px;text-align:right;font-size:12px" ${r.empty?'disabled':''}><span style="font-size:10px;color:var(--mut)">EA</span></div>
         <div style="display:flex;align-items:center;gap:2px"><span style="font-size:11px;width:30px;color:var(--mut)">S육각</span><input type="number" value="${r.fShex||0}" min="0" onchange="updNum(${i},'fShex',+this.value)" style="width:48px;text-align:right;font-size:12px" ${r.empty?'disabled':''}><span style="font-size:10px;color:var(--mut)">EA</span></div>
@@ -1109,7 +1122,7 @@ function render(){
       ${_effTS[di]===0?'':`<td class="ltxt ${emC}" ${span>1?`rowspan="${span}" style="vertical-align:middle"`:''}><textarea style="width:100%;height:${span>1?span*52:52}px;max-height:${span>1?span*52:52}px;background:transparent;border:none;color:inherit;font:inherit;resize:none;padding:2px 4px;overflow-y:auto;font-size:12px" oninput="upd(${i},'note',this.value);autoSaveCT()" placeholder="관리항목">${esc(r.note)}</textarea></td>`}
       <td style="text-align:center;white-space:nowrap;vertical-align:middle">
         <button class="btn sml" onclick="insertRow(${i})" style="margin-bottom:3px;width:52px">+ 삽입</button><br>
-        <button class="btn sml" onclick="curLine===2?openDistPanel('ct'):openDist(${i})" style="margin-bottom:3px;width:52px">🔀 배분</button><br>
+        <button class="btn sml" onclick="(curLine===2||curLine===5)?openDistPanel('ct'):openDist(${i})" style="margin-bottom:3px;width:52px">🔀 배분</button><br>
         <button class="btn sml warn" onclick="delRow(${i})" style="width:52px">삭제</button>
       </td>`;
     tbody.appendChild(tr);
@@ -1280,7 +1293,7 @@ function resetRows(){if(!confirm('초기화하시겠습니까?'))return;state[cu
 /* ─── 기아 인정표 C/T 계산기 ─────────────────── */
 let _ctCalcIdx=-1;
 function openCTCalc(i){
-  if(curLine===2){openCTCalc3(i);return;}
+  if(curLine===2||curLine===5){openCTCalc3(i);return;}
   _ctCalcIdx=i;
   const r=G().rows[i];
   document.getElementById('ctcProcName').textContent=r.name||('공정 '+(i+1));
@@ -3455,6 +3468,7 @@ window.addEventListener('message', e => {
 
 <!-- ===== 보고서 작성 ===== -->
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <script>
 // ── JSZip PPTX 헬퍼 ──────────────────────────────────
 function _pptFindShape(doc, id){
@@ -3527,10 +3541,28 @@ function _pptFillTable(doc,id,headers,rows){
     const cells=[...trs[i+1].childNodes].filter(n=>n.localName==='tc');
     row.forEach((v,j)=>{if(cells[j])_pptCellText(cells[j],String(v));});
   });
-  for(let i=rows.length+1;i<trs.length;i++){
-    const cells=[...trs[i].childNodes].filter(n=>n.localName==='tc');
-    cells.forEach(c=>_pptCellText(c,''));
+  // 데이터보다 많은 행은 삭제 (빈 행 공백 방지)
+  while(trs.length-1>rows.length){
+    tbl.removeChild(trs[trs.length-1]);
+    trs=[...tbl.childNodes].filter(n=>n.localName==='tr');
   }
+}
+function _pptStyleBox(doc,id,opts){
+  // opts: {anchor:'t'|'ctr', sz:1400, y:EMU, cy:EMU}
+  const sp=_pptFindShape(doc,id);if(!sp)return;
+  const txBody=_pptDesc(sp,'txBody');
+  if(opts.anchor&&txBody){
+    const bodyPr=[...txBody.childNodes].find(n=>n.localName==='bodyPr');
+    if(bodyPr)bodyPr.setAttribute('anchor',opts.anchor);
+  }
+  if(opts.sz&&txBody){
+    for(const rPr of [...txBody.getElementsByTagName('*')].filter(e=>e.localName==='rPr'))
+      rPr.setAttribute('sz',String(opts.sz));
+  }
+  const xfrm=[...sp.getElementsByTagName('*')].find(e=>e.localName==='xfrm');
+  if(!xfrm)return;
+  if(opts.y!==undefined){const off=[...xfrm.childNodes].find(n=>n.localName==='off');if(off)off.setAttribute('y',String(opts.y));}
+  if(opts.cy!==undefined){const ext=[...xfrm.childNodes].find(n=>n.localName==='ext');if(ext)ext.setAttribute('cy',String(opts.cy));}
 }
 
 // ── 공통 데이터 계산 ────────────────────────────────
@@ -3757,6 +3789,9 @@ async function generateReportV1(){
 async function generateReportV2(){
   try{
     const d=_rptCalcData();
+    // 공정 데이터 없으면 중단
+    const _totalCT=G().rows.reduce((s,r)=>s+(r.ct||0),0);
+    if(_totalCT===0){_toast('공정 데이터가 없습니다. 시뮬레이션에서 공정을 먼저 설정해주세요.');return;}
     const zip=await _rptLoadZip(true);
     const parser=new DOMParser(), ser=new XMLSerializer();
     const gapStr=g=>g<0?`▼${Math.abs(g)}대`:g>0?`▲${g}대`:'동일';
@@ -3775,111 +3810,178 @@ async function generateReportV2(){
       _pptSetText(doc,1107,`공피치별 UPH·생산량·필요 인원 분석  |  보고일: ${d.dateStr}`);
       _pptSetLines(doc,1108,['1) 공피치별 생산성 현황','2) 공정 부하 및 납품 영향','3) 결론 및 건의사항']);
     });
-    // 슬라이드2: 현황 핵심 요약
+    // 슬라이드2: 핵심 현황 — 결론 먼저 (title=id=11, body=id=2, table=id=4 비우기)
     await mod(2,doc=>{
+      const achievePct2=Math.round(d.curProd8/224*100);
       _pptSetText(doc,11,
         d.curShortage>0
-          ?`현재 ${curLabel} 운영 중 — 기아 목표 대비 매 조 ${d.curShortage}대 부족`
-          :`현재 ${curLabel} 운영 중 — 기아 목표 충족 가능`
+          ?`현재 ${curLabel} — 8시간 ${d.curProd8}대 생산 / 기아 목표 ${d.curShortage}대 미달`
+          :`현재 ${curLabel} — 기아 목표 224대 달성 가능`
+      );
+      const noGapRow2=d.pitchRows[0];
+      const totalCT2=d.overRows.reduce((s,r)=>s+r.ct,0);
+      const bodyLines2=[
+        `피치 간격 ${Math.round(d.curPitch)}초  /  UPH ${d.curUPH}대/h  /  8시간 생산 ${d.curProd8}대`,
+        `기아 목표 224대 대비 ${d.curShortage}대 ${d.curShortage>0?'부족':'여유'} — 달성률 ${achievePct2}%`,
+      ];
+      if(d.bottleneck&&d.bottleneck.load>100){
+        bodyLines2.push(`병목: ${d.bottleneck.name} ${d.bottleneck.load}% 과부하 → 실제 생산 ${d.effectiveProd8}대`);
+      }
+      if(d.curShortage>0){
+        bodyLines2.push(`공피치 해소 시: ${noGapRow2.prod8}대 가능 (+${noGapRow2.prod8-d.curProd8}대 회복)`);
+      }
+      bodyLines2.push('');
+      bodyLines2.push(`대상 공정 ${d.overRows.length}개  /  총 CT ${Math.round(totalCT2)}초  /  기준 생산 ${d.base}대/일 (작업 ${d.wm}분)`);
+      if(d.curShortage>0){
+        bodyLines2.push(`일일 부족(2조 기준) ${d.curShortage*2}대/일  →  주간 ${d.curShortage*2*5}대 납품 영향`);
+        if(d.curAddMin>0&&d.curAddMin<=90) bodyLines2.push(`단기 보완: 매 조 ${d.curAddMin}분 연장 → 당일 부족분 해소 가능`);
+      }
+      _pptSetLines(doc,2,bodyLines2);
+      // 폰트 16pt, 상단 정렬, 내용에 맞게 박스 높이 축소
+      _pptStyleBox(doc,2,{anchor:'t',sz:1600,cy:Math.round(bodyLines2.length*320000+300000)});
+      // 슬라이드2 하단 테이블: 공피치 비교 데이터로 채우기
+      const curW2=d.pitchRows.find(r=>r.pn===d.curEffPn)?.workers||d.baseWorkers;
+      _pptFillTable(doc,4,
+        ['구분',`현재 (${curLabel})`,'공피치 없음'],
+        [
+          ['생산량(8시간)',`${d.curProd8}대`,`${noGapRow2.prod8}대 (+${noGapRow2.prod8-d.curProd8}대)`],
+          ['목표 달성률',`${achievePct2}%`,`${Math.round(noGapRow2.prod8/224*100)}%`],
+          ['필요 인원',`${curW2}명`,`${noGapRow2.workers}명 (+${noGapRow2.workers-curW2}명)`]
+        ]
       );
     });
-    // 슬라이드3: 공피치별 생산량 (★ 현재)
+    // 슬라이드3: 공피치별 생산량 — 테이블 헤더2열 맞춤
     await mod(3,doc=>{
-      _pptSetText(doc,20,`공피치별 시간당 생산량(UPH) 및 8시간 생산 가능 대수`);
+      const noGapRow=d.pitchRows[0];
+      _pptSetText(doc,20,
+        d.curShortage>0
+          ?`공피치 없음 ${noGapRow.prod8}대 vs 현재 ${curLabel} ${d.curProd8}대 — ${d.curShortage}대 차이`
+          :`현재 ${curLabel}에서 기아 목표 달성 중`
+      );
+      // 템플릿 테이블: 헤더2열·데이터4열 구조 → 헤더2열로 맞추고 3,4열 빈값으로 덮어쓰기
       _pptFillTable(doc,2,
-        ['구분','UPH','8시간 생산','기아(224대) 대비'],
+        ['구분','UPH / 8시간 생산 / 기아 목표 대비'],
         d.pitchRows.map(r=>[
           markCur(r),
-          r.uph+'대/h',
-          r.prod8+'대',
-          r.gap<0?`${Math.abs(r.gap)}대 부족`:r.gap===0?'목표 충족':`${r.gap}대 여유`
-        ])
+          `${r.uph}대/h  ·  ${r.prod8}대  ·  ${r.gap<0?'▼'+Math.abs(r.gap)+'대 부족':r.gap===0?'목표 충족':'▲'+r.gap+'대 여유'}`,
+          '','']  // 3,4번째 셀 원본 내용 제거
+        )
       );
     });
-    // 슬라이드4: 공정별 부하 현황
+    // 슬라이드4: 공정별 부하 — 테이블 헤더2열 맞춤
     await mod(4,doc=>{
       const overCnt=d.overRows.filter(r=>r.load>100).length;
       _pptSetText(doc,20,
         overCnt>0
-          ?`공정별 작업 부하 현황 — ${curLabel} 기준 ${overCnt}개 공정 과부하`
-          :`공정별 작업 부하 현황 — ${curLabel} 기준 과부하 없음`
+          ?`과부하 공정 ${overCnt}개 — ${d.bottleneck.name} ${d.bottleneck.load}%, 라인 속도 제한 중`
+          :`전 공정 정상 부하 — ${curLabel} 기준 과부하 없음`
       );
+      const src4=d.overRows.length>0?d.overRows.slice(0,9):[{name:'공정 데이터 없음',ct:0,load:0}];
       _pptFillTable(doc,4,
-        ['공정명','작업시간(CT)','피치 대비 부하','상태'],
-        d.overRows.slice(0,9).map(r=>[
+        ['공정명','CT / 부하율 / 상태'],
+        src4.map(r=>[
           r.name,
-          r.ct.toFixed(1)+'초',
-          r.load+'%',
-          r.load>100?'과부하':r.load>85?'주의':'정상'
-        ])
+          r.load>0?`${r.ct.toFixed(1)}초  ·  ${r.load}%  ·  ${r.load>100?'과부하':r.load>85?'주의':'정상'}`:'—',
+          '','']
+        )
       );
     });
-    // 슬라이드5: 공피치별 필요 인원
+    // 슬라이드5: 공피치별 필요 인원 — 테이블 헤더2열 맞춤
     await mod(5,doc=>{
-      _pptSetText(doc,20,`공피치별 필요 인원 — 공피치가 클수록 피치 간격이 늘어 필요 인원 감소`);
+      const noGapRow=d.pitchRows[0];
+      const curWorkers5=d.pitchRows.find(r=>r.pn===d.curEffPn)?.workers||d.baseWorkers;
+      _pptSetText(doc,20,
+        noGapRow.workers>curWorkers5
+          ?`공피치 해소 시 ${noGapRow.workers}명 필요 — 현재 ${curWorkers5}명 대비 ${noGapRow.workers-curWorkers5}명 증원`
+          :`공피치 해소 시에도 인원 동일 (${curWorkers5}명 기준)`
+      );
       _pptFillTable(doc,4,
-        ['구분','피치 간격','최소 필요 인원','현재 기준 대비'],
-        d.pitchRows.map(r=>[
-          markCur(r),
-          Math.round(r.pitch)+'초',
-          r.workers+'명',
-          r.workers>d.baseWorkers?`${r.workers-d.baseWorkers}명 증원 필요`:
-          r.workers<d.baseWorkers?`${d.baseWorkers-r.workers}명 여유`:'기준 인원'
-        ])
+        ['구분','피치(초) / 필요 인원 / 현재 대비'],
+        d.pitchRows.map(r=>{
+          const diff=r.workers-curWorkers5;
+          return [
+            markCur(r),
+            `${Math.round(r.pitch)}초  ·  ${r.workers}명  ·  ${diff>0?'+'+diff+'명':diff<0?diff+'명':'현재'}`,
+            '',''];
+        })
       );
     });
-    // 슬라이드6: 납품 영향 — 문장형
+    // 슬라이드6: 납품 영향 — 간결, 핵심만
     await mod(6,doc=>{
-      _pptSetText(doc,20,'공피치 적용이 납품에 미치는 영향');
+      const achievePct=Math.round(d.curProd8/224*100);
+      const actShortage=d.bottleneck&&d.bottleneck.load>100?d.effectiveShortage:d.curShortage;
+      _pptSetText(doc,20,
+        actShortage>0
+          ?`매 조 ${actShortage}대 부족 — 목표 달성률 ${achievePct}%`
+          :`목표 달성 가능 — 납품 정상`
+      );
       const lines=[];
-      lines.push(`[ 현재 운영 현황 ]`);
-      lines.push(`• 적용 공피치: ${curLabel}  /  피치 간격: ${Math.round(d.curPitch)}초`);
-      lines.push(`• 시간당 생산량(UPH): ${d.curUPH}대  →  8시간 생산: ${d.curProd8}대`);
-      lines.push(`• 기아 납품 목표: 224대  →  매 조 ${d.curShortage}대 부족 발생`);
-      lines.push('');
+      lines.push(`현재 ${curLabel} 공피치 → 피치 간격 ${Math.round(d.curPitch)}초 → UPH ${d.curUPH}대/h`);
+      lines.push(`8시간 생산: ${d.curProd8}대  /  기아 목표: 224대  →  달성률 ${achievePct}%`);
+      if(actShortage>0) lines.push(`매 조 ${actShortage}대 부족 발생`);
       if(d.bottleneck&&d.bottleneck.load>100){
-        lines.push(`[ 병목 공정 추가 손실 ]`);
-        lines.push(`• ${d.bottleneck.name} 작업시간 ${d.bottleneck.ct.toFixed(1)}초가 피치 ${Math.round(d.curPitch)}초 초과 (${d.bottleneck.load}% 부하)`);
-        lines.push(`• 이 공정이 라인 전체 속도를 제한 → 실제 UPH ${d.effectiveUPH} / 8시간 ${d.effectiveProd8}대`);
-        lines.push(`• 공피치 손실 + 병목 손실 합산 → 목표 대비 ${d.effectiveShortage}대 미달`);
-        lines.push('');
+        lines.push(`${d.bottleneck.name} ${d.bottleneck.load}% 과부하 → 라인 속도 추가 저하 → 실제 ${d.effectiveProd8}대`);
       }
-      lines.push(`[ 납품 일정 영향 ]`);
-      lines.push(`• 1조당 납품 구성: 총 5~7회 / 1회당 C/PAD 6대 + 범퍼 6대`);
-      const shortage=d.bottleneck&&d.bottleneck.load>100?d.effectiveShortage:d.curShortage;
-      lines.push(`• 매 조 ${shortage}대 부족 → 납품 ${Math.ceil(shortage/6)}회분 정시 납품 불가`);
-      lines.push(`• 목표 달성 위해 매 조 약 ${d.curAddMin}분 추가 가동 필요`);
-      _pptSetLines(doc,6,lines);
-    });
-    // 슬라이드7: 결론 — 문장형, 행동 중심
-    await mod(7,doc=>{
-      _pptSetText(doc,20,'종합 결론 및 개선 방향');
-      const curWorkers=d.pitchRows.find(r=>r.pn===d.curEffPn)?.workers||d.baseWorkers;
+      if(actShortage>0){
+        lines.push(`일일 부족(2조 기준): ${actShortage*2}대/일  →  주간 약 ${actShortage*2*5}대 납품 차질`);
+        if(d.curAddMin>0&&d.curAddMin<=90) lines.push(`단기 대응: 매 조 ${d.curAddMin}분 연장 가동 → 당일 부족분 해소 가능`);
+      }
       const noGapRow=d.pitchRows[0];
-      const lines=[];
-      lines.push(`[ 문제 요약 ]`);
-      lines.push(`• 공피치(${curLabel}) 적용으로 생산 속도 저하 → 기아 목표 224대 대비 매 조 ${d.curShortage}대 부족`);
-      if(d.bottleneck&&d.bottleneck.load>100){
-        lines.push(`• ${d.bottleneck.name} 작업시간 초과(${d.bottleneck.load}%)로 라인 추가 지연 발생`);
-      }
       lines.push('');
-      lines.push(`[ 공피치 해소 시 기대 효과 ]`);
-      lines.push(`• 공피치 없음 기준: ${noGapRow.uph}대/h → 8시간 ${noGapRow.prod8}대 생산 가능`);
-      lines.push(`• 필요 인원: ${noGapRow.workers}명  (현재 ${curLabel} 기준 ${curWorkers}명)`);
-      lines.push('');
-      lines.push(`[ 개선 방향 ]`);
-      if(d.bottleneck&&d.bottleneck.load>100){
-        lines.push(`• 우선: ${d.bottleneck.name} 작업시간을 피치 ${Math.round(d.curPitch)}초 이내로 개선`);
+      lines.push(`▶ 공피치 해소 시: ${noGapRow.prod8}대 생산 가능 (현재 대비 +${noGapRow.prod8-d.curProd8}대)`);
+      if(noGapRow.prod8>=224) lines.push(`  → 인원 ${noGapRow.workers}명 확보 시 기아 목표 달성 가능`);
+      else lines.push(`  → 인원 ${noGapRow.workers}명, 목표까지 ${224-noGapRow.prod8}대 추가 과제`);
+      // 부하 상위 공정 목록
+      if(d.overRows.length>0){
+        lines.push('');
+        lines.push('공정별 부하 현황 (높은 순):');
+        d.overRows.slice(0,Math.min(6,d.overRows.length)).forEach(r=>{
+          lines.push(`  ${r.name}: ${r.ct.toFixed(1)}초 · ${r.load}% · ${r.load>100?'▲과부하':r.load>85?'△주의':'정상'}`);
+        });
       }
-      if(d.curShortage>0){
-        lines.push(`• 공피치 해소 추진 — 인원 ${noGapRow.workers}명 확보 시 목표 달성 가능`);
-        lines.push(`• 단기: 매 조 ${d.curAddMin}분 연장 가동으로 부족분(${d.curShortage}대) 보완`);
-      } else {
-        lines.push(`• 현재 공피치 조건에서 목표 달성 가능 — 유지 권고`);
-      }
-      lines.push('');
-      lines.push(`보고일: ${d.dateStr}  |  생산팀`);
       _pptSetLines(doc,6,lines);
+      // 박스를 제목 바로 아래(y=4cm)로 이동, 높이 14cm로 확장, 폰트 14pt 상단 정렬
+      _pptStyleBox(doc,6,{anchor:'t',sz:1400,y:1440000,cy:5040000});
+    });
+    // 슬라이드7: 결론 — 번호 행동 중심
+    await mod(7,doc=>{
+      const noGapRow=d.pitchRows[0];
+      const curWorkers=d.pitchRows.find(r=>r.pn===d.curEffPn)?.workers||d.baseWorkers;
+      _pptSetText(doc,20,
+        d.curShortage>0
+          ?`공피치 해소가 핵심 — ${noGapRow.prod8}대 달성 가능`
+          :`현재 상태 양호 — 목표 달성 중`
+      );
+      const lines=[];
+      lines.push(`현재: ${curLabel} 공피치 → 8시간 ${d.curProd8}대 / 목표 224대 → ${d.curShortage}대 ${d.curShortage>0?'부족':'여유'} (달성률 ${Math.round(d.curProd8/224*100)}%)`);
+      if(d.bottleneck&&d.bottleneck.load>100){
+        lines.push(`${d.bottleneck.name} 과부하(${d.bottleneck.load}%) → 라인 속도 추가 제한`);
+      }
+      if(d.curShortage>0) lines.push(`일일 부족(2조): ${d.curShortage*2}대/일  →  주간 ${d.curShortage*2*5}대 납품 영향`);
+      lines.push('');
+      if(d.curShortage>0){
+        let step=1;
+        if(d.bottleneck&&d.bottleneck.load>100){
+          lines.push(`${step++}) ${d.bottleneck.name} CT 단축 → 병목 해소 (피치 ${Math.round(d.curPitch)}초 이내 목표)`);
+        }
+        lines.push(`${step++}) 공피치 해소 추진 → ${noGapRow.prod8}대 달성 (+${noGapRow.prod8-d.curProd8}대), 인원 ${noGapRow.workers}명 필요`);
+        if(d.curAddMin<=90){
+          lines.push(`${step++}) 단기: 매 조 ${d.curAddMin}분 연장 가동으로 부족분(${d.curShortage}대) 즉시 보완`);
+        }
+        lines.push(`  → 공피치 해소 목표 달성률: ${Math.round(noGapRow.prod8/224*100)}%`);
+      } else {
+        lines.push(`현재 공피치 조건에서 기아 목표 충족 중 → 현 운영 유지`);
+        if(d.overRows[0]) lines.push(`  최고 부하 공정: ${d.overRows[0].name} ${d.overRows[0].load}%`);
+      }
+      // 공피치별 요약
+      lines.push('');
+      lines.push('공피치별 생산량 요약:');
+      lines.push('  '+d.pitchRows.map(r=>`${r.pn===d.curEffPn?'★':' '}${r.label}: ${r.prod8}대`).join('  /  '));
+      lines.push('');
+      lines.push(`보고일: ${d.dateStr}  /  생산팀`);
+      _pptSetLines(doc,6,lines);
+      // 폰트 14pt, 상단 정렬, 내용에 맞게 박스 높이 조정
+      _pptStyleBox(doc,6,{anchor:'t',sz:1400,cy:Math.round(lines.length*290000+400000)});
     });
     // 슬라이드8: 재배분 시나리오 분석은 PPTX 구조 조작 위험으로 HTML 모달로만 제공
     if(false && d.redistAnalysis){
