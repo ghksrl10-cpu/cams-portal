@@ -942,9 +942,9 @@ function importSimConfig(input){
   reader.readAsText(file);
 }
 function goto2D(){
-  if(curLine!==2){curLine=2;curSub=0;buildStabs();loadLineData();}
+  if(curLine!==2&&curLine!==5){curLine=2;curSub=0;buildStabs();loadLineData();}
   showView('2d');
-  document.querySelectorAll('[id^=nl]').forEach(el=>el.classList.toggle('active',el.id==='nl2'));
+  document.querySelectorAll('[id^=nl]').forEach(el=>el.classList.toggle('active',el.id==='nl'+curLine));
   toggleNav(false);
 }
 function toggleNav(open){
@@ -1865,7 +1865,9 @@ function apply2DScen(id){
   if(sc.ratio){const n=parseInt(sc.ratio);if(!isNaN(n))document.getElementById('pitchRatio').value=n;}
   if(sc.base)document.getElementById('baseProd').value=sc.base;
   calcPitch();
+  window._skip2dRestore=true; // 방금 적용한 시나리오가 autoRestore로 지워지지 않게
   goto2D();
+  _toast('✅ ['+sc.name+'] 적용 완료');
 }
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -2506,7 +2508,10 @@ function init2D(){
   const isSUB=r=>r.group==='SUB'||(r.name||'').toUpperCase().startsWith('SUB')||(r.name||'').includes('서브');
   // 데이터 이상 시 자동 복구 (행수 부족 OR 상단 공정 CT 전부 0)
   (function autoRestore(){
+    // 시나리오 직후 1회 스킵 — 방금 적용한 시나리오를 기본값으로 되돌리지 않음
+    if(window._skip2dRestore){window._skip2dRestore=false;return;}
     if(!G().rows||G().rows.length<6){return _doRestore();}
+    if(curLine!==2)return; // 기본값 복구는 조립 3라인(병합형)만
     const mn=G().rows.filter(r=>!isSUB(r));
     const half=Math.ceil(mn.length/2);
     const top=mn.slice(half);
@@ -2514,8 +2519,9 @@ function init2D(){
     if(top.length>=9&&top.every(r=>!(r.ct>0))){_doRestore();}
   })();
   function _doRestore(){
-    const key='conv_struct_2_0';
-    localStorage.setItem(key,JSON.stringify(JSON.parse(JSON.stringify(DEF_CPAD))));
+    const key='conv_struct_'+curLine+'_'+curSub;
+    const def=curLine===5?DEF_CPAD_SPLIT:DEF_CPAD;
+    localStorage.setItem(key,JSON.stringify(JSON.parse(JSON.stringify(def))));
     loadLineData();
     if(typeof _simPushCloud==='function')setTimeout(_simPushCloud,500);
   }
