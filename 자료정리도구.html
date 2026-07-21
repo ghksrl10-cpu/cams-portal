@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>자료 정리 도구</title>
+<style>
+@font-face { font-family:'Pretendard'; font-weight:400; src:url('https://unpkg.com/pretendard@1.3.9/dist/web/static/woff2/Pretendard-Regular.woff2') format('woff2'); }
+@font-face { font-family:'Pretendard'; font-weight:500; src:url('https://unpkg.com/pretendard@1.3.9/dist/web/static/woff2/Pretendard-Medium.woff2') format('woff2'); }
+@font-face { font-family:'Pretendard'; font-weight:600; src:url('https://unpkg.com/pretendard@1.3.9/dist/web/static/woff2/Pretendard-SemiBold.woff2') format('woff2'); }
+@font-face { font-family:'Pretendard'; font-weight:700; src:url('https://unpkg.com/pretendard@1.3.9/dist/web/static/woff2/Pretendard-Bold.woff2') format('woff2'); }
+@font-face { font-family:'Pretendard'; font-weight:800; src:url('https://unpkg.com/pretendard@1.3.9/dist/web/static/woff2/Pretendard-ExtraBold.woff2') format('woff2'); }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Pretendard','Malgun Gothic',sans-serif; background:#e9edf2; color:#333a42; -webkit-font-smoothing:antialiased; }
+
+/* ═══ 툴바 ═══ */
+#toolbar { position:sticky; top:0; z-index:50; background:#17395f; color:#fff; padding:10px 18px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; box-shadow:0 2px 8px rgba(0,0,0,.25); }
+#toolbar .logo { font-weight:800; font-size:17px; letter-spacing:-0.4px; margin-right:6px; }
+#toolbar select, #toolbar button { font-family:inherit; font-size:13.5px; font-weight:700; border:none; border-radius:8px; padding:7px 14px; cursor:pointer; }
+#toolbar select { background:#fff; color:#17395f; max-width:220px; }
+#toolbar button { background:#2f6fd0; color:#fff; }
+#toolbar button:hover { background:#4a86e0; }
+#toolbar button.green { background:#2e7d4f; }
+#toolbar button.gray { background:#5a6572; }
+#toolbar button.red { background:#c0392b; }
+#toolbar .sp { flex:1; }
+#hint { background:#fffbe8; border-bottom:1.5px solid #e8dfb0; color:#6b5d1e; font-size:12.5px; font-weight:600; padding:6px 18px; }
+
+/* ═══ 캔버스 ═══ */
+#wrap { overflow:auto; padding:22px; }
+#canvas { width:1600px; background:#fff; padding:20px 24px 16px; margin:0 auto; box-shadow:0 3px 14px rgba(20,40,80,.15); }
+b { font-weight:700; }
+[contenteditable]:hover { outline:1.5px dashed #9ec2f0; outline-offset:2px; }
+[contenteditable]:focus { outline:2px solid #2f6fd0; outline-offset:2px; background:#f4f9ff; }
+
+.titlerow { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+.titletab { border-radius:9px; padding:7px 24px; font-weight:800; font-size:21px; letter-spacing:-0.5px; color:#fff; background:#17395f; }
+.legend { font-size:14px; font-weight:700; letter-spacing:-0.3px; flex:1; }
+
+.secrow { display:flex; align-items:center; margin-bottom:9px; gap:10px; }
+.tab { display:inline-block; border-radius:9px; padding:6px 20px; font-weight:800; font-size:18.5px; letter-spacing:-0.4px; color:#fff; }
+.gridbox { display:grid; border-radius:10px; overflow:hidden; background:#fff; border:2px solid #2c5794; }
+.gc { border-right:1px solid #e4e9ef; text-align:center; position:relative; background:#fff; padding-bottom:7px; min-height:120px; }
+.gc:last-child { border-right:none; }
+.gc .nm { font-weight:700; font-size:17px; padding:10px 4px 6px; letter-spacing:-0.4px; }
+.gc .ds { font-size:13px; font-weight:500; line-height:1.42; color:#454d57; min-height:40px; letter-spacing:-0.3px; padding:0 4px; }
+.gc .ph { height:150px; display:flex; align-items:center; justify-content:center; padding:0 5px; cursor:pointer; }
+.gc .ph img { max-width:100%; max-height:146px; }
+.gc .ph .noimg { color:#c3cad2; font-size:12px; font-weight:600; border:1.5px dashed #d5dbe2; border-radius:8px; padding:18px 10px; }
+.gc .ct { font-weight:700; font-size:15px; padding-top:4px; }
+.gc.del::after { content:''; position:absolute; inset:5px; border:2px dashed #e35050; border-radius:8px; pointer-events:none; }
+.gc.del { background:#fffbfb; }
+.gc.del .nm, .gc.del .ct { color:#e03c3c !important; }
+.gc.empty { background:#f7f9fb; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; }
+.gc.empty .nm { color:#9aa5b1 !important; font-size:14.5px; padding:0; }
+.gc.empty .lbl { color:#b6bfc9; font-size:12px; font-weight:600; }
+.deltag { display:inline-block; background:#e03c3c; color:#fff; font-size:10.5px; font-weight:700; border-radius:10px; padding:1px 7px; margin-left:4px; vertical-align:2px; }
+.gearbtn { position:absolute; top:4px; right:4px; z-index:5; background:#fff; border:1.5px solid #c9d2dc; border-radius:7px; font-size:12px; cursor:pointer; padding:1px 6px; opacity:0; transition:.15s; }
+.gc:hover .gearbtn, .mv:hover .gearbtn { opacity:1; }
+
+/* 이동 블록 존 */
+#mvzone { position:relative; margin-top:10px; }
+#mvsvg { position:absolute; inset:0; pointer-events:none; }
+.mv { position:absolute; border:2px solid; border-radius:12px; background:#fff; padding:9px 11px; width:300px; box-shadow:0 2px 7px rgba(30,50,90,.08); }
+.mv .badge { position:absolute; top:-12px; left:12px; border:2px solid; border-radius:13px; background:#fff; font-size:12.5px; font-weight:700; padding:1px 12px; }
+.mv .t { font-size:14.5px; font-weight:700; margin:3px 0 6px 2px; letter-spacing:-0.4px; }
+.mv .body { display:flex; gap:10px; align-items:center; }
+.mv .body .ph { width:80px; min-height:60px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex:none; }
+.mv .body .ph img { max-width:80px; max-height:80px; object-fit:contain; }
+.mv .body .ph .noimg { color:#c3cad2; font-size:10.5px; font-weight:600; border:1.5px dashed #d5dbe2; border-radius:6px; padding:10px 4px; text-align:center; }
+.mv .ls { font-size:12px; font-weight:500; line-height:1.5; color:#454d57; letter-spacing:-0.3px; }
+.mv .go { font-weight:700; font-size:12.5px; margin-top:3px; }
+
+/* 하단 존 */
+.bottomzone { display:flex; gap:16px; margin-top:16px; align-items:stretch; }
+.pplbox { border:2px solid #7a3fb5; border-radius:12px; padding:26px 18px 14px; position:relative; display:flex; align-items:center; justify-content:center; gap:14px; }
+.pplbox .btab { position:absolute; top:-15px; left:12px; background:#7a3fb5; color:#fff; border-radius:8px; font-size:14px; font-weight:800; padding:3px 14px; }
+.ppl { border:1.5px solid #b18ad6; border-radius:10px; background:#fff; width:150px; text-align:center; padding:14px 2px 12px; }
+.ppl .r { color:#7a3fb5; font-weight:700; font-size:15px; }
+.ppl .n { font-size:28px; font-weight:800; margin:4px 0 2px; }
+.ppl .s { color:#98a1ac; font-size:11.5px; font-weight:500; }
+.panelcol { flex:1; display:flex; flex-direction:column; gap:12px; }
+.panel { border:1.5px solid #d7dde6; border-radius:10px; overflow:hidden; background:#fff; box-shadow:0 2px 7px rgba(30,50,90,.05); position:relative; }
+.panel .ph2 { color:#fff; font-weight:700; font-size:15px; text-align:center; padding:8px 0; background:#1f4e8c; }
+.panel .bd { padding:11px 14px 12px; font-size:12.8px; font-weight:500; line-height:1.7; color:#3c444d; }
+.conclusion { padding:16px 10px; border:2px solid #7fae4a; border-radius:10px; background:linear-gradient(180deg,#f6faf0,#eef6e3); color:#4e7a1f; font-weight:700; font-size:16px; text-align:center; line-height:1.55; margin-top:16px; }
+
+.addbtn { background:#eef2f7; border:1.5px dashed #a8b4c2; color:#5a6572; border-radius:8px; font-size:12.5px; font-weight:700; padding:4px 12px; cursor:pointer; }
+.addbtn:hover { background:#dfe7f0; }
+.editonly { }
+body.exporting .editonly, body.exporting .gearbtn { display:none !important; }
+body.exporting [contenteditable]:hover { outline:none; }
+body.exporting .noimg { visibility:hidden; }
+
+/* 모달 */
+#modalbg { position:fixed; inset:0; background:rgba(10,20,40,.45); z-index:100; display:none; align-items:center; justify-content:center; }
+#modal { background:#fff; border-radius:14px; padding:22px 24px; width:520px; max-height:86vh; overflow:auto; box-shadow:0 8px 30px rgba(0,0,0,.3); }
+#modal h3 { font-size:17px; font-weight:800; color:#17395f; margin-bottom:14px; }
+#modal label { display:block; font-size:12.5px; font-weight:700; color:#5a6572; margin:10px 0 4px; }
+#modal input[type=text], #modal textarea, #modal select { width:100%; font-family:inherit; font-size:13.5px; border:1.5px solid #c9d2dc; border-radius:8px; padding:7px 10px; }
+#modal textarea { min-height:70px; resize:vertical; }
+#modal .btnrow { display:flex; gap:8px; margin-top:18px; justify-content:flex-end; }
+#modal button { font-family:inherit; font-size:13.5px; font-weight:700; border:none; border-radius:8px; padding:8px 18px; cursor:pointer; }
+#modal .ok { background:#2f6fd0; color:#fff; }
+#modal .del { background:#c0392b; color:#fff; margin-right:auto; }
+#modal .cancel { background:#e3e8ee; color:#444; }
+#modal .radio { display:flex; gap:12px; font-size:13px; font-weight:600; }
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <span class="logo">📋 자료 정리 도구</span>
+  <select id="docsel" onchange="switchDoc(this.value)"></select>
+  <button onclick="newDoc()">＋ 새 문서</button>
+  <button class="gray" onclick="renameDoc()">이름 변경</button>
+  <button class="red" onclick="deleteDoc()">문서 삭제</button>
+  <span class="sp"></span>
+  <button onclick="convertExcel()" style="background:#e07b1f;">📄 엑셀 자동 변환</button>
+  <button class="gray" onclick="openPaste()">📥 엑셀 붙여넣기</button>
+  <button class="green" onclick="exportPNG()">🖼 PNG 내보내기</button>
+</div>
+<div id="hint"><b>📄 엑셀 자동 변환</b>에 공정표 엑셀(.xlsx)을 넣으면 공정·품명·시간·사진까지 자동으로 정리됩니다 · 칸의 글자는 <b>클릭해서 바로 수정</b> · 칸/블록 위에 마우스를 올리면 <b>⚙ 설정</b> · 자동 저장</div>
+
+<div id="wrap"><div id="canvas"></div></div>
+
+<div id="modalbg"><div id="modal"></div></div>
+
+<script>
+/* ══════════ 데이터 ══════════ */
+const LSKEY = 'jaryo_docs_v1';
+let store = null, cur = 0;
+
+function defaultDoc(name){
+  return {
+    name: name || '새 자료',
+    title: '제목을 입력하세요',
+    legend: '',
+    grids: [
+      { label:'상단 구간', color:'#1f4e8c', border:'#2c5794',
+        cells: Array.from({length:6},(_,i)=>({empty:false, del:false, name:(6-i)+'공정', desc:'작업 내용', time:'0초', img:null})) }
+    ],
+    blocks: [],
+    ppl: { show:false, label:'구분 별 인원', items:[{r:'1:1',n:'3명',s:'(비고)'}] },
+    panels: [],
+    conclusion: '결론을 입력하세요'
+  };
+}
+
+function load(){
+  try { store = JSON.parse(localStorage.getItem(LSKEY)); } catch(e){}
+  if (!store || !store.docs || !store.docs.length) {
+    store = { docs:[ sampleDoc() ] };
+  }
+  cur = Math.min(store.cur||0, store.docs.length-1);
+}
+function save(){ store.cur = cur; try { localStorage.setItem(LSKEY, JSON.stringify(store)); } catch(e){ alert('저장 공간이 가득 찼습니다. 사진 수를 줄이거나 문서를 정리해 주세요.'); } }
+function doc(){ return store.docs[cur]; }
+
+function sampleDoc(){
+  const d = defaultDoc('예시 — 공수 이동 흐름도');
+  d.title = 'OO 공정 삭제 시 공수 이동';
+  d.legend = '';
+  d.grids = [
+    { label:'대시보드 조립 과정 (앞면 부품 흐름도)', color:'#1f4e8c', border:'#2c5794',
+      cells:[
+        {empty:false, del:false, name:'17공정', desc:'전장 검사', time:'203초', img:null},
+        {empty:false, del:false, name:'16공정', desc:'클러스터페시아 조립', time:'78.6초', img:null},
+        {empty:true},
+        {empty:false, del:true,  name:'13공정', desc:'글로브 박스 조립', time:'83.6초', img:null},
+        {empty:true},
+        {empty:false, del:false, name:'11공정', desc:'AVN 및 패드 부착', time:'120.9초', img:null},
+      ]},
+    { label:'대시보드 조립 과정 (뼈대 / 프레임)', color:'#2e7d4f', border:'#2e7d4f',
+      cells:[
+        {empty:false, del:false, name:'1공정', desc:'카울 크로스 고정', time:'128.2초', img:null},
+        {empty:false, del:false, name:'2공정', desc:'전장 부품 조립', time:'72.8초', img:null},
+        {empty:false, del:false, name:'5공정', desc:'C/PAD 조립', time:'121초', img:null},
+        {empty:true},
+        {empty:false, del:false, name:'8공정', desc:'클러스터 체결', time:'152.7초', img:null},
+      ]}
+  ];
+  d.blocks = [
+    { badge:'1안', color:'#e35050', title:'공수 이동 예시 21.5초', lines:'공수 : 박스 1EA · 너트 1EA', img:null, tg:0, ti:5, dir:'up' },
+    { badge:'2안', color:'#4a7fd4', title:'공수 이동 예시 5초', lines:'공수 : 퓨즈박스 커버 1EA', img:null, tg:1, ti:4, dir:'down' },
+  ];
+  d.ppl = { show:true, label:'공피치 별 하네스 투입 인원', items:[
+    {r:'1:1',n:'3명',s:'(1명당 35대)'},{r:'2:1',n:'4명',s:'(1명당 35대)'},{r:'3:1 · 4:1',n:'5명',s:'(1명당 32~34대)'},{r:'5:1',n:'6명',s:'(정상 운영)'}]};
+  d.panels = [ {title:'기존 공수', body:'<b>단품</b> : 예시 · <b>공수</b> : 예시 항목을 클릭해 수정하세요'} ];
+  d.conclusion = '공정 삭제 시 공피치 1:1 ~ 4:1 까지 가능';
+  return d;
+}
+
+/* ══════════ 렌더링 ══════════ */
+const $c = () => document.getElementById('canvas');
+
+function esc(s){ return (s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+function render(){
+  const d = doc();
+  document.getElementById('docsel').innerHTML =
+    store.docs.map((x,i)=>`<option value="${i}" ${i===cur?'selected':''}>${esc(x.name)}</option>`).join('');
+  const C = $c();
+  C.innerHTML = '';
+
+  /* 제목 */
+  const tr = el(`<div class="titlerow">
+      <div class="titletab" contenteditable data-k="title">${esc(d.title)}</div>
+      <div class="legend" contenteditable data-k="legend">${esc(d.legend)}</div>
+    </div>`);
+  bindText(tr.querySelector('[data-k=title]'), v=>d.title=v);
+  bindText(tr.querySelector('[data-k=legend]'), v=>d.legend=v);
+  C.appendChild(tr);
+
+  /* 그리드들 (0번 그리드 다음에 이동블록 존) */
+  d.grids.forEach((g, gi) => {
+    const sec = el(`<div class="secrow">
+        <div class="tab" style="background:${g.color}" contenteditable>${esc(g.label)}</div>
+        <button class="addbtn editonly" title="칸 추가">＋ 칸</button>
+        <button class="addbtn editonly" title="구간 삭제">구간 삭제</button>
+      </div>`);
+    bindText(sec.querySelector('.tab'), v=>g.label=v);
+    sec.querySelectorAll('button')[0].onclick = ()=>{ g.cells.push({empty:false,del:false,name:'공정',desc:'',time:'',img:null}); save(); render(); };
+    sec.querySelectorAll('button')[1].onclick = ()=>{ if(confirm('이 구간을 삭제할까요?')){ d.grids.splice(gi,1); d.blocks=d.blocks.filter(b=>b.tg!==gi); d.blocks.forEach(b=>{if(b.tg>gi)b.tg--;}); save(); render(); } };
+    C.appendChild(sec);
+
+    const grid = el(`<div class="gridbox" style="border-color:${g.border}; grid-template-columns:repeat(${g.cells.length},1fr);" data-grid="${gi}"></div>`);
+    g.cells.forEach((cell, ci) => {
+      let cc;
+      if (cell.empty) {
+        cc = el(`<div class="gc empty"><button class="gearbtn">⚙</button>
+          <div class="nm" contenteditable>${esc(cell.name||'빈 공정')}</div><div class="lbl">빈 공정</div></div>`);
+        bindText(cc.querySelector('.nm'), v=>cell.name=v);
+      } else {
+        cc = el(`<div class="gc ${cell.del?'del':''}"><button class="gearbtn">⚙</button>
+          <div class="nm" style="color:${g.color}"><span contenteditable>${esc(cell.name)}</span>${cell.del?'<span class="deltag">삭제 대상</span>':''}</div>
+          <div class="ds" contenteditable>${esc(cell.desc)}</div>
+          <div class="ph" title="클릭해서 사진 등록/교체">${cell.img?`<img src="${cell.img}">`:'<div class="noimg">사진 클릭 등록</div>'}</div>
+          <div class="ct" style="color:${g.color}" contenteditable>${esc(cell.time)}</div></div>`);
+        bindText(cc.querySelector('.nm span'), v=>cell.name=v);
+        bindText(cc.querySelector('.ds'), v=>cell.desc=v);
+        bindText(cc.querySelector('.ct'), v=>cell.time=v);
+        cc.querySelector('.ph').onclick = ()=>pickImage(url=>{ cell.img=url; save(); render(); });
+      }
+      cc.querySelector('.gearbtn').onclick = (e)=>{ e.stopPropagation(); cellMenu(gi, ci); };
+      grid.appendChild(cc);
+    });
+    C.appendChild(grid);
+
+    if (gi === 0) C.appendChild(renderMvzone(d));
+    else { const gap = el('<div style="height:6px"></div>'); C.appendChild(gap); }
+  });
+  const addG = el(`<div style="margin:10px 0"><button class="addbtn editonly">＋ 공정 구간 추가</button></div>`);
+  addG.querySelector('button').onclick = ()=>{ d.grids.push({label:'새 구간', color:'#2e7d4f', border:'#2e7d4f', cells:[{empty:false,del:false,name:'공정',desc:'',time:'',img:null}]}); save(); render(); };
+  C.appendChild(addG);
+
+  /* 하단 존 */
+  const bz = el('<div class="bottomzone"></div>');
+  if (d.ppl.show) {
+    const pb = el(`<div class="pplbox"><div class="btab" contenteditable>${esc(d.ppl.label)}</div></div>`);
+    bindText(pb.querySelector('.btab'), v=>d.ppl.label=v);
+    d.ppl.items.forEach((it, ii)=>{
+      const card = el(`<div class="ppl"><button class="gearbtn" style="opacity:.6">✕</button>
+        <div class="r" contenteditable>${esc(it.r)}</div><div class="n" contenteditable>${esc(it.n)}</div><div class="s" contenteditable>${esc(it.s)}</div></div>`);
+      card.style.position='relative';
+      bindText(card.querySelector('.r'), v=>it.r=v);
+      bindText(card.querySelector('.n'), v=>it.n=v);
+      bindText(card.querySelector('.s'), v=>it.s=v);
+      card.querySelector('.gearbtn').onclick=()=>{ d.ppl.items.splice(ii,1); save(); render(); };
+      pb.appendChild(card);
+    });
+    const add = el('<button class="addbtn editonly">＋</button>');
+    add.onclick = ()=>{ d.ppl.items.push({r:'구분',n:'0명',s:''}); save(); render(); };
+    pb.appendChild(add);
+    bz.appendChild(pb);
+  }
+  const pc = el('<div class="panelcol"></div>');
+  d.panels.forEach((p, pi)=>{
+    const pn = el(`<div class="panel"><button class="gearbtn">✕</button>
+      <div class="ph2" contenteditable>${esc(p.title)}</div><div class="bd" contenteditable>${p.body}</div></div>`);
+    bindText(pn.querySelector('.ph2'), v=>p.title=v);
+    pn.querySelector('.bd').addEventListener('blur', ()=>{ p.body = pn.querySelector('.bd').innerHTML; save(); });
+    pn.querySelector('.gearbtn').onclick=()=>{ d.panels.splice(pi,1); save(); render(); };
+    pc.appendChild(pn);
+  });
+  const addrow = el(`<div style="display:flex; gap:8px;">
+      <button class="addbtn editonly">＋ 설명 패널</button>
+      <button class="addbtn editonly">${d.ppl.show?'인원 박스 끄기':'인원 박스 켜기'}</button></div>`);
+  addrow.querySelectorAll('button')[0].onclick = ()=>{ d.panels.push({title:'제목', body:'내용을 입력하세요'}); save(); render(); };
+  addrow.querySelectorAll('button')[1].onclick = ()=>{ d.ppl.show=!d.ppl.show; save(); render(); };
+  pc.appendChild(addrow);
+  bz.appendChild(pc);
+  C.appendChild(bz);
+
+  /* 결론 */
+  const con = el(`<div class="conclusion" contenteditable>${esc(d.conclusion)}</div>`);
+  bindText(con, v=>d.conclusion=v);
+  C.appendChild(con);
+}
+
+/* ── 이동 블록 존 + SVG 화살표 ── */
+function renderMvzone(d){
+  const zone = el('<div id="mvzone"></div>');
+  const blocks = d.blocks;
+  const N = blocks.length;
+  const addB = el(`<div style="position:absolute; left:0; top:0;" class="editonly"><button class="addbtn">＋ 이동 블록</button></div>`);
+  addB.querySelector('button').onclick = ()=>editBlock(-1);
+  if (!N) {
+    zone.style.height = '48px';
+    zone.appendChild(addB);
+    return zone;
+  }
+  zone.style.height = '210px';
+  const W = 1552;
+  const bw = Math.min(300, Math.floor((W - 60) / N) - 14);
+  // 대상 x 좌표 계산 후 정렬 배치
+  const withX = blocks.map((b,i)=>({b, i, tx: targetX(d, b)}));
+  withX.sort((a,c)=>a.tx-c.tx);
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('id','mvsvg'); svg.setAttribute('width',W); svg.setAttribute('height',210);
+  zone.appendChild(svg);
+  withX.forEach((w, k)=>{
+    const b = w.b;
+    const left = 30 + k * ((W-60-bw)/Math.max(1,N-1) || 0);
+    const mv = el(`<div class="mv" style="left:${Math.round(N===1?30:left)}px; top:40px; width:${bw}px; border-color:${b.color};">
+        <button class="gearbtn">⚙</button>
+        <div class="badge" style="color:${b.color}; border-color:${b.color};" contenteditable>${esc(b.badge)}</div>
+        <div class="t" style="color:${b.color}" contenteditable>${esc(b.title)}</div>
+        <div class="body">
+          <div class="ph" title="사진 등록/교체">${b.img?`<img src="${b.img}">`:'<div class="noimg">사진<br>등록</div>'}</div>
+          <div><div class="ls" contenteditable>${(b.lines||'').split('\n').map(esc).join('<br>')}</div>
+          <div class="go" style="color:${b.color}">▶ ${targetName(d,b)}으로${b.dir==='down'?' (아래 ▼)':''}</div></div>
+        </div></div>`);
+    bindText(mv.querySelector('.badge'), v=>b.badge=v);
+    bindText(mv.querySelector('.t'), v=>b.title=v);
+    mv.querySelector('.ls').addEventListener('blur', function(){ b.lines = this.innerText; save(); });
+    mv.querySelector('.ph').onclick = ()=>pickImage(url=>{ b.img=url; save(); render(); });
+    mv.querySelector('.gearbtn').onclick = ()=>editBlock(w.i);
+    zone.appendChild(mv);
+
+    // 화살표
+    const bx = Math.round((N===1?30:left) + bw/2);
+    const tx = Math.round(w.tx);
+    let path;
+    if (b.dir === 'down') {
+      const y0 = 178, y1 = 196, ym = 188;
+      path = `M ${bx} ${y0} L ${bx} ${ym} L ${tx} ${ym} L ${tx} ${y1+6}`;
+      svg.appendChild(svgPath(path, b.color));
+      svg.appendChild(svgHead(tx, 210, 'down', b.color));
+    } else {
+      const y0 = 40, ym = 22;
+      path = `M ${bx} ${y0} L ${bx} ${ym} L ${tx} ${ym} L ${tx} 10`;
+      svg.appendChild(svgPath(path, b.color));
+      svg.appendChild(svgHead(tx, 0, 'up', b.color));
+    }
+  });
+  addB.style.top = '8px';
+  zone.appendChild(addB);
+  return zone;
+}
+function targetX(d, b){
+  const g = d.grids[b.tg];
+  if (!g) return 100;
+  const colW = 1552 / g.cells.length;
+  return colW * (b.ti + 0.5);
+}
+function targetName(d, b){
+  const g = d.grids[b.tg];
+  if (!g || !g.cells[b.ti]) return '?';
+  return g.cells[b.ti].name || '?';
+}
+function svgPath(dstr, color){
+  const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d', dstr); p.setAttribute('stroke', color); p.setAttribute('stroke-width', 3);
+  p.setAttribute('fill','none'); p.setAttribute('stroke-linejoin','round');
+  return p;
+}
+function svgHead(x, y, dir, color){
+  const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+  const s = 8;
+  p.setAttribute('d', dir==='up' ? `M ${x-s} ${y+10} L ${x} ${y} L ${x+s} ${y+10} Z`
+                                 : `M ${x-s} ${y-10} L ${x} ${y} L ${x+s} ${y-10} Z`);
+  p.setAttribute('fill', color);
+  return p;
+}
+
+/* ══════════ 편집 UI ══════════ */
+function el(html){ const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstChild; }
+function bindText(node, setter){ if(!node) return; node.addEventListener('blur', ()=>{ setter(node.innerText.trim()); save(); }); }
+
+function pickImage(cb){
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = ()=>{
+    const f = inp.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = ()=>{
+      // 리사이즈(최대 900px)로 저장 용량 절약
+      const img = new Image();
+      img.onload = ()=>{
+        const sc = Math.min(1, 900/Math.max(img.width, img.height));
+        const cv = document.createElement('canvas');
+        cv.width = Math.round(img.width*sc); cv.height = Math.round(img.height*sc);
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+        cb(cv.toDataURL('image/png'));
+      };
+      img.src = rd.result;
+    };
+    rd.readAsDataURL(f);
+  };
+  inp.click();
+}
+
+function modal(html){ document.getElementById('modal').innerHTML = html; document.getElementById('modalbg').style.display = 'flex'; }
+function closeModal(){ document.getElementById('modalbg').style.display = 'none'; }
+document.getElementById('modalbg').addEventListener('click', e=>{ if(e.target.id==='modalbg') closeModal(); });
+
+function cellMenu(gi, ci){
+  const d = doc(), g = d.grids[gi], cell = g.cells[ci];
+  modal(`<h3>칸 설정 — ${esc(cell.name||'빈 공정')}</h3>
+    <label><input type="checkbox" id="m_empty" ${cell.empty?'checked':''}> 빈 공정 칸</label>
+    <label><input type="checkbox" id="m_del" ${cell.del?'checked':''}> 삭제 대상 표시 (빨간 점선)</label>
+    <div class="btnrow">
+      <button class="del" id="m_rm">칸 삭제</button>
+      <button class="cancel" id="m_left">◀ 왼쪽에 칸 추가</button>
+      <button class="ok" id="m_ok">확인</button>
+    </div>`);
+  document.getElementById('m_ok').onclick = ()=>{
+    const wasEmpty = cell.empty;
+    cell.empty = document.getElementById('m_empty').checked;
+    cell.del = document.getElementById('m_del').checked;
+    if (wasEmpty && !cell.empty) Object.assign(cell, {name:cell.name||'공정', desc:cell.desc||'', time:cell.time||'', img:cell.img||null, del:cell.del});
+    save(); render(); closeModal();
+  };
+  document.getElementById('m_rm').onclick = ()=>{ g.cells.splice(ci,1); d.blocks.forEach(b=>{ if(b.tg===gi&&b.ti>=ci) b.ti=Math.max(0,b.ti-1); }); save(); render(); closeModal(); };
+  document.getElementById('m_left').onclick = ()=>{ g.cells.splice(ci,0,{empty:false,del:false,name:'공정',desc:'',time:'',img:null}); save(); render(); closeModal(); };
+}
+
+function editBlock(idx){
+  const d = doc();
+  const b = idx>=0 ? d.blocks[idx] : { badge:'1안', color:'#e35050', title:'공수 이동 0초', lines:'공수 : ', img:null, tg:0, ti:0, dir:'up' };
+  const gridOpts = d.grids.map((g,gi)=>`<optgroup label="${esc(g.label)}">` +
+    g.cells.map((c,ci)=>`<option value="${gi}|${ci}" ${b.tg===gi&&b.ti===ci?'selected':''}>${esc(c.name||'빈 공정')}</option>`).join('') + '</optgroup>').join('');
+  modal(`<h3>${idx>=0?'이동 블록 수정':'이동 블록 추가'}</h3>
+    <label>배지 (안 번호)</label><input type="text" id="b_badge" value="${esc(b.badge)}">
+    <label>색</label>
+    <div class="radio">
+      <label><input type="radio" name="b_col" value="#e35050" ${b.color==='#e35050'?'checked':''}> 빨강</label>
+      <label><input type="radio" name="b_col" value="#4a7fd4" ${b.color==='#4a7fd4'?'checked':''}> 파랑</label>
+      <label><input type="radio" name="b_col" value="#1f4e8c" ${b.color==='#1f4e8c'?'checked':''}> 남색</label>
+      <label><input type="radio" name="b_col" value="#2e7d4f" ${b.color==='#2e7d4f'?'checked':''}> 초록</label>
+    </div>
+    <label>제목</label><input type="text" id="b_title" value="${esc(b.title)}">
+    <label>공수 내용 (줄바꿈 가능)</label><textarea id="b_lines">${esc(b.lines)}</textarea>
+    <label>받는 공정 (화살표 대상)</label><select id="b_target">${gridOpts}</select>
+    <label>화살표 방향</label>
+    <div class="radio">
+      <label><input type="radio" name="b_dir" value="up" ${b.dir!=='down'?'checked':''}> 위(첫째 구간)로</label>
+      <label><input type="radio" name="b_dir" value="down" ${b.dir==='down'?'checked':''}> 아래(다음 구간)로</label>
+    </div>
+    <div class="btnrow">
+      ${idx>=0?'<button class="del" id="b_rm">블록 삭제</button>':''}
+      <button class="cancel" onclick="closeModal()">취소</button>
+      <button class="ok" id="b_ok">확인</button>
+    </div>`);
+  document.getElementById('b_ok').onclick = ()=>{
+    b.badge = document.getElementById('b_badge').value;
+    b.color = document.querySelector('input[name=b_col]:checked').value;
+    b.title = document.getElementById('b_title').value;
+    b.lines = document.getElementById('b_lines').value;
+    const [tg, ti] = document.getElementById('b_target').value.split('|').map(Number);
+    b.tg = tg; b.ti = ti;
+    b.dir = document.querySelector('input[name=b_dir]:checked').value;
+    if (idx < 0) d.blocks.push(b);
+    save(); render(); closeModal();
+  };
+  const rm = document.getElementById('b_rm');
+  if (rm) rm.onclick = ()=>{ d.blocks.splice(idx,1); save(); render(); closeModal(); };
+}
+
+/* ══════════ 엑셀 붙여넣기 ══════════ */
+function openPaste(){
+  const d = doc();
+  modal(`<h3>엑셀 붙여넣기</h3>
+    <div style="font-size:12.5px; color:#5a6572; line-height:1.6; margin-bottom:6px;">
+      엑셀에서 <b>공정명 줄 / 품명 줄 / 시간 줄</b> (3줄) 범위를 복사한 뒤 아래에 붙여넣으세요.<br>
+      공정명이 비었거나 "빈"이 들어간 칸은 빈 공정으로 처리됩니다. 사진은 이후 칸 클릭으로 등록합니다.</div>
+    <label>붙여넣기</label><textarea id="p_data" style="min-height:120px" placeholder="여기에 Ctrl+V"></textarea>
+    <label>넣을 위치</label>
+    <select id="p_grid">${d.grids.map((g,i)=>`<option value="${i}">${esc(g.label)}</option>`).join('')}<option value="-1">새 구간으로 추가</option></select>
+    <div class="btnrow"><button class="cancel" onclick="closeModal()">취소</button><button class="ok" id="p_ok">가져오기</button></div>`);
+  document.getElementById('p_ok').onclick = ()=>{
+    const raw = document.getElementById('p_data').value.replace(/\r/g,'');
+    const rows = raw.split('\n').filter(r=>r.trim().length).map(r=>r.split('\t'));
+    if (!rows.length) { alert('붙여넣은 내용이 없습니다.'); return; }
+    const n = Math.max(...rows.map(r=>r.length));
+    const cells = [];
+    for (let i=0;i<n;i++){
+      const name = (rows[0]&&rows[0][i]||'').trim();
+      const desc = (rows[1]&&rows[1][i]||'').trim();
+      const time = (rows[2]&&rows[2][i]||'').trim();
+      if (!name || name.includes('빈')) cells.push({empty:true, name:name||'빈 공정'});
+      else cells.push({empty:false, del:false, name, desc, time, img:null});
+    }
+    const gi = Number(document.getElementById('p_grid').value);
+    if (gi === -1) doc().grids.push({label:'새 구간', color:'#2e7d4f', border:'#2e7d4f', cells});
+    else doc().grids[gi].cells = cells;
+    save(); render(); closeModal();
+  };
+}
+
+/* ══════════ 문서 관리 ══════════ */
+function switchDoc(i){ cur = Number(i); save(); render(); }
+function newDoc(){
+  const name = prompt('새 문서 이름을 입력하세요', '새 자료');
+  if (name === null) return;
+  store.docs.push(defaultDoc(name || '새 자료'));
+  cur = store.docs.length - 1; save(); render();
+}
+function renameDoc(){
+  const name = prompt('문서 이름', doc().name);
+  if (name) { doc().name = name; save(); render(); }
+}
+function deleteDoc(){
+  if (!confirm(`"${doc().name}" 문서를 삭제할까요?`)) return;
+  store.docs.splice(cur,1);
+  if (!store.docs.length) store.docs.push(defaultDoc('새 자료'));
+  cur = 0; save(); render();
+}
+
+/* ══════════ PNG 내보내기 ══════════ */
+function exportPNG(){
+  document.body.classList.add('exporting');
+  const go = ()=>{
+    html2canvas(document.getElementById('canvas'), {scale:3, backgroundColor:'#ffffff'}).then(cv=>{
+      document.body.classList.remove('exporting');
+      const a = document.createElement('a');
+      a.download = (doc().name||'자료정리') + '.png';
+      a.href = cv.toDataURL('image/png');
+      a.click();
+    }).catch(e=>{ document.body.classList.remove('exporting'); alert('내보내기 실패: '+e); });
+  };
+  if (window.html2canvas) return go();
+  const s = document.createElement('script');
+  s.src = 'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js';
+  s.onload = go;
+  s.onerror = ()=>{ document.body.classList.remove('exporting'); alert('회사망에서 라이브러리를 못 불러왔습니다. 잠시 후 다시 시도해 주세요.'); };
+  document.head.appendChild(s);
+}
+
+/* ══════════ 엑셀 자동 변환 ══════════ */
+function loadLib(url){
+  return new Promise((res, rej)=>{
+    const s = document.createElement('script');
+    s.src = url; s.onload = res; s.onerror = ()=>rej(new Error('라이브러리 로드 실패: '+url));
+    document.head.appendChild(s);
+  });
+}
+async function ensureLibs(){
+  if (!window.XLSX) await loadLib('https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js');
+  if (!window.JSZip) await loadLib('https://unpkg.com/jszip@3.10.1/dist/jszip.min.js');
+}
+
+function convertExcel(){
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.xlsx,.xlsm';
+  inp.onchange = async ()=>{
+    const f = inp.files[0]; if (!f) return;
+    try {
+      await ensureLibs();
+      const buf = await f.arrayBuffer();
+      await doConvert(buf, f.name.replace(/\.(xlsx|xlsm)$/i,''));
+    } catch(e) { alert('변환 실패: ' + (e.message||e)); console.error(e); }
+  };
+  inp.click();
+}
+
+async function doConvert(buf, fname){
+  const wb = XLSX.read(buf, {type:'array'});
+  const wsname = wb.SheetNames[0];
+  const ws = wb.Sheets[wsname];
+  if (!ws['!ref']) throw new Error('시트가 비어 있습니다');
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  const merges = ws['!merges'] || [];
+  function cellv(r, c){
+    for (const m of merges){ if (r>=m.s.r && r<=m.e.r && c>=m.s.c && c<=m.e.c){ r=m.s.r; c=m.s.c; break; } }
+    const cell = ws[XLSX.utils.encode_cell({r,c})];
+    return cell != null && cell.v != null ? String(cell.v).trim() : '';
+  }
+
+  /* 1) 라벨 열 찾기 (공정/사진 라벨이 있는 열) */
+  let labCol = -1;
+  for (let c=range.s.c; c<=Math.min(range.s.c+4, range.e.c); c++){
+    let g=false, p=false;
+    for (let r=range.s.r; r<=range.e.r; r++){
+      const v = cellv(r,c);
+      if (v==='공정') g=true;
+      if (v==='사진') p=true;
+    }
+    if (g && p){ labCol=c; break; }
+  }
+  if (labCol < 0) throw new Error('공정표 형식을 찾지 못했습니다 ("공정"/"사진" 라벨 열이 필요합니다)');
+
+  /* 2) 구간(밴드) 찾기: 공정 ~ 사진 라벨 행 묶음 */
+  const bands = [];
+  for (let r=range.s.r; r<=range.e.r; r++){
+    if (cellv(r,labCol)==='공정'){
+      const band = { nameRow:r, descRow:-1, timeRow:-1, photoRow:-1 };
+      for (let r2=r+1; r2<=Math.min(r+10, range.e.r); r2++){
+        const lab = cellv(r2,labCol);
+        if (lab.includes('품명') && band.descRow<0) band.descRow=r2;
+        else if (lab.includes('시간') && band.timeRow<0) band.timeRow=r2;
+        else if (lab==='사진'){ band.photoRow=r2; break; }
+      }
+      if (band.photoRow>=0){ bands.push(band); r = band.photoRow; }
+    }
+  }
+  if (!bands.length) throw new Error('공정 구간을 찾지 못했습니다');
+
+  /* 3) 구간별 칸 구성 */
+  const palette = [['#1f4e8c','#2c5794'], ['#2e7d4f','#2e7d4f'], ['#7a3fb5','#7a3fb5']];
+  const grids = [], colmaps = [];
+  bands.forEach((band, bi)=>{
+    const cells = [], colmap = {};
+    for (let c=labCol+1; c<=range.e.c; c++){
+      const nm = cellv(band.nameRow, c);
+      if (!nm) continue;
+      // 같은 병합칸이 반복되면 한 번만
+      if (cells.length && colmap[c-1]===cells.length-1 && cellv(band.nameRow, c-1)===nm){ colmap[c]=cells.length-1; continue; }
+      colmap[c] = cells.length;
+      const desc = band.descRow>=0 ? cellv(band.descRow, c) : '';
+      const time = band.timeRow>=0 ? cellv(band.timeRow, c) : '';
+      if (!desc && !time) cells.push({empty:true, name:nm});
+      else cells.push({empty:false, del:false, name:nm, desc:desc.replace(/\n+/g,' '), time, img:null});
+    }
+    colmaps.push(colmap);
+    const [col, bord] = palette[bi % palette.length];
+    grids.push({label:'공정 구간 ' + (bi+1), color:col, border:bord, cells});
+  });
+
+  /* 4) 그림/도형 추출 (xl/drawings) */
+  const zip = await JSZip.loadAsync(buf);
+  const pics = [], shapes = [];
+  /* 첫 번째 시트의 드로잉만 사용 (다른 시트 도형이 섞여 들어오는 것 방지) */
+  let drawNames = [];
+  try {
+    const wbxml = await zip.file('xl/workbook.xml').async('string');
+    const wbdoc = new DOMParser().parseFromString(wbxml, 'application/xml');
+    const sheetEl = [...wbdoc.getElementsByTagName('*')].filter(n=>n.localName==='sheet')
+      .find(n=>n.getAttribute('name')===wsname);
+    const rid = sheetEl && (sheetEl.getAttribute('r:id') || sheetEl.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id'));
+    const wbrels = new DOMParser().parseFromString(await zip.file('xl/_rels/workbook.xml.rels').async('string'), 'application/xml');
+    let sheetPath = null;
+    for (const rel of wbrels.getElementsByTagName('Relationship'))
+      if (rel.getAttribute('Id')===rid) sheetPath = 'xl/' + rel.getAttribute('Target').replace(/^\//,'').replace('xl/','');
+    const srelName = sheetPath.replace(/worksheets\//,'worksheets/_rels/') + '.rels';
+    if (zip.file(srelName)){
+      const srels = new DOMParser().parseFromString(await zip.file(srelName).async('string'), 'application/xml');
+      for (const rel of srels.getElementsByTagName('Relationship'))
+        if (/drawing/.test(rel.getAttribute('Type'))) drawNames.push(rel.getAttribute('Target').replace('../','xl/'));
+    }
+  } catch(e) { /* 실패 시 전체 드로잉 사용 */ }
+  if (!drawNames.length) drawNames = Object.keys(zip.files).filter(n=>/^xl\/drawings\/drawing\d+\.xml$/.test(n));
+  for (const dn of drawNames){
+    const xml = await zip.file(dn).async('string');
+    const relName = dn.replace('drawings/','drawings/_rels/') + '.rels';
+    const rels = {};
+    if (zip.file(relName)){
+      const rxml = await zip.file(relName).async('string');
+      const rdoc = new DOMParser().parseFromString(rxml, 'application/xml');
+      for (const rel of rdoc.getElementsByTagName('Relationship'))
+        rels[rel.getAttribute('Id')] = rel.getAttribute('Target').replace('../','xl/');
+    }
+    const doc2 = new DOMParser().parseFromString(xml, 'application/xml');
+    const anchors = [...doc2.getElementsByTagName('*')].filter(n=>/(:|^)(twoCellAnchor|oneCellAnchor|absoluteAnchor)$/.test(n.tagName));
+    for (const an of anchors){
+      const from = [...an.children].find(n=>n.localName==='from');
+      const col = from ? Number([...from.children].find(n=>n.localName==='col')?.textContent || 0) : -1;
+      const row = from ? Number([...from.children].find(n=>n.localName==='row')?.textContent || 0) : -1;
+      const picList = [...an.getElementsByTagName('*')].filter(n=>n.localName==='pic');
+      const spList  = [...an.getElementsByTagName('*')].filter(n=>n.localName==='sp');
+      for (const pic of picList){
+        if (!from) break;
+        const blip = [...pic.getElementsByTagName('*')].find(n=>n.localName==='blip');
+        const rid = blip && (blip.getAttribute('r:embed') || blip.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','embed'));
+        if (!rid || !rels[rid]) continue;
+        // 절대 좌표(EMU) — 칸 안 배치 그대로 합성하기 위해
+        const xfrm = [...pic.getElementsByTagName('*')].find(n=>n.localName==='xfrm');
+        const off = xfrm && [...xfrm.children].find(n=>n.localName==='off');
+        const ext = xfrm && [...xfrm.children].find(n=>n.localName==='ext');
+        pics.push({col, row, path:rels[rid],
+          x: off?Number(off.getAttribute('x')):null, y: off?Number(off.getAttribute('y')):null,
+          w: ext?Number(ext.getAttribute('cx')):null, h: ext?Number(ext.getAttribute('cy')):null});
+      }
+      for (const sp of spList){
+        const txts = [...sp.getElementsByTagName('*')].filter(n=>n.localName==='t').map(n=>n.textContent);
+        const text = txts.join('').trim();
+        const paras = [...sp.getElementsByTagName('*')].filter(n=>n.localName==='p')
+          .map(p=>[...p.getElementsByTagName('*')].filter(n=>n.localName==='t').map(n=>n.textContent).join('').trim())
+          .filter(s=>s);
+        if (text) shapes.push({col, row, text, paras});
+      }
+    }
+  }
+
+  /* 5) 사진 → 해당 구간·칸에 배치 */
+  async function toDataURL(path){
+    const f = zip.file(path); if (!f) return null;
+    const b64 = await f.async('base64');
+    const ext = path.split('.').pop().toLowerCase();
+    const mime = ext==='jpg'||ext==='jpeg' ? 'image/jpeg' : ext==='gif' ? 'image/gif' : 'image/png';
+    const url = `data:${mime};base64,${b64}`;
+    // 리사이즈 (700px) + 원본 크기 반환
+    return new Promise(res=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const w = img.width, h = img.height;
+        const sc = Math.min(1, 700/Math.max(w, h));
+        if (sc >= 1) return res({url, w, h});
+        const cv = document.createElement('canvas');
+        cv.width = Math.round(w*sc); cv.height = Math.round(h*sc);
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+        res({url: cv.toDataURL('image/png'), w, h});
+      };
+      img.onerror = ()=>res(null);
+      img.src = url;
+    });
+  }
+  function nearestBand(row){
+    // 사진 행(병합 포함) 바로 주변만 인정 — 구간 밖(블록 영역) 그림이 칸으로 빨려오는 것 방지
+    for (let i=0;i<bands.length;i++){
+      const pr = bands[i].photoRow;
+      let prEnd = pr;
+      for (const m of merges){ if (pr>=m.s.r && pr<=m.e.r && m.s.c<=labCol && m.e.c>=labCol){ prEnd = m.e.r; break; } }
+      if (row >= pr-1 && row <= prEnd+1) return i;
+    }
+    return -1;
+  }
+  function cellIdxFor(bi, col){
+    const cm = colmaps[bi];
+    if (cm[col] != null) return cm[col];
+    let best=-1;
+    for (const c in cm){ if (Number(c)<=col) best = cm[c]; }
+    if (best<0){ const first = Math.min(...Object.keys(cm).map(Number)); best = cm[first]; } // 라벨열에 걸친 그림 → 첫 칸
+    return best;
+  }
+  /* 칸별로 그림 여러 장이 겹쳐 있으므로(본체+부품 레이어) 원래 배치 그대로 캔버스에 합성 */
+  const byCell = {};
+  for (const p of pics){
+    const bi = nearestBand(p.row);
+    if (bi<0) continue;
+    const ci = cellIdxFor(bi, p.col);
+    if (ci<0 || !grids[bi].cells[ci] || grids[bi].cells[ci].empty) continue;
+    (byCell[bi+'|'+ci] = byCell[bi+'|'+ci] || []).push(p);
+  }
+  const EMU = 9525; // EMU → px
+  async function loadImg(path){
+    const f = zip.file(path); if (!f) return null;
+    const b64 = await f.async('base64');
+    const ext = path.split('.').pop().toLowerCase();
+    const mime = ext==='jpg'||ext==='jpeg' ? 'image/jpeg' : ext==='gif' ? 'image/gif' : 'image/png';
+    return new Promise(res=>{
+      const img = new Image();
+      img.onload = ()=>res(img);
+      img.onerror = ()=>res(null);
+      img.src = `data:${mime};base64,${b64}`;
+    });
+  }
+  for (const key in byCell){
+    const [bi, ci] = key.split('|').map(Number);
+    const list = byCell[key].filter(p=>p.x!=null && p.w>0 && p.h>0);
+    if (!list.length){ // 좌표 없으면 가장 큰 그림 한 장
+      let best=null, ba=-1;
+      for (const p of byCell[key]){ const im = await loadImg(p.path); if (im && im.width*im.height>ba){ ba=im.width*im.height; best=im; } }
+      if (best){ const cv=document.createElement('canvas'); cv.width=best.width; cv.height=best.height; cv.getContext('2d').drawImage(best,0,0); grids[bi].cells[ci].img=cv.toDataURL('image/png'); }
+      continue;
+    }
+    const minX = Math.min(...list.map(p=>p.x)), minY = Math.min(...list.map(p=>p.y));
+    const maxX = Math.max(...list.map(p=>p.x+p.w)), maxY = Math.max(...list.map(p=>p.y+p.h));
+    const pxW = (maxX-minX)/EMU, pxH = (maxY-minY)/EMU;
+    const f = Math.min(2.5, 900/Math.max(pxW, pxH));   // 선명하게 확대 렌더(최대 900px)
+    const cv = document.createElement('canvas');
+    cv.width = Math.max(1, Math.round(pxW*f)); cv.height = Math.max(1, Math.round(pxH*f));
+    const ctx = cv.getContext('2d');
+    for (const p of list){                              // XML 순서 = 쌓임 순서
+      const im = await loadImg(p.path);
+      if (!im) continue;
+      ctx.drawImage(im, (p.x-minX)/EMU*f, (p.y-minY)/EMU*f, p.w/EMU*f, p.h/EMU*f);
+    }
+    grids[bi].cells[ci].img = cv.toDataURL('image/png');
+  }
+
+  /* 6) 텍스트 도형 분류: 공수 텍스트 → 블록/패널, "…가능" → 결론, 나머지 잡음 제외 */
+  const blocks = [], panels = [];
+  let conclusion = '결론을 입력하세요';
+  const seen = new Set();
+  for (const s of shapes){
+    if (s.text.length < 6) continue;
+    const title = s.paras[0] || s.text.slice(0,30);
+    if (seen.has(title)) continue;                       // 같은 제목 도형 중복 제거(흐름+범례 이중 배치)
+    seen.add(title);
+    const isGongsu = /\d+(\.\d+)?\s*초/.test(s.text) || s.text.includes('공수');
+    if (isGongsu){
+      const rest = s.paras.slice(1).join('\n');
+      if (s.text.length > 130 || s.paras.length > 4) panels.push({title: title.slice(0,40), body: esc(rest || s.text).replace(/\n/g,'<br>')});
+      else blocks.push({badge:'이동', color:'#e35050', title, lines:rest, img:null, tg:0, ti:0, dir:'up'});
+    } else if (s.text.includes('가능') && s.text.length <= 60 && conclusion === '결론을 입력하세요'){
+      conclusion = s.text;
+    }
+  }
+
+  /* 7) 문서 생성 */
+  store.docs.push({
+    name: fname, title: fname, legend:'',
+    grids, blocks,
+    ppl:{show:false, label:'구분 별 인원', items:[{r:'1:1',n:'3명',s:''}]},
+    panels,
+    conclusion
+  });
+  cur = store.docs.length - 1;
+  save(); render();
+  toast(`✅ 변환 완료 — 공정 구간 ${grids.length}개 · 사진 처리 · 이동 블록 ${blocks.length}개 (블록 ⚙에서 받는 공정·화살표 지정, 불필요한 것은 삭제)`);
+}
+function toast(msg){
+  const t = el(`<div style="position:fixed; top:64px; left:50%; transform:translateX(-50%); z-index:200; background:#1e5c33; color:#fff; font-size:14px; font-weight:700; padding:12px 22px; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,.3); max-width:80%;">${msg}</div>`);
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 7000);
+}
+
+load(); render();
+</script>
+</body>
+</html>
