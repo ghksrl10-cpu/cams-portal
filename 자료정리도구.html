@@ -91,6 +91,16 @@ body.exporting .editonly, body.exporting .gearbtn { display:none !important; }
 body.exporting [contenteditable]:hover { outline:none; }
 body.exporting .noimg { visibility:hidden; }
 
+/* ── 인쇄(벡터 PDF) ── */
+@media print {
+  @page { size: A3 landscape; margin: 6mm; }
+  #toolbar, #hint, .editonly, .gearbtn, .noimg { display:none !important; }
+  body { background:#fff; }
+  #wrap { padding:0; overflow:visible; }
+  #canvas { box-shadow:none; margin:0; zoom:0.72; }
+  [contenteditable]:hover, [contenteditable]:focus { outline:none !important; background:none !important; }
+}
+
 /* 모달 */
 #modalbg { position:fixed; inset:0; background:rgba(10,20,40,.45); z-index:100; display:none; align-items:center; justify-content:center; }
 #modal { background:#fff; border-radius:14px; padding:22px 24px; width:520px; max-height:86vh; overflow:auto; box-shadow:0 8px 30px rgba(0,0,0,.3); }
@@ -118,6 +128,7 @@ body.exporting .noimg { visibility:hidden; }
   <button onclick="convertExcel()" style="background:#e07b1f;">📄 엑셀 자동 변환</button>
   <button class="gray" onclick="openPaste()">📥 엑셀 붙여넣기</button>
   <button class="green" onclick="exportPNG()">🖼 PNG 내보내기</button>
+  <button class="green" onclick="exportPDF()" title="글자·선이 벡터라 확대해도 안 깨집니다">📑 PDF (최고화질)</button>
 </div>
 <div id="hint"><b>📄 엑셀 자동 변환</b>에 공정표 엑셀(.xlsx)을 넣으면 공정·품명·시간·사진까지 자동으로 정리됩니다 · 칸의 글자는 <b>클릭해서 바로 수정</b> · 칸/블록 위에 마우스를 올리면 <b>⚙ 설정</b> · 자동 저장</div>
 
@@ -528,10 +539,14 @@ function deleteDoc(){
 }
 
 /* ══════════ PNG 내보내기 ══════════ */
+function exportPDF(){
+  toast('인쇄 창에서 <b>대상: PDF로 저장</b>을 고르고 저장하세요 — 글자·선이 벡터라 확대해도 안 깨집니다');
+  setTimeout(()=>window.print(), 400);
+}
 function exportPNG(){
   document.body.classList.add('exporting');
   const go = ()=>{
-    html2canvas(document.getElementById('canvas'), {scale:3, backgroundColor:'#ffffff'}).then(cv=>{
+    html2canvas(document.getElementById('canvas'), {scale:4, backgroundColor:'#ffffff'}).then(cv=>{
       document.body.classList.remove('exporting');
       const a = document.createElement('a');
       a.download = (doc().name||'자료정리') + '.png';
