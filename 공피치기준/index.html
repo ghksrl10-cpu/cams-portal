@@ -119,9 +119,12 @@ b { font-weight:700; }
 .restorebox .rt { font-weight:800; font-size:19px; color:#b8781c; margin-bottom:12px; }
 .restorebox .rrow { display:flex; gap:14px; align-items:flex-start; margin-top:10px; }
 .restorebox .rrow:first-of-type { margin-top:0; }
-.restorebox .rtag { flex:0 0 auto; background:#b8781c; color:#fff; font-weight:800; font-size:13px; padding:5px 12px; border-radius:8px; white-space:nowrap; letter-spacing:-0.3px; margin-top:1px; }
+.restorebox .rtag { flex:0 0 auto; width:44px; text-align:center; background:#8a95a3; color:#fff; font-weight:800; font-size:13px; padding:5px 6px; border-radius:8px; white-space:nowrap; letter-spacing:-0.3px; margin-top:1px; }
+.restorebox .rtag.warn { background:#c0392b; }
+.restorebox .rtag.ok { background:#2e7d4f; }
 .restorebox .rtext { font-size:14.5px; font-weight:600; color:#5a4620; line-height:1.6; word-break:keep-all; overflow-wrap:normal; padding-top:2px; }
 .restorebox .rtext b { color:#b8781c; }
+.restorebox .rnote { margin-top:12px; padding-top:10px; border-top:1.5px dashed #e8d3a8; font-size:12.5px; font-weight:600; color:#8a7248; }
 
 /* 하단 참고 존 */
 .bottomzone { display:flex; gap:16px; margin-top:18px; align-items:stretch; }
@@ -311,9 +314,12 @@ b { font-weight:700; }
 
 <div class="restorebox">
   <div class="rt">⚠ 원복 기준</div>
-  <div class="rrow"><span class="rtag">1:1 → 2:1 이상</span><div class="rtext"><b>그 즉시 11 또는 13 중 1개 공정 원복(인원 재배치) 필요</b> — 8공정이 221.6초로 늘어나 실차 간격(197초 이하)보다 느려지고, 강행 시 안전재고(24대) 소진 후 기아 납품 끊김(약 11.9시간 후)</div></div>
-  <div class="rrow"><span class="rtag">2:1 이상 → 1:1</span><div class="rtext">원복 불필요 — 유지 중인 단독 삭제(-1명)에 1개를 더 없애 동시 삭제(-2명)로 전환 가능</div></div>
-  <div class="rrow"><span class="rtag">원복 대상</span><div class="rtext">11·13 어느 쪽이든 무방 (둘 다 단독 삭제는 전 공피치에서 가능)</div></div>
+  <div class="rrow"><span class="rtag ok">1:1</span><div class="rtext">원복 불필요 — 11+13 동시 삭제(-2명) 그대로 유지 가능</div></div>
+  <div class="rrow"><span class="rtag warn">2:1</span><div class="rtext"><b>원복 필요 — 그 즉시 11 또는 13 중 1개 공정 원복(인원 재배치)</b> — 8공정이 221.6초로 늘어나 실차 간격(197초 이하)보다 느려지고, 강행 시 안전재고(24대) 소진 후 기아 납품 끊김(약 11.9시간 후)</div></div>
+  <div class="rrow"><span class="rtag">3:1</span><div class="rtext">원복 유지 — 2:1에서 시행한 원복 상태 그대로 유지(추가 조치 없음)</div></div>
+  <div class="rrow"><span class="rtag">4:1</span><div class="rtext">원복 유지 — 동일하게 유지(추가 조치 없음)</div></div>
+  <div class="rrow"><span class="rtag">5:1</span><div class="rtext">원복 유지 — 동일하게 유지(추가 조치 없음)</div></div>
+  <div class="rnote">원복 대상은 11·13 어느 쪽이든 무방(둘 다 단독 삭제는 전 공피치에서 가능) · 반대로 공피치가 2:1 이상 → 1:1로 낮아지면 원복 불필요, 유지 중인 단독 삭제(-1명)에 1개를 더 없애 동시 삭제(-2명)로 즉시 전환 가능</div>
 </div>
 
 <div class="bottomzone" style="justify-content:flex-start;">
