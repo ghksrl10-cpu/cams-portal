@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<style>
+@font-face { font-family:'Pretendard'; font-weight:400; src:url('Pretendard-Regular.woff2') format('woff2'); }
+@font-face { font-family:'Pretendard'; font-weight:500; src:url('Pretendard-Medium.woff2') format('woff2'); }
+@font-face { font-family:'Pretendard'; font-weight:600; src:url('Pretendard-SemiBold.woff2') format('woff2'); }
+@font-face { font-family:'Pretendard'; font-weight:700; src:url('Pretendard-Bold.woff2') format('woff2'); }
+@font-face { font-family:'Pretendard'; font-weight:800; src:url('Pretendard-ExtraBold.woff2') format('woff2'); }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Pretendard','Malgun Gothic',sans-serif; background:#fff; width:1600px; padding:20px 24px 16px; color:#333a42;
+       -webkit-font-smoothing:antialiased; }
+b { font-weight:700; }
+
+.tab { display:inline-block; border-radius:10px; padding:8px 24px; font-weight:800; font-size:24px; letter-spacing:-0.4px; color:#fff; }
+.tab.navy { background:#1f4e8c; }
+.tab.green { background:#2e7d4f; }
+.tab.pur { background:#7a3fb5; }
+.secrow { display:flex; align-items:center; margin-bottom:9px; }
+
+.titlerow { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+.titletab { display:inline-block; border-radius:9px; padding:7px 24px; font-weight:800; font-size:28px; letter-spacing:-0.5px; color:#fff; background:#17395f; }
+.legend { display:flex; gap:10px; align-items:center; font-size:16px; font-weight:700; letter-spacing:-0.3px; color:#5a6572; }
+
+.gridtop, .gridbot { display:grid; grid-template-columns:repeat(9,1fr);
+           border:2px solid #2c5794; border-radius:10px; overflow:hidden; background:#fff; }
+.gridbot { border-color:#2e7d4f; }
+.gc.empty, .gb.empty { background:#f7f9fb; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding-bottom:0; }
+.gc.empty .nm, .gb.empty .nm { color:#9aa5b1; padding:0; font-size:17.5px; }
+.gc.empty .lbl, .gb.empty .lbl { color:#b6bfc9; font-size:14px; font-weight:600; letter-spacing:-0.3px; }
+.gc { border-right:1px solid #e4e9ef; text-align:center; position:relative; background:#fff; padding-bottom:7px; }
+.gb { border-right:1px solid #e4e9ef; text-align:center; position:relative; background:#fff; padding-bottom:7px; }
+.gc:last-child, .gb:last-child { border-right:none; }
+.gc .nm { font-weight:700; font-size:21px; color:#1f4e8c; padding:10px 0 8px; letter-spacing:-0.4px; }
+.gb .nm { font-weight:700; font-size:21px; color:#2e7d4f; padding:10px 0 8px; letter-spacing:-0.4px; }
+.gc .ds { font-size:14.5px; font-weight:500; line-height:1.4; color:#454d57; height:44px; letter-spacing:-0.3px; }
+.gb .ds { font-size:14.5px; font-weight:500; line-height:1.4; color:#454d57; height:44px; letter-spacing:-0.3px; }
+.gc .ph { height:150px; display:flex; align-items:center; justify-content:center; padding:0 5px; }
+.gb .ph { height:150px; display:flex; align-items:center; justify-content:center; padding:0 5px; }
+.gc .ph img, .gb .ph img { max-width:100%; max-height:96%; }
+.gc .ct { font-weight:700; font-size:17px; color:#1f4e8c; padding-top:4px; }
+.gb .ct { font-weight:700; font-size:17px; color:#2e7d4f; padding-top:4px; }
+.gc.cond { background:#fffdf6; }
+.gc.cond::after { content:''; position:absolute; inset:5px; border:2px dashed #d99a2b; border-radius:8px; pointer-events:none; }
+.gc.cond .nm { color:#b8781c; }
+.condtag { display:inline-block; background:#d99a2b; color:#fff; font-size:12.5px; font-weight:700; border-radius:10px; padding:1px 9px; letter-spacing:-0.3px; margin-left:5px; vertical-align:2px; }
+
+.secrow2 { display:flex; align-items:center; margin:20px 0 9px; gap:10px; }
+
+/* 공피치 기준 카드 5개 */
+.pitchrow { display:flex; gap:14px; margin-top:8px; }
+.pcard { flex:1; border:2.5px solid #d7dde6; border-radius:14px; background:#fff; overflow:hidden; box-shadow:0 2px 8px rgba(30,50,90,.06); }
+.pcard.flag { border-color:#d99a2b; box-shadow:0 2px 10px rgba(217,154,43,.18); }
+.pcard .ph { background:#1f4e8c; color:#fff; text-align:center; padding:10px 0 8px; }
+.pcard.flag .ph { background:#b8781c; }
+.pcard .ph .pn { font-size:26px; font-weight:800; letter-spacing:-0.5px; }
+.pcard .ph .pi { font-size:12.5px; font-weight:600; opacity:.85; margin-top:1px; }
+.pcard .hn { text-align:center; padding:12px 0 10px; border-bottom:1.5px dashed #e4e9ef; }
+.pcard .hn .num { font-size:32px; font-weight:800; color:#7a3fb5; }
+.pcard .hn .lbl { font-size:11.5px; font-weight:600; color:#98a1ac; margin-top:1px; }
+.prow { display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid #eef1f5; }
+.prow:last-of-type { border-bottom:none; }
+.prow .pl { font-size:13px; font-weight:600; color:#5a6572; }
+.pill { display:inline-block; border-radius:8px; padding:3px 12px; font-size:12.5px; font-weight:700; cursor:pointer; transition:transform .1s; }
+.pill:hover { transform:scale(1.06); box-shadow:0 1px 4px rgba(0,0,0,.15); }
+.pill.ok { background:#e6f4e8; color:#1e7a3a; }
+.pill.no { background:#fde8e8; color:#c0392b; }
+.pill.active { outline:2.5px solid #2f6fd0; outline-offset:1px; }
+.pcard .foot { text-align:center; padding:12px 10px 14px; background:#f7f9fc; }
+.pcard.flag .foot { background:#fff8ea; }
+.calc { font-size:12.5px; font-weight:600; color:#6b7482; line-height:1.5; }
+.calc b { color:#333a42; font-weight:800; }
+.calc .plus { color:#98a1ac; font-weight:700; margin:0 3px; }
+.calcsep { border-top:1.5px dashed #d7dde6; margin:7px 0 6px; }
+.calctot { font-size:22px; font-weight:800; color:#c0392b; }
+.calctot .u { font-size:13px; font-weight:700; margin-left:2px; }
+.calclbl { font-size:10.5px; font-weight:600; color:#98a1ac; margin-top:1px; }
+
+/* ── 위/아래로 찢어지는 공수이동 상세 존 ── */
+.dzone { position:relative; height:0; overflow:hidden; transition:height .22s ease; }
+.dzone.open { height:165px; }
+.dzone.lower.open { height:165px; }
+.dpanel { display:none; position:relative; height:100%; }
+.dpanel.show { display:block; }
+.vline { position:absolute; width:3px; background:#4a7fd4; border-radius:2px; }
+.vline.red { background:#e35050; }
+.hline { position:absolute; height:3px; background:#4a7fd4; border-radius:2px; }
+.hline.red { background:#e35050; }
+.arrowhead { position:absolute; width:0; height:0; border-left:7px solid transparent; border-right:7px solid transparent; border-bottom:9px solid #4a7fd4; }
+.arrowhead.red { border-bottom-color:#e35050; }
+.arrowhead.down { border-bottom:none; border-top:9px solid #4a7fd4; }
+.arrowhead.down.red { border-top-color:#e35050; }
+.vline.navy { background:#1f4e8c; }
+.arrowhead.navy { border-bottom-color:#1f4e8c; }
+.mv2 { position:absolute; border:2px solid; border-radius:12px; background:#fff; padding:9px 9px 9px 11px; width:330px; box-shadow:0 2px 7px rgba(30,50,90,.08); }
+.mv2.blue { border-color:#4a7fd4; }
+.mv2.red  { border-color:#e35050; }
+.mv2.navy { border-color:#1f4e8c; }
+.mv2 .badge { position:absolute; top:-13px; left:12px; border:2px solid; border-radius:14px; background:#fff; font-size:13px; font-weight:700; padding:1px 12px; }
+.mv2.blue .badge { color:#2f6fd0; border-color:#4a7fd4; }
+.mv2.red  .badge { color:#e03c3c; border-color:#e35050; }
+.mv2.navy .badge { color:#1f4e8c; border-color:#1f4e8c; }
+.mv2 .t { font-size:15px; font-weight:700; margin:3px 0 7px 2px; letter-spacing:-0.4px; }
+.mv2.blue .t { color:#2f5fa8; }
+.mv2.red  .t { color:#d43c3c; }
+.mv2.navy .t { color:#1f4e8c; }
+.mv2 .body2 { display:flex; gap:5px; align-items:center; }
+.mv2 .body2 img { width:34px; max-height:70px; object-fit:contain; }
+.mv2 .ls { font-size:12px; font-weight:500; line-height:1.4; color:#454d57; letter-spacing:-0.5px; word-break:keep-all; overflow-wrap:normal; }
+.mv2 .go { color:#d43c3c; font-weight:700; font-size:13px; margin-top:3px; }
+.mv2.blue .go, .mv2.navy .go { color:#2f6fd0; }
+.mv2 .verdict { display:inline-block; margin-top:4px; padding:2px 9px; border-radius:8px; font-size:11.5px; font-weight:700; }
+.mv2 .verdict.ok { background:#e6f4e8; color:#1e7a3a; }
+.mv2 .verdict.no { background:#fde8e8; color:#c0392b; }
+
+/* 원복 기준 */
+.restorebox { margin-top:18px; border:2.5px solid #d99a2b; border-radius:12px; background:linear-gradient(180deg,#fffaf0,#fff3dd); padding:20px 26px; }
+.restorebox .rt { font-weight:800; font-size:19px; color:#b8781c; margin-bottom:12px; }
+.restorebox .rrow { display:flex; gap:14px; align-items:flex-start; margin-top:10px; }
+.restorebox .rrow:first-of-type { margin-top:0; }
+.restorebox .rtag { flex:0 0 auto; background:#b8781c; color:#fff; font-weight:800; font-size:13px; padding:5px 12px; border-radius:8px; white-space:nowrap; letter-spacing:-0.3px; margin-top:1px; }
+.restorebox .rtext { font-size:14.5px; font-weight:600; color:#5a4620; line-height:1.6; word-break:keep-all; overflow-wrap:normal; padding-top:2px; }
+.restorebox .rtext b { color:#b8781c; }
+
+/* 하단 참고 존 */
+.bottomzone { display:flex; gap:16px; margin-top:18px; align-items:stretch; }
+.sub { border:2px dashed #e35050; border-radius:12px; background:#fffcfc; width:190px; text-align:center; padding:8px 6px 6px; }
+.sub .t { color:#d43c3c; font-weight:700; font-size:14px; }
+.sub .s { font-size:11.5px; font-weight:500; margin:2px 0 3px; color:#454d57; }
+.sub img { max-height:100px; max-width:100%; }
+</style>
+</head>
+<body>
+
+<div class="titlerow">
+  <div class="titletab">공피치별 11·13공정 삭제 가능 여부 &amp; 원복 기준</div>
+  <div class="legend">공정표는 참고용(동일 구조) · 삭제 가능 여부는 공피치에 따라 달라짐</div>
+</div>
+
+<div class="secrow">
+  <div class="tab navy">C/PAD 컨베어 공수</div>
+</div>
+<div class="gridtop">
+  <div class="gc empty"><div class="nm">18공정</div><div class="lbl">빈 공정</div></div>
+  <div class="gc"><div class="nm">17공정</div><div class="ds">전장 검사<br>전기 기능 최종 검사</div><div class="ph"><img src="phc_t17.png"></div><div class="ct">203초</div></div>
+  <div class="gc"><div class="nm">16공정</div><div class="ds">클러스터페시아 조립<br>중앙 조작부 패널</div><div class="ph"><img src="phc_t16.png"></div><div class="ct">78.6초</div></div>
+  <div class="gc empty"><div class="nm">15공정</div><div class="lbl">빈 공정</div></div>
+  <div class="gc empty"><div class="nm">14공정</div><div class="lbl">빈 공정</div></div>
+  <div class="gc cond"><div class="nm">13공정<span class="condtag">조건부 삭제</span></div><div class="ds">글로브 박스 조립<br>(수납함 · 퓨즈 박스)</div><div class="ph"><img src="phc_t13.png"></div><div class="ct">83.6초</div></div>
+  <div class="gc empty"><div class="nm">12공정</div><div class="lbl">빈 공정</div></div>
+  <div class="gc cond"><div class="nm">11공정<span class="condtag">조건부 삭제</span></div><div class="ds">AVN(모니터·오디오)<br>및 패드 부착</div><div class="ph"><img src="phc_t11.png"></div><div class="ct">120.9초</div></div>
+  <div class="gc empty"><div class="nm">10공정</div><div class="lbl">빈 공정</div></div>
+</div>
+
+<!-- ═══ 위쪽 상세존 : 11·13·16공정으로 올라가는 화살표(그리드 바로 밑 top:0에서 카드로 내려옴) ═══ -->
+<div id="dzoneUpper" class="dzone">
+  <div id="panel-avn-up" class="dpanel">
+    <div class="arrowhead" style="left:424px; top:0;"></div>
+    <div class="vline" style="left:430px; top:7px; height:24px;"></div>
+    <div class="mv2 blue" style="left:190px; top:34px; width:430px;"><div class="badge">2안</div><div class="t">AVN 공수 후속 58.2초</div>
+      <div class="body2"><img src="phc_mv_avn_post.png"><div class="ls">공수 : AVN 커버 후크 12EA · 패드 부착 · 하네스 클립 7EA · 퓨즈커버 바코드 1EA<div class="go">▶ 16공정으로</div><div class="verdict ok">136.8초 · C/T 가능</div></div></div></div>
+    <div class="arrowhead red" style="left:893px; top:0;"></div>
+    <div class="vline red" style="left:899px; top:7px; height:24px;"></div>
+    <div class="mv2 red" style="left:650px; top:34px; width:430px;"><div class="badge">1안</div><div class="t">AVN 공수 후속 58.2초</div>
+      <div class="body2"><img src="phc_mv_avn_post.png"><div class="ls">공수 : AVN 커버 후크 12EA · 패드 부착 · 하네스 클립 7EA · 퓨즈커버 바코드 1EA<div class="go">▶ 13공정으로</div><div class="verdict ok">141.8초 · C/T 가능</div></div></div></div>
+    <div class="arrowhead" style="left:978px; top:0;"></div>
+    <div class="vline" style="left:984px; top:7px; height:16px;"></div>
+    <div class="hline" style="left:984px; top:23px; width:331px;"></div>
+    <div class="vline" style="left:1312px; top:23px; height:11px;"></div>
+    <div class="mv2 blue" style="left:1100px; top:34px; width:430px;"><div class="badge">2안</div><div class="t">AVN 공수 선행 47.4초</div>
+      <div class="body2"><img src="phc_mv_avn_pre.png"><div class="ls">공수 : AVN 후크 4EA · 스크류 3EA · 하네스 체결 3EA · 바코드 1EA<div class="go">▶ 13공정으로</div><div class="verdict ok">131.0초 · C/T 가능</div></div></div></div>
+  </div>
+  <div id="panel-glv-up" class="dpanel">
+    <div class="arrowhead navy" style="left:424px; top:0;"></div>
+    <div class="vline navy" style="left:430px; top:7px; height:24px;"></div>
+    <div class="mv2 navy" style="left:271px; top:34px;"><div class="badge">1·2안 공통</div><div class="t">글로브 공수 본작업 67.1초</div>
+      <div class="body2"><img src="phc_mv_glv_main.png"><div class="ls">공수 : 스크류 9EA · BRKT 2EA · 박스 커버 1EA · 후크 2EA<div class="go">▶ 16공정으로</div><div class="verdict ok">145.7초 · C/T 가능</div></div></div></div>
+    <div class="arrowhead red" style="left:1218px; top:0;"></div>
+    <div class="vline red" style="left:1224px; top:7px; height:16px;"></div>
+    <div class="hline red" style="left:898px; top:23px; width:326px;"></div>
+    <div class="vline red" style="left:895px; top:23px; height:11px;"></div>
+    <div class="mv2 red" style="left:733px; top:34px;"><div class="badge">1안</div><div class="t">글로브 공수 선행 필수 21.5초</div>
+      <div class="body2"><img src="phc_mv_glv_pre_full.png"><div class="ls">공수 : 박스 1EA · 너트 1EA · 퓨즈박스 커버 1EA 조립<div class="go">▶ 11공정으로</div><div class="verdict ok">142.4초 · C/T 가능</div></div></div></div>
+    <div class="arrowhead" style="left:1313px; top:0;"></div>
+    <div class="vline" style="left:1319px; top:7px; height:24px;"></div>
+    <div class="mv2 blue" style="left:1150px; top:34px;"><div class="badge">2안</div><div class="t">글로브 공수 선행 16.5초</div>
+      <div class="body2"><img src="phc_mv_glv_pre.png"><div class="ls">공수 : 박스 1EA · 너트 1EA<div class="go">▶ 11공정으로</div><div class="verdict ok">137.4초 · C/T 가능</div></div></div></div>
+  </div>
+  <div id="panel-both-up" class="dpanel">
+    <div class="arrowhead red" style="left:424px; top:0;"></div>
+    <div class="vline red" style="left:430px; top:7px; height:24px;"></div>
+    <div class="mv2 red" style="left:190px; top:34px; width:430px;"><div class="badge">AVN</div><div class="t">AVN 공수 후속 58.2초</div>
+      <div class="body2"><img src="phc_mv_avn_post.png"><div class="ls">공수 : AVN 커버 후크 12EA · 패드 부착 · 하네스 클립 7EA · 퓨즈커버 바코드 1EA<div class="go">▶ 16공정으로</div><div class="verdict no">203.9초 · 180초 초과 불가</div></div></div></div>
+    <div class="arrowhead" style="left:490px; top:0;"></div>
+    <div class="vline" style="left:496px; top:7px; height:16px;"></div>
+    <div class="hline" style="left:496px; top:23px; width:309px;"></div>
+    <div class="vline" style="left:802px; top:23px; height:11px;"></div>
+    <div class="mv2 blue" style="left:640px; top:34px;"><div class="badge">글로브</div><div class="t">글로브 공수 본작업 67.1초</div>
+      <div class="body2"><img src="phc_mv_glv_main.png"><div class="ls">공수 : 스크류 9EA · BRKT 2EA · 박스 커버 1EA · 후크 2EA<div class="go">▶ 16공정으로</div><div class="verdict no">203.9초 · 180초 초과 불가</div></div></div></div>
+  </div>
+</div>
+
+<div class="pitchrow">
+  <div class="pcard">
+    <div class="ph"><div class="pn">1 : 1</div><div class="pi">실차 간격 263초</div></div>
+    <div class="hn"><div class="num">3명</div><div class="lbl">하네스 투입 인원</div></div>
+    <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능</span></div>
+    <div class="prow"><span class="pl">글로브(13) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능</span></div>
+    <div class="prow"><span class="pl">11+13 동시 삭제</span><span class="pill ok" onclick="showDetail('both',this)">가능</span></div>
+    <div class="foot">
+      <div class="calc">(하네스 3명 <span class="plus">+</span> 공정 1명) <span class="plus">×2조</span></div>
+      <div class="calctot">-8<span class="u">명/일</span></div>
+      <div class="calclbl">단독 삭제 시 (주야 합)</div>
+      <div class="calcsep"></div>
+      <div class="calc">(하네스 3명 <span class="plus">+</span> 공정 2명) <span class="plus">×2조</span></div>
+      <div class="calctot" style="margin-top:2px;">-10<span class="u">명/일</span></div>
+      <div class="calclbl">동시 삭제 시 (주야 합)</div>
+    </div>
+  </div>
+  <div class="pcard flag">
+    <div class="ph"><div class="pn">2 : 1</div><div class="pi">실차 간격 197초</div></div>
+    <div class="hn"><div class="num">4명</div><div class="lbl">하네스 투입 인원</div></div>
+    <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능</span></div>
+    <div class="prow"><span class="pl">글로브(13) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능</span></div>
+    <div class="prow"><span class="pl">11+13 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가·원복</span></div>
+    <div class="foot">
+      <div class="calc">(하네스 2명 <span class="plus">+</span> 공정 1명) <span class="plus">×2조</span></div>
+      <div class="calctot">-6<span class="u">명/일</span></div>
+      <div class="calclbl">단독 삭제 시 (주야 합, 11 또는 13 중 1개)</div>
+    </div>
+  </div>
+  <div class="pcard">
+    <div class="ph"><div class="pn">3 : 1</div><div class="pi">실차 간격 175초</div></div>
+    <div class="hn"><div class="num">5명</div><div class="lbl">하네스 투입 인원</div></div>
+    <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능</span></div>
+    <div class="prow"><span class="pl">글로브(13) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능</span></div>
+    <div class="prow"><span class="pl">11+13 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가</span></div>
+    <div class="foot">
+      <div class="calc">(하네스 1명 <span class="plus">+</span> 공정 1명) <span class="plus">×2조</span></div>
+      <div class="calctot">-4<span class="u">명/일</span></div>
+      <div class="calclbl">단독 삭제 시 (주야 합, 11 또는 13 중 1개)</div>
+    </div>
+  </div>
+  <div class="pcard">
+    <div class="ph"><div class="pn">4 : 1</div><div class="pi">실차 간격 164초</div></div>
+    <div class="hn"><div class="num">5명</div><div class="lbl">하네스 투입 인원</div></div>
+    <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능</span></div>
+    <div class="prow"><span class="pl">글로브(13) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능</span></div>
+    <div class="prow"><span class="pl">11+13 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가</span></div>
+    <div class="foot">
+      <div class="calc">(하네스 1명 <span class="plus">+</span> 공정 1명) <span class="plus">×2조</span></div>
+      <div class="calctot">-4<span class="u">명/일</span></div>
+      <div class="calclbl">단독 삭제 시 (주야 합, 11 또는 13 중 1개)</div>
+    </div>
+  </div>
+  <div class="pcard">
+    <div class="ph"><div class="pn">5 : 1</div><div class="pi">실차 간격 158초</div></div>
+    <div class="hn"><div class="num">6명</div><div class="lbl">하네스 투입 인원</div></div>
+    <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능(83%)</span></div>
+    <div class="prow"><span class="pl">글로브(13) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능(90%)</span></div>
+    <div class="prow"><span class="pl">11+13 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가</span></div>
+    <div class="foot">
+      <div class="calc">(하네스 0명 <span class="plus">+</span> 공정 1명) <span class="plus">×2조</span></div>
+      <div class="calctot">-2<span class="u">명/일</span></div>
+      <div class="calclbl">단독 삭제 시 (주야 합, 11 또는 13 중 1개)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 아래쪽 상세존 : 8공정으로 내려가는 화살표(top에서 아래로) ═══ -->
+<div id="dzoneLower" class="dzone lower">
+  <div id="panel-avn-dn" class="dpanel">
+    <div class="mv2 red" style="left:1108px; top:15px; width:430px;"><div class="badge">1안</div><div class="t">AVN 공수 선행 47.4초</div>
+      <div class="body2"><img src="phc_mv_avn_pre.png"><div class="ls">공수 : AVN 후크 4EA · 스크류 3EA · 하네스 체결 3EA · 바코드 1EA<div class="go">▶ 8공정으로</div><div class="verdict no">200.1초 · 180초 초과 불가</div></div></div></div>
+    <div class="vline red" style="left:1293px; top:127px; height:10px;"></div>
+    <div class="arrowhead down red" style="left:1286px; top:137px;"></div>
+  </div>
+  <div id="panel-glv-dn" class="dpanel">
+    <div class="mv2 blue" style="left:1128px; top:15px;"><div class="badge">2안</div><div class="t">글로브 공수 선행 5초</div>
+      <div class="body2"><img src="phc_mv_glv_fcover.png"><div class="ls">공수 : 퓨즈박스 커버 1EA 조립<div class="go">▶ 8공정으로</div><div class="verdict ok">157.7초 · C/T 가능</div></div></div></div>
+    <div class="vline" style="left:1293px; top:126px; height:10px;"></div>
+    <div class="arrowhead down" style="left:1286px; top:136px;"></div>
+  </div>
+  <div id="panel-both-dn" class="dpanel">
+    <div class="mv2 blue" style="left:700px; top:15px;"><div class="badge">글로브</div><div class="t">글로브 공수 선행 21.5초</div>
+      <div class="body2"><img src="phc_mv_glv_pre_full.png"><div class="ls">공수 : 박스 1EA · 너트 1EA · 퓨즈박스 커버 1EA 조립<div class="go">▶ 8공정으로</div><div class="verdict no">221.6초 · 180초 초과 불가</div></div></div></div>
+    <div class="vline" style="left:867px; top:126px; height:8px;"></div>
+    <div class="hline" style="left:867px; top:134px; width:405px;"></div>
+    <div class="vline" style="left:1270px; top:134px; height:6px;"></div>
+    <div class="arrowhead down" style="left:1263px; top:140px;"></div>
+    <div class="mv2 red" style="left:1050px; top:15px; width:430px;"><div class="badge">AVN</div><div class="t">AVN 공수 선행 47.4초</div>
+      <div class="body2"><img src="phc_mv_avn_pre.png"><div class="ls">공수 : AVN 후크 4EA · 스크류 3EA · 하네스 체결 3EA · 바코드 1EA<div class="go">▶ 8공정으로</div><div class="verdict no">221.6초 · 180초 초과 불가</div></div></div></div>
+    <div class="vline red" style="left:1318px; top:127px; height:10px;"></div>
+    <div class="arrowhead down red" style="left:1311px; top:137px;"></div>
+  </div>
+</div>
+
+
+<div class="gridbot" style="margin-top:16px;">
+  <div class="gb"><div class="nm">1공정</div><div class="ds">카울 크로스(프레임)<br>기준핀 고정</div><div class="ph"><img src="phc_b1.png"></div><div class="ct">128.2초</div></div>
+  <div class="gb"><div class="nm">2공정</div><div class="ds">ETACS · 퓨즈박스 등<br>전장 부품 조립</div><div class="ph"><img src="phc_b2.png"></div><div class="ct">72.8초</div></div>
+  <div class="gb"><div class="nm">3공정</div><div class="ds">와이어 하네스<br>전선 뭉치 결선</div><div class="ph"><img src="phc_b3.png"></div><div class="ct">65초</div></div>
+  <div class="gb"><div class="nm">4공정</div><div class="ds">사양별 커넥터 결선<br>리저브 탱크 조립</div><div class="ph"><img src="phc_b4.png"></div><div class="ct">71초</div></div>
+  <div class="gb"><div class="nm">5공정</div><div class="ds">C/PAD(크래시패드)<br>조립</div><div class="ph"><img src="phc_b5.png"></div><div class="ct">121초</div></div>
+  <div class="gb"><div class="nm">6공정</div><div class="ds">오토라이트 · 포토센서<br>노즐 L/R 조립</div><div class="ph"><img src="phc_b6.png"></div><div class="ct">74초</div></div>
+  <div class="gb empty"><div class="nm">7공정</div><div class="lbl">빈 공정</div></div>
+  <div class="gb"><div class="nm">8공정</div><div class="ds">클러스터 · 헤드 유닛<br>체결 · 바코드 스캔</div><div class="ph"><img src="phc_b8.png"></div><div class="ct">152.7초</div></div>
+  <div class="gb empty"><div class="nm">9공정</div><div class="lbl">빈 공정</div></div>
+</div>
+
+<div class="restorebox">
+  <div class="rt">⚠ 원복 기준</div>
+  <div class="rrow"><span class="rtag">1:1 → 2:1 이상</span><div class="rtext"><b>그 즉시 11 또는 13 중 1개 공정 원복(인원 재배치) 필요</b> — 8공정이 221.6초로 늘어나 실차 간격(197초 이하)보다 느려지고, 강행 시 안전재고(24대) 소진 후 기아 납품 끊김(약 11.9시간 후)</div></div>
+  <div class="rrow"><span class="rtag">2:1 이상 → 1:1</span><div class="rtext">원복 불필요 — 유지 중인 단독 삭제(-1명)에 1개를 더 없애 동시 삭제(-2명)로 전환 가능</div></div>
+  <div class="rrow"><span class="rtag">원복 대상</span><div class="rtext">11·13 어느 쪽이든 무방 (둘 다 단독 삭제는 전 공피치에서 가능)</div></div>
+</div>
+
+<div class="bottomzone" style="justify-content:flex-start;">
+  <div class="sub">
+    <div class="t">SUB 공정 (보조)</div>
+    <div class="s">에어백 · 55초</div>
+    <img src="phc_sub.png">
+  </div>
+</div>
+
+<script>
+function showDetail(which, el){
+  var already = el.classList.contains('active');
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.dpanel').forEach(p=>p.classList.remove('show'));
+  document.getElementById('dzoneUpper').classList.remove('open');
+  document.getElementById('dzoneLower').classList.remove('open');
+  if (!already) {
+    el.classList.add('active');
+    document.getElementById('panel-'+which+'-up').classList.add('show');
+    document.getElementById('panel-'+which+'-dn').classList.add('show');
+    document.getElementById('dzoneUpper').classList.add('open');
+    document.getElementById('dzoneLower').classList.add('open');
+  }
+}
+</script>
+
+</body>
+</html>
