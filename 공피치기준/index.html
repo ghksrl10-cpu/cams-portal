@@ -145,9 +145,37 @@ b { font-weight:700; }
 .sub .ph img { max-width:100%; max-height:96%; }
 .sub .ct { font-weight:700; font-size:17px; color:#d43c3c; padding-top:4px; }
 .sub .ct .hn { font-size:17px; font-weight:700; color:#d43c3c; margin-left:2px; }
+
+/* 상단 탭 전환 */
+.topnav { display:flex; gap:10px; margin-bottom:16px; }
+.topnav button { border:none; cursor:pointer; font-family:inherit; font-weight:800; font-size:16px; letter-spacing:-0.3px; padding:10px 26px; border-radius:9px; background:#e4e9ef; color:#5a6572; transition:background .15s,color .15s; }
+.topnav button.active { background:#17395f; color:#fff; }
+.tabpage { display:none; }
+.tabpage.active { display:block; }
+
+/* 레이아웃 제약 카드 */
+.layoutrow { display:flex; gap:16px; margin-top:8px; }
+.lcard { flex:1; border:2.5px solid #d7dde6; border-radius:14px; background:#fff; overflow:hidden; box-shadow:0 2px 8px rgba(30,50,90,.06); }
+.lcard .lh { background:#7a3fb5; color:#fff; text-align:center; padding:10px 0 8px; }
+.lcard .lh .ln { font-size:20px; font-weight:800; letter-spacing:-0.4px; }
+.lcard .lh .li { font-size:13px; font-weight:600; opacity:.85; margin-top:2px; }
+.lcard .lbody { padding:16px 18px; }
+.lcard .lrow { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #eef1f5; font-size:14.5px; }
+.lcard .lrow:last-of-type { border-bottom:none; }
+.lcard .lrow .ll { color:#5a6572; font-weight:600; }
+.lcard .lrow .lv { color:#333a42; font-weight:800; }
+.lcard .lissue { margin-top:10px; padding:12px 14px; background:#fdf3f3; border:1.5px dashed #e35050; border-radius:10px; font-size:13.5px; font-weight:600; color:#a73030; line-height:1.5; word-break:keep-all; }
+.lcard .lissue b { color:#c0392b; }
 </style>
 </head>
 <body>
+
+<div class="topnav">
+  <button class="active" onclick="switchTab('gongpitch', this)">공피치</button>
+  <button onclick="switchTab('layout', this)">레이아웃</button>
+</div>
+
+<div id="tab-gongpitch" class="tabpage active">
 
 <div class="titlerow">
   <div class="titletab">공피치별 11·13공정 삭제 가능 여부 &amp; 원복 기준</div>
@@ -365,7 +393,45 @@ b { font-weight:700; }
   <div class="rnote">원복 대상은 11·13 어느 쪽이든 무방(둘 다 단독 삭제는 전 공피치에서 가능) · 반대로 공피치가 2:1 이상 → 1:1로 낮아지면 원복 불필요, 유지 중인 단독 삭제(-1명)에 1개를 더 없애 동시 삭제(-2명)로 즉시 전환 가능</div>
 </div>
 
+</div>
+
+<div id="tab-layout" class="tabpage">
+
+<div class="titlerow">
+  <div class="titletab">공수 이동 레이아웃 제약사항</div>
+  <div class="legend">11·13공정 공수를 다른 공정으로 옮길 때 실제 배치 가능 여부(공간·물류) 검토</div>
+</div>
+
+<div class="layoutrow">
+  <div class="lcard">
+    <div class="lh"><div class="ln">글로브 박스</div><div class="li">13공정 이동 대상</div></div>
+    <div class="lbody">
+      <div class="lrow"><span class="ll">대상 부품</span><span class="lv">글로브 박스 · 글로브 박스 커버</span></div>
+      <div class="lrow"><span class="ll">공급 형태</span><span class="lv">단품 파렛트</span></div>
+      <div class="lrow"><span class="ll">파렛트 크기</span><span class="lv">큰 편</span></div>
+      <div class="lissue"><b>제약 :</b> 파렛트가 커서 어느 공정(11·16공정 등)으로 옮기든 배치 공간 제약이 있음 — 받는 공정 옆에 이 파렛트를 놓을 자리 확보가 우선 필요</div>
+    </div>
+  </div>
+  <div class="lcard">
+    <div class="lh"><div class="ln">AVN</div><div class="li">11공정 이동 대상</div></div>
+    <div class="lbody">
+      <div class="lrow"><span class="ll">공급 형태</span><span class="lv">단프라 박스</span></div>
+      <div class="lrow"><span class="ll">박스당 수량</span><span class="lv">약 10개</span></div>
+      <div class="lrow"><span class="ll">크기</span><span class="lv">크지 않음</span></div>
+      <div class="lissue"><b>제약 :</b> 파렛트처럼 공간을 크게 차지하진 않지만, 박스당 물량이 적어(약 10개) 단프라 박스를 수시로 교체해줘야 함 — 받는 공정에 보충 빈도 부담이 추가됨</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
 <script>
+function switchTab(name, el){
+  document.querySelectorAll('.topnav button').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.tabpage').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
 function setMainHc(n, el){
   document.getElementById('mainHcNum').textContent = n+'명';
   document.querySelectorAll('.pcard .ph').forEach(p=>p.classList.remove('hcsel'));
