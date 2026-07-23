@@ -58,11 +58,9 @@ b { font-weight:700; }
 /* 공피치 기준 카드 5개 */
 .pitchrow { display:flex; gap:14px; margin-top:8px; }
 .pcard { flex:1; border:2.5px solid #d7dde6; border-radius:14px; background:#fff; overflow:hidden; box-shadow:0 2px 8px rgba(30,50,90,.06); cursor:pointer; }
-.pcard.flag { border-color:#d99a2b; box-shadow:0 2px 10px rgba(217,154,43,.18); }
 .pcard .ph { background:#1f4e8c; color:#fff; text-align:center; padding:10px 0 8px; cursor:pointer; transition:box-shadow .15s; }
 .pcard .ph:hover { box-shadow:inset 0 0 0 2px rgba(255,255,255,.5); }
 .pcard .ph.hcsel { box-shadow:inset 0 0 0 3px #d99a2b; }
-.pcard.flag .ph { background:#b8781c; }
 .pcard .ph .pn { font-size:26px; font-weight:800; letter-spacing:-0.5px; }
 .pcard .ph .pi { font-size:15.5px; font-weight:600; opacity:.85; margin-top:1px; }
 .pcard .ph .pi2 { font-size:14.5px; font-weight:600; opacity:.75; margin-top:1px; }
@@ -78,7 +76,6 @@ b { font-weight:700; }
 .pill.no { background:#fde8e8; color:#c0392b; }
 .pill.active { outline:2.5px solid #2f6fd0; outline-offset:1px; }
 .pcard .foot { text-align:center; padding:12px 10px 14px; background:#f7f9fc; }
-.pcard.flag .foot { background:#fff8ea; }
 .calc { font-size:16px; font-weight:600; color:#6b7482; line-height:1.5; }
 .calc b { color:#333a42; font-weight:800; }
 .calc .plus { color:#98a1ac; font-weight:700; margin:0 3px; }
@@ -264,7 +261,7 @@ b { font-weight:700; }
       <div class="calclbl">동시 삭제 시 (주야 합)</div>
     </div>
   </div>
-  <div class="pcard flag" data-hc="4" onclick="setMainHc(this)">
+  <div class="pcard" data-hc="4" onclick="setMainHc(this)">
     <div class="ph"><div class="pn">2 : 1</div><div class="pi">실차 간격 197초</div><div class="pi2">일 납품 5회</div></div>
     <div class="hn"><div class="num">4명</div><div class="lbl">하네스 투입 인원</div></div>
     <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능</span></div>
