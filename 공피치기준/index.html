@@ -253,7 +253,7 @@ b { font-weight:700; }
     <div class="hn"><div class="num">5명</div><div class="lbl">하네스 투입 인원</div></div>
     <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능</span></div>
     <div class="prow"><span class="pl">글로브(13) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능</span></div>
-    <div class="prow"><span class="pl">11+13 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가</span></div>
+    <div class="prow"><span class="pl">11+13 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가·원복</span></div>
     <div class="foot">
       <div class="calc">(하네스 1명 <span class="plus">+</span> 공정 1명) <span class="plus">×2조</span></div>
       <div class="calctot">-4<span class="u">명/일</span></div>
@@ -265,7 +265,7 @@ b { font-weight:700; }
     <div class="hn"><div class="num">5명</div><div class="lbl">하네스 투입 인원</div></div>
     <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능</span></div>
     <div class="prow"><span class="pl">글로브(13) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능</span></div>
-    <div class="prow"><span class="pl">11+13 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가</span></div>
+    <div class="prow"><span class="pl">11+13 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가·원복</span></div>
     <div class="foot">
       <div class="calc">(하네스 1명 <span class="plus">+</span> 공정 1명) <span class="plus">×2조</span></div>
       <div class="calctot">-4<span class="u">명/일</span></div>
@@ -277,7 +277,7 @@ b { font-weight:700; }
     <div class="hn"><div class="num">6명</div><div class="lbl">하네스 투입 인원</div></div>
     <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능(83%)</span></div>
     <div class="prow"><span class="pl">글로브(13) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능(90%)</span></div>
-    <div class="prow"><span class="pl">11+13 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가</span></div>
+    <div class="prow"><span class="pl">11+13 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가·원복</span></div>
     <div class="foot">
       <div class="calc">(하네스 0명 <span class="plus">+</span> 공정 1명) <span class="plus">×2조</span></div>
       <div class="calctot">-2<span class="u">명/일</span></div>
@@ -359,9 +359,9 @@ b { font-weight:700; }
   <div class="rt">⚠ 원복 기준</div>
   <div class="rrow"><span class="rtag ok">1:1</span><div class="rtext"><b>하네스 3명</b> 운영 · 원복 불필요 — 11+13 동시 삭제(-2명) 그대로 유지 가능</div></div>
   <div class="rrow"><span class="rtag warn">2:1</span><div class="rtext"><b>하네스 4명</b>으로 원복 · 그 즉시 11 또는 13 중 1개 공정 원복(인원 재배치) — 8공정이 221.6초로 늘어나 실차 간격(197초 이하)보다 느려지고, 강행 시 안전재고(24대) 소진 후 기아 납품 끊김(약 11.9시간 후)</div></div>
-  <div class="rrow"><span class="rtag">3:1</span><div class="rtext"><b>하네스 5명</b> 유지 · 2:1에서 시행한 원복 상태 그대로 유지(추가 조치 없음)</div></div>
-  <div class="rrow"><span class="rtag">4:1</span><div class="rtext"><b>하네스 5명</b> 유지 · 동일하게 유지(추가 조치 없음)</div></div>
-  <div class="rrow"><span class="rtag">5:1</span><div class="rtext"><b>하네스 6명</b> 유지 · 동일하게 유지(추가 조치 없음)</div></div>
+  <div class="rrow"><span class="rtag warn">3:1</span><div class="rtext"><b>하네스 5명</b>으로 원복 · 2:1과 동일한 이유로 원복 필요(8공정 초과) — 이미 2:1에서 원복했다면 그 상태 유지, 안 했다면 즉시 시행</div></div>
+  <div class="rrow"><span class="rtag warn">4:1</span><div class="rtext"><b>하네스 5명</b>으로 원복 · 동일(8공정 초과로 원복 필요) — 이미 원복했다면 유지, 안 했다면 즉시 시행</div></div>
+  <div class="rrow"><span class="rtag warn">5:1</span><div class="rtext"><b>하네스 6명</b>으로 원복 · 동일(8공정 초과로 원복 필요) — 이미 원복했다면 유지, 안 했다면 즉시 시행</div></div>
   <div class="rnote">원복 대상은 11·13 어느 쪽이든 무방(둘 다 단독 삭제는 전 공피치에서 가능) · 반대로 공피치가 2:1 이상 → 1:1로 낮아지면 원복 불필요, 유지 중인 단독 삭제(-1명)에 1개를 더 없애 동시 삭제(-2명)로 즉시 전환 가능</div>
 </div>
 
