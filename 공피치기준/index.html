@@ -129,9 +129,10 @@ b { font-weight:700; }
 
 /* 하단 참고 존 */
 .bottomzone { display:flex; gap:16px; margin-top:18px; align-items:stretch; }
-.sub { border:2px dashed #e35050; border-radius:12px; background:#fffcfc; width:190px; text-align:center; padding:8px 6px 6px; }
+.sub { border:2px dashed #e35050; border-radius:12px; background:#fffcfc; width:210px; text-align:center; padding:8px 6px 6px; }
 .sub .t { color:#d43c3c; font-weight:700; font-size:14px; }
 .sub .s { font-size:11.5px; font-weight:500; margin:2px 0 3px; color:#454d57; }
+.sub .s2 { font-size:10px; font-weight:500; color:#98a1ac; margin-top:3px; line-height:1.4; }
 .sub img { max-height:100px; max-width:100%; }
 </style>
 </head>
@@ -313,6 +314,32 @@ b { font-weight:700; }
   <div class="gb empty"><div class="nm">9공정</div><div class="lbl">빈 공정</div></div>
 </div>
 
+<div class="bottomzone" style="justify-content:flex-start;">
+  <div class="sub">
+    <div class="t">SUB 공정 (에어백)</div>
+    <div class="s">에어백 · 55초</div>
+    <img src="phc_sub.png">
+  </div>
+  <div class="sub">
+    <div class="t">SUB 공정 (클러스터 페시아)</div>
+    <div class="s">클러스터 페시아 · 스위치 · 에어덕트</div>
+    <img src="phc_subA.png">
+    <div class="s2">이중 · 누락 · 미체결 · 바코드 스캔 누락 없을 것</div>
+  </div>
+  <div class="sub">
+    <div class="t">SUB 공정 (클러스터 페시아)</div>
+    <div class="s">에어덕트 · USB 모듈</div>
+    <img src="phc_subB.png">
+    <div class="s2">이중 · 누락 · 미체결 · 바코드 스캔 누락 없을 것</div>
+  </div>
+  <div class="sub">
+    <div class="t">SUB 공정 (LTE/AVN BRKT)</div>
+    <div class="s">AVN BRKT · LTE 모듈</div>
+    <img src="phc_subC.png">
+    <div class="s2">누락 · 미체결 · 바코드 스캔 누락 없을 것</div>
+  </div>
+</div>
+
 <div class="restorebox">
   <div class="rt">⚠ 원복 기준</div>
   <div class="rrow"><span class="rtag ok">1:1</span><div class="rtext"><b>하네스 3명</b> 운영 · 원복 불필요 — 11+13 동시 삭제(-2명) 그대로 유지 가능</div></div>
@@ -321,14 +348,6 @@ b { font-weight:700; }
   <div class="rrow"><span class="rtag">4:1</span><div class="rtext"><b>하네스 5명</b> 유지 · 동일하게 유지(추가 조치 없음)</div></div>
   <div class="rrow"><span class="rtag">5:1</span><div class="rtext"><b>하네스 6명</b> 유지 · 동일하게 유지(추가 조치 없음)</div></div>
   <div class="rnote">원복 대상은 11·13 어느 쪽이든 무방(둘 다 단독 삭제는 전 공피치에서 가능) · 반대로 공피치가 2:1 이상 → 1:1로 낮아지면 원복 불필요, 유지 중인 단독 삭제(-1명)에 1개를 더 없애 동시 삭제(-2명)로 즉시 전환 가능</div>
-</div>
-
-<div class="bottomzone" style="justify-content:flex-start;">
-  <div class="sub">
-    <div class="t">SUB 공정 (보조)</div>
-    <div class="s">에어백 · 55초</div>
-    <img src="phc_sub.png">
-  </div>
 </div>
 
 <script>
