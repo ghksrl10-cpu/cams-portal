@@ -23,6 +23,10 @@ b { font-weight:700; }
 .titletab { display:inline-block; border-radius:9px; padding:7px 24px; font-weight:800; font-size:28px; letter-spacing:-0.5px; color:#fff; background:#17395f; }
 .legend { display:flex; gap:10px; align-items:center; font-size:16px; font-weight:700; letter-spacing:-0.3px; color:#5a6572; }
 
+.ctnote { display:flex; align-items:center; gap:8px; background:#eef2f8; border:1.5px solid #c8d3e2; border-radius:9px; padding:8px 16px; margin-bottom:14px; font-size:13.5px; font-weight:600; color:#3c4a5e; letter-spacing:-0.2px; }
+.ctnote b { color:#1f4e8c; font-weight:800; }
+.ctnote .warn { color:#c0392b; font-weight:800; }
+
 .gridtop, .gridbot { display:grid; grid-template-columns:repeat(9,1fr);
            border:2px solid #2c5794; border-radius:10px; overflow:hidden; background:#fff; }
 .gridbot { border-color:#2e7d4f; }
@@ -142,6 +146,8 @@ b { font-weight:700; }
   <div class="titletab">공피치별 11·13공정 삭제 가능 여부 &amp; 원복 기준</div>
   <div class="legend">공정표는 참고용(동일 구조) · 삭제 가능 여부는 공피치에 따라 달라짐</div>
 </div>
+
+<div class="ctnote">⚙ 공정 최대 C/T <b>200초</b> = 작업 공수 90%(<b>180초</b>) + 작업자 동선 10%(20초) → 공정별 판정 기준은 90% C/T인 <b>180초</b>로 지정 · <span class="warn">200초 초과 시 기아 납품 끊김</span></div>
 
 <div class="secrow">
   <div class="tab navy">C/PAD 컨베어 공수</div>
