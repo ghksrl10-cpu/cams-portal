@@ -57,7 +57,7 @@ b { font-weight:700; }
 
 /* 공피치 기준 카드 5개 */
 .pitchrow { display:flex; gap:14px; margin-top:8px; }
-.pcard { flex:1; border:2.5px solid #d7dde6; border-radius:14px; background:#fff; overflow:hidden; box-shadow:0 2px 8px rgba(30,50,90,.06); }
+.pcard { flex:1; border:2.5px solid #d7dde6; border-radius:14px; background:#fff; overflow:hidden; box-shadow:0 2px 8px rgba(30,50,90,.06); cursor:pointer; }
 .pcard.flag { border-color:#d99a2b; box-shadow:0 2px 10px rgba(217,154,43,.18); }
 .pcard .ph { background:#1f4e8c; color:#fff; text-align:center; padding:10px 0 8px; cursor:pointer; transition:box-shadow .15s; }
 .pcard .ph:hover { box-shadow:inset 0 0 0 2px rgba(255,255,255,.5); }
@@ -248,8 +248,8 @@ b { font-weight:700; }
 </div>
 
 <div class="pitchrow">
-  <div class="pcard">
-    <div class="ph" onclick="setMainHc(3,this)"><div class="pn">1 : 1</div><div class="pi">실차 간격 263초</div><div class="pi2">일 납품 4회</div></div>
+  <div class="pcard" data-hc="3" onclick="setMainHc(this)">
+    <div class="ph"><div class="pn">1 : 1</div><div class="pi">실차 간격 263초</div><div class="pi2">일 납품 4회</div></div>
     <div class="hn"><div class="num">3명</div><div class="lbl">하네스 투입 인원</div></div>
     <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능</span></div>
     <div class="prow"><span class="pl">글로브(13) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능</span></div>
@@ -264,8 +264,8 @@ b { font-weight:700; }
       <div class="calclbl">동시 삭제 시 (주야 합)</div>
     </div>
   </div>
-  <div class="pcard flag">
-    <div class="ph" onclick="setMainHc(4,this)"><div class="pn">2 : 1</div><div class="pi">실차 간격 197초</div><div class="pi2">일 납품 5회</div></div>
+  <div class="pcard flag" data-hc="4" onclick="setMainHc(this)">
+    <div class="ph"><div class="pn">2 : 1</div><div class="pi">실차 간격 197초</div><div class="pi2">일 납품 5회</div></div>
     <div class="hn"><div class="num">4명</div><div class="lbl">하네스 투입 인원</div></div>
     <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능</span></div>
     <div class="prow"><span class="pl">글로브(13) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능</span></div>
@@ -276,8 +276,8 @@ b { font-weight:700; }
       <div class="calclbl">단독 삭제 시 (주야 합, 11 또는 13 중 1개)</div>
     </div>
   </div>
-  <div class="pcard">
-    <div class="ph" onclick="setMainHc(5,this)"><div class="pn">3 : 1</div><div class="pi">실차 간격 175초</div><div class="pi2">일 납품 6회</div></div>
+  <div class="pcard" data-hc="5" onclick="setMainHc(this)">
+    <div class="ph"><div class="pn">3 : 1</div><div class="pi">실차 간격 175초</div><div class="pi2">일 납품 6회</div></div>
     <div class="hn"><div class="num">5명</div><div class="lbl">하네스 투입 인원</div></div>
     <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능</span></div>
     <div class="prow"><span class="pl">글로브(13) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능</span></div>
@@ -288,8 +288,8 @@ b { font-weight:700; }
       <div class="calclbl">단독 삭제 시 (주야 합, 11 또는 13 중 1개)</div>
     </div>
   </div>
-  <div class="pcard">
-    <div class="ph" onclick="setMainHc(5,this)"><div class="pn">4 : 1</div><div class="pi">실차 간격 164초</div><div class="pi2">일 납품 7회</div></div>
+  <div class="pcard" data-hc="5" onclick="setMainHc(this)">
+    <div class="ph"><div class="pn">4 : 1</div><div class="pi">실차 간격 164초</div><div class="pi2">일 납품 7회</div></div>
     <div class="hn"><div class="num">5명</div><div class="lbl">하네스 투입 인원</div></div>
     <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능</span></div>
     <div class="prow"><span class="pl">글로브(13) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능</span></div>
@@ -300,8 +300,8 @@ b { font-weight:700; }
       <div class="calclbl">단독 삭제 시 (주야 합, 11 또는 13 중 1개)</div>
     </div>
   </div>
-  <div class="pcard">
-    <div class="ph" onclick="setMainHc(6,this)"><div class="pn">5 : 1</div><div class="pi">실차 간격 158초</div><div class="pi2">일 납품 7회</div></div>
+  <div class="pcard" data-hc="6" onclick="setMainHc(this)">
+    <div class="ph"><div class="pn">5 : 1</div><div class="pi">실차 간격 158초</div><div class="pi2">일 납품 7회</div></div>
     <div class="hn"><div class="num">6명</div><div class="lbl">하네스 투입 인원</div></div>
     <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능(83%)</span></div>
     <div class="prow"><span class="pl">글로브(13) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능(90%)</span></div>
@@ -447,10 +447,11 @@ function switchTab(name, el){
   document.querySelectorAll('.tabpage').forEach(p=>p.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
 }
-function setMainHc(n, el){
+function setMainHc(el){
+  var n = el.dataset.hc;
   document.getElementById('mainHcNum').textContent = n+'명';
   document.querySelectorAll('.pcard .ph').forEach(p=>p.classList.remove('hcsel'));
-  el.classList.add('hcsel');
+  el.querySelector('.ph').classList.add('hcsel');
   document.querySelector('#mainHcBanner .hcsub').textContent = '('+el.querySelector('.pn').textContent+' 기준)';
 }
 function showDetail(which, el){
