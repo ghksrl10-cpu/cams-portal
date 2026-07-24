@@ -69,7 +69,7 @@ b { font-weight:700; }
 .pcard .hn .lbl { font-size:14.5px; font-weight:600; color:#98a1ac; margin-top:1px; }
 .prow { display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid #eef1f5; }
 .prow:last-of-type { border-bottom:none; }
-.prow .pl { font-size:16px; font-weight:600; color:#5a6572; }
+.prow .pl { font-size:16px; font-weight:600; color:#5a6572; word-break:keep-all; overflow-wrap:normal; }
 .pill { display:inline-block; border-radius:8px; padding:3px 12px; font-size:15.5px; font-weight:700; cursor:pointer; transition:transform .1s; }
 .pill:hover { transform:scale(1.06); box-shadow:0 1px 4px rgba(0,0,0,.15); }
 .pill.ok { background:#e6f4e8; color:#1e7a3a; }
@@ -143,6 +143,12 @@ b { font-weight:700; }
 .sub .ph.dual { gap:4px; }
 .sub .ph.dual img { max-width:48%; max-height:96%; }
 .sub .ct2 { font-size:12.5px; font-weight:700; color:#8a95a3; margin-top:2px; }
+.sub .bk { padding:6px 10px; text-align:left; }
+.sub .bk .bkrow { display:flex; justify-content:space-between; font-size:11.5px; font-weight:600; color:#5a6572; padding:2px 0; border-bottom:1px dashed #f0d5d5; }
+.sub .bk .bkrow:last-child { border-bottom:none; }
+.sub .bk .bkrow .bkv { font-weight:800; }
+.sub .bk .bkrow .bkv.ok { color:#1e7a3a; }
+.sub .bk .bkrow .bkv.no { color:#c0392b; }
 .sub .ct { font-weight:700; font-size:17px; color:#d43c3c; padding-top:4px; }
 .sub .ct .hn { font-size:17px; font-weight:700; color:#d43c3c; margin-left:2px; }
 
@@ -251,9 +257,12 @@ b { font-weight:700; }
   <div class="pcard" data-hc="3" onclick="setMainHc(this)">
     <div class="ph"><div class="pn">1 : 1</div><div class="pi">실차 간격 263초</div><div class="pi2">일 납품 4회</div></div>
     <div class="hn"><div class="num">3명</div><div class="lbl">하네스 투입 인원</div></div>
-    <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능</span></div>
-    <div class="prow"><span class="pl">글로브(13) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능</span></div>
-    <div class="prow"><span class="pl">11+13 동시 삭제</span><span class="pill ok" onclick="showDetail('both',this)">가능</span></div>
+    <div class="prow"><span class="pl">AVN(11공정) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능</span></div>
+    <div class="prow"><span class="pl">글로브(13공정) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능</span></div>
+    <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill ok" onclick="showDetail('both',this)">가능</span></div>
+    <div class="prow"><span class="pl">클러스터 페시아(SUB)</span><span class="pill no">1명 축소 불가</span></div>
+    <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill ok">가능(73%)</span></div>
+    <div class="prow"><span class="pl">LTE/AVN BRKT(SUB)</span><span class="pill ok">가능</span></div>
     <div class="foot">
       <div class="calc">(하네스 3명 <span class="plus">+</span> 공정 1명) <span class="plus">×2조</span></div>
       <div class="calctot">-8<span class="u">명/일</span></div>
@@ -267,9 +276,12 @@ b { font-weight:700; }
   <div class="pcard" data-hc="4" onclick="setMainHc(this)">
     <div class="ph"><div class="pn">2 : 1</div><div class="pi">실차 간격 197초</div><div class="pi2">일 납품 5회</div></div>
     <div class="hn"><div class="num">4명</div><div class="lbl">하네스 투입 인원</div></div>
-    <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능</span></div>
-    <div class="prow"><span class="pl">글로브(13) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능</span></div>
-    <div class="prow"><span class="pl">11+13 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가·원복</span></div>
+    <div class="prow"><span class="pl">AVN(11공정) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능</span></div>
+    <div class="prow"><span class="pl">글로브(13공정) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능</span></div>
+    <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가·원복</span></div>
+    <div class="prow"><span class="pl">클러스터 페시아(SUB)</span><span class="pill no">1명 축소 불가</span></div>
+    <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill ok">가능(97%)</span></div>
+    <div class="prow"><span class="pl">LTE/AVN BRKT(SUB)</span><span class="pill ok">가능</span></div>
     <div class="foot">
       <div class="calc">(하네스 2명 <span class="plus">+</span> 공정 1명) <span class="plus">×2조</span></div>
       <div class="calctot">-6<span class="u">명/일</span></div>
@@ -279,9 +291,12 @@ b { font-weight:700; }
   <div class="pcard" data-hc="5" onclick="setMainHc(this)">
     <div class="ph"><div class="pn">3 : 1</div><div class="pi">실차 간격 175초</div><div class="pi2">일 납품 6회</div></div>
     <div class="hn"><div class="num">5명</div><div class="lbl">하네스 투입 인원</div></div>
-    <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능</span></div>
-    <div class="prow"><span class="pl">글로브(13) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능</span></div>
-    <div class="prow"><span class="pl">11+13 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가·원복</span></div>
+    <div class="prow"><span class="pl">AVN(11공정) 삭제</span><span class="pill ok" onclick="showDetail('avn',this)">가능</span></div>
+    <div class="prow"><span class="pl">글로브(13공정) 삭제</span><span class="pill ok" onclick="showDetail('glv',this)">가능</span></div>
+    <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가·원복</span></div>
+    <div class="prow"><span class="pl">클러스터 페시아(SUB)</span><span class="pill no">1명 축소 불가</span></div>
+    <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill no">불가(초과)</span></div>
+    <div class="prow"><span class="pl">LTE/AVN BRKT(SUB)</span><span class="pill ok">가능</span></div>
     <div class="foot">
       <div class="calc">(하네스 1명 <span class="plus">+</span> 공정 1명) <span class="plus">×2조</span></div>
       <div class="calctot">-4<span class="u">명/일</span></div>
@@ -291,9 +306,12 @@ b { font-weight:700; }
   <div class="pcard" data-hc="5" onclick="setMainHc(this)">
     <div class="ph"><div class="pn">4 : 1</div><div class="pi">실차 간격 164초</div><div class="pi2">일 납품 7회</div></div>
     <div class="hn"><div class="num">5명</div><div class="lbl">하네스 투입 인원</div></div>
-    <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill no" onclick="showDetail('avn',this)">불가·원복(80%)</span></div>
-    <div class="prow"><span class="pl">글로브(13) 삭제</span><span class="pill no" onclick="showDetail('glv',this)">불가·원복(87%)</span></div>
-    <div class="prow"><span class="pl">11+13 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가·원복</span></div>
+    <div class="prow"><span class="pl">AVN(11공정) 삭제</span><span class="pill no" onclick="showDetail('avn',this)">불가·원복(80%)</span></div>
+    <div class="prow"><span class="pl">글로브(13공정) 삭제</span><span class="pill no" onclick="showDetail('glv',this)">불가·원복(87%)</span></div>
+    <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가·원복</span></div>
+    <div class="prow"><span class="pl">클러스터 페시아(SUB)</span><span class="pill no">1명 축소 불가</span></div>
+    <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill no">불가(초과)</span></div>
+    <div class="prow"><span class="pl">LTE/AVN BRKT(SUB)</span><span class="pill ok">가능</span></div>
     <div class="foot">
       <div class="calclbl">실차 간격 대비 여유 부족(AVN 80%·글로브 87%)으로 단독 삭제도 금지 — 감축 없음</div>
     </div>
@@ -301,9 +319,12 @@ b { font-weight:700; }
   <div class="pcard" data-hc="6" onclick="setMainHc(this)">
     <div class="ph"><div class="pn">5 : 1</div><div class="pi">실차 간격 158초</div><div class="pi2">일 납품 7회</div></div>
     <div class="hn"><div class="num">6명</div><div class="lbl">하네스 투입 인원</div></div>
-    <div class="prow"><span class="pl">AVN(11) 삭제</span><span class="pill no" onclick="showDetail('avn',this)">불가·원복(83%)</span></div>
-    <div class="prow"><span class="pl">글로브(13) 삭제</span><span class="pill no" onclick="showDetail('glv',this)">불가·원복(90%)</span></div>
-    <div class="prow"><span class="pl">11+13 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가·원복</span></div>
+    <div class="prow"><span class="pl">AVN(11공정) 삭제</span><span class="pill no" onclick="showDetail('avn',this)">불가·원복(83%)</span></div>
+    <div class="prow"><span class="pl">글로브(13공정) 삭제</span><span class="pill no" onclick="showDetail('glv',this)">불가·원복(90%)</span></div>
+    <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가·원복</span></div>
+    <div class="prow"><span class="pl">클러스터 페시아(SUB)</span><span class="pill no">1명 축소 불가</span></div>
+    <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill no">불가(초과)</span></div>
+    <div class="prow"><span class="pl">LTE/AVN BRKT(SUB)</span><span class="pill ok">가능</span></div>
     <div class="foot">
       <div class="calclbl">실차 간격 대비 여유 부족(AVN 83%·글로브 90%)으로 단독 삭제도 금지 — 감축 없음</div>
     </div>
@@ -377,17 +398,11 @@ b { font-weight:700; }
     <div class="ph"><img src="phc_subC.png"></div>
     <div class="ct">79.5초<span class="hn">· 1명</span></div>
   </div>
-  <div class="sub">
-    <div class="t">SUB 통합<br>(에어덕트+BRKT)</div>
-    <div class="s">191초 · 1명(통합 시)</div>
-    <div class="ph dual"><img src="phc_subB.png"><img src="phc_subC.png"></div>
-    <div class="ct">1:1~2:1<div class="ct2">가능 · 3:1↑ 불가</div></div>
-  </div>
 </div>
 
 <div class="restorebox">
   <div class="rt">⚠ 원복 기준</div>
-  <div class="rrow"><span class="rtag ok">1:1</span><div class="rtext"><b>하네스 3명</b> 운영 · 원복 불필요 — 11+13 동시 삭제(-2명) 그대로 유지 가능</div></div>
+  <div class="rrow"><span class="rtag ok">1:1</span><div class="rtext"><b>하네스 3명</b> 운영 · 원복 불필요 — 11공정+13공정 동시 삭제(-2명) 그대로 유지 가능</div></div>
   <div class="rrow"><span class="rtag warn">2:1</span><div class="rtext"><b>하네스 4명</b>으로 원복 · 그 즉시 11 또는 13 중 1개 공정 원복(인원 재배치) — 8공정이 221.6초로 늘어나 실차 간격(197초 이하)보다 느려지고, 강행 시 안전재고(24대) 소진 후 기아 납품 끊김(약 11.9시간 후)</div></div>
   <div class="rrow"><span class="rtag warn">3:1</span><div class="rtext"><b>하네스 5명</b>으로 원복 · 2:1과 동일한 이유로 원복 필요(8공정 초과) — 이미 2:1에서 원복했다면 그 상태 유지, 안 했다면 즉시 시행</div></div>
   <div class="rrow"><span class="rtag warn">4:1</span><div class="rtext"><b>하네스 5명</b>으로 원복 · 11·13 <b>둘 다</b> 원복 필요(동시 삭제=8공정 초과, 단독 삭제도 실차 간격 여유 부족 80%대로 금지) — 이미 원복했다면 유지, 안 했다면 즉시 시행</div></div>
