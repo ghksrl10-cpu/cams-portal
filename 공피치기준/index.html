@@ -76,13 +76,13 @@ b { font-weight:700; }
 .pill.no { background:#fde8e8; color:#c0392b; }
 .pill.active { outline:2.5px solid #2f6fd0; outline-offset:1px; }
 .pcard .foot { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:12px 10px 14px; background:#f7f9fc; box-sizing:border-box; }
-.calc { font-size:16px; font-weight:600; color:#6b7482; line-height:1.5; }
+.calc { font-size:16px; font-weight:600; color:#6b7482; line-height:1.5; word-break:keep-all; overflow-wrap:normal; }
 .calc b { color:#333a42; font-weight:800; }
 .calc .plus { color:#98a1ac; font-weight:700; margin:0 3px; }
 .calcsep { border-top:1.5px dashed #d7dde6; margin:7px 0 6px; }
 .calctot { font-size:22px; font-weight:800; color:#c0392b; }
 .calctot .u { font-size:13px; font-weight:700; margin-left:2px; }
-.calclbl { font-size:14px; font-weight:600; color:#98a1ac; margin-top:1px; }
+.calclbl { font-size:14px; font-weight:600; color:#98a1ac; margin-top:1px; word-break:keep-all; overflow-wrap:normal; }
 
 /* ── 위/아래로 찢어지는 공수이동 상세 존 ── */
 .dzone { position:relative; height:0; overflow:hidden; transition:height .22s ease; }
@@ -262,15 +262,14 @@ b { font-weight:700; }
     <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill ok" onclick="showDetail('both',this)">가능</span></div>
     <div class="prow"><span class="pl">클러스터 페시아(SUB)</span><span class="pill no">1명 축소 불가</span></div>
     <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill ok">가능(73%)</span></div>
-    <div class="prow"><span class="pl">LTE/AVN BRKT(SUB)</span><span class="pill ok">가능</span></div>
     <div class="foot">
-      <div class="calc">(하네스 3명 <span class="plus">+</span> 공정 1명) <span class="plus">×2조</span></div>
-      <div class="calctot">-8<span class="u">명/일</span></div>
-      <div class="calclbl">단독 삭제 시 (주야 합)</div>
+      <div class="calc">(하네스 3명 <span class="plus">+</span> 공정 1명 <span class="plus">+</span> SUB 1명) <span class="plus">×2조</span></div>
+      <div class="calctot">-10<span class="u">명/일</span></div>
+      <div class="calclbl">단독 삭제 + SUB 통합 시 (주야 합)</div>
       <div class="calcsep"></div>
-      <div class="calc">(하네스 3명 <span class="plus">+</span> 공정 2명) <span class="plus">×2조</span></div>
-      <div class="calctot" style="margin-top:2px;">-10<span class="u">명/일</span></div>
-      <div class="calclbl">동시 삭제 시 (주야 합)</div>
+      <div class="calc">(하네스 3명 <span class="plus">+</span> 공정 2명 <span class="plus">+</span> SUB 1명) <span class="plus">×2조</span></div>
+      <div class="calctot" style="margin-top:2px;">-12<span class="u">명/일</span></div>
+      <div class="calclbl">동시 삭제 + SUB 통합 시 (주야 합)</div>
     </div>
   </div>
   <div class="pcard" data-hc="4" onclick="setMainHc(this)">
@@ -281,11 +280,10 @@ b { font-weight:700; }
     <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가·원복</span></div>
     <div class="prow"><span class="pl">클러스터 페시아(SUB)</span><span class="pill no">1명 축소 불가</span></div>
     <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill ok">가능(97%)</span></div>
-    <div class="prow"><span class="pl">LTE/AVN BRKT(SUB)</span><span class="pill ok">가능</span></div>
     <div class="foot">
-      <div class="calc">(하네스 2명 <span class="plus">+</span> 공정 1명) <span class="plus">×2조</span></div>
-      <div class="calctot">-6<span class="u">명/일</span></div>
-      <div class="calclbl">단독 삭제 시 (주야 합, 11 또는 13 중 1개)</div>
+      <div class="calc">(하네스 2명 <span class="plus">+</span> 공정 1명 <span class="plus">+</span> SUB 1명) <span class="plus">×2조</span></div>
+      <div class="calctot">-8<span class="u">명/일</span></div>
+      <div class="calclbl">단독 삭제 + SUB 통합 시 (주야 합, 11공정 또는 13공정 중 1개)</div>
     </div>
   </div>
   <div class="pcard" data-hc="5" onclick="setMainHc(this)">
@@ -296,7 +294,6 @@ b { font-weight:700; }
     <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가·원복</span></div>
     <div class="prow"><span class="pl">클러스터 페시아(SUB)</span><span class="pill no">1명 축소 불가</span></div>
     <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill no">불가(초과)</span></div>
-    <div class="prow"><span class="pl">LTE/AVN BRKT(SUB)</span><span class="pill ok">가능</span></div>
     <div class="foot">
       <div class="calc">(하네스 1명 <span class="plus">+</span> 공정 1명) <span class="plus">×2조</span></div>
       <div class="calctot">-4<span class="u">명/일</span></div>
@@ -311,7 +308,6 @@ b { font-weight:700; }
     <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가·원복</span></div>
     <div class="prow"><span class="pl">클러스터 페시아(SUB)</span><span class="pill no">1명 축소 불가</span></div>
     <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill no">불가(초과)</span></div>
-    <div class="prow"><span class="pl">LTE/AVN BRKT(SUB)</span><span class="pill ok">가능</span></div>
     <div class="foot">
       <div class="calclbl">실차 간격 대비 여유 부족(AVN 80%·글로브 87%)으로 단독 삭제도 금지 — 감축 없음</div>
     </div>
@@ -324,7 +320,6 @@ b { font-weight:700; }
     <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill no" onclick="showDetail('both',this)">불가·원복</span></div>
     <div class="prow"><span class="pl">클러스터 페시아(SUB)</span><span class="pill no">1명 축소 불가</span></div>
     <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill no">불가(초과)</span></div>
-    <div class="prow"><span class="pl">LTE/AVN BRKT(SUB)</span><span class="pill ok">가능</span></div>
     <div class="foot">
       <div class="calclbl">실차 간격 대비 여유 부족(AVN 83%·글로브 90%)으로 단독 삭제도 금지 — 감축 없음</div>
     </div>
