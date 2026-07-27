@@ -265,11 +265,11 @@ b { font-weight:700; }
     <div class="foot">
       <div class="calc">(하네스 3명 <span class="plus">+</span> 공정 1명 <span class="plus">+</span> SUB 1명) <span class="plus">×2조</span></div>
       <div class="calctot">-10<span class="u">명/일</span></div>
-      <div class="calclbl">단독 삭제 + SUB 통합 시 (주야 합)</div>
+      <div class="calclbl">단독 삭제 + SUB 통합 시<br>(주야 합)</div>
       <div class="calcsep"></div>
       <div class="calc">(하네스 3명 <span class="plus">+</span> 공정 2명 <span class="plus">+</span> SUB 1명) <span class="plus">×2조</span></div>
       <div class="calctot" style="margin-top:2px;">-12<span class="u">명/일</span></div>
-      <div class="calclbl">동시 삭제 + SUB 통합 시 (주야 합)</div>
+      <div class="calclbl">동시 삭제 + SUB 통합 시<br>(주야 합)</div>
     </div>
   </div>
   <div class="pcard" data-hc="4" onclick="setMainHc(this)">
@@ -283,7 +283,7 @@ b { font-weight:700; }
     <div class="foot">
       <div class="calc">(하네스 2명 <span class="plus">+</span> 공정 1명 <span class="plus">+</span> SUB 1명) <span class="plus">×2조</span></div>
       <div class="calctot">-8<span class="u">명/일</span></div>
-      <div class="calclbl">단독 삭제 + SUB 통합 시 (주야 합, 11공정 또는 13공정 중 1개)</div>
+      <div class="calclbl">단독 삭제 + SUB 통합 시<br>(주야 합, 11공정 또는 13공정 중 1개)</div>
     </div>
   </div>
   <div class="pcard" data-hc="5" onclick="setMainHc(this)">
@@ -311,7 +311,7 @@ b { font-weight:700; }
     <div class="foot">
       <div class="calc">(하네스 1명 <span class="plus">+</span> 공정 0명) <span class="plus">×2조</span></div>
       <div class="calctot">-2<span class="u">명/일</span></div>
-      <div class="calclbl">하네스 자연감소만 (11·13 단독삭제 금지 — AVN 80%·글로브 87%)</div>
+      <div class="calclbl">하네스 자연감소만<br>(11·13 단독삭제 금지 — AVN 80%·글로브 87%)</div>
     </div>
   </div>
   <div class="pcard" data-hc="6" onclick="setMainHc(this)">
@@ -323,7 +323,7 @@ b { font-weight:700; }
     <div class="prow"><span class="pl">클러스터 페시아(SUB)</span><span class="pill no">1명 축소 불가</span></div>
     <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill no">불가(초과)</span></div>
     <div class="foot">
-      <div class="calclbl">실차 간격 대비 여유 부족(AVN 83%·글로브 90%)으로 단독 삭제도 금지 — 감축 없음</div>
+      <div class="calclbl">감축 없음<br>(실차 간격 대비 여유 부족 — AVN 83%·글로브 90%로 단독 삭제도 금지)</div>
     </div>
   </div>
 </div>
@@ -395,6 +395,16 @@ b { font-weight:700; }
     <div class="ph"><img src="phc_subC.png"></div>
     <div class="ct">79.5초<span class="hn">· 1명</span></div>
   </div>
+</div>
+
+<div class="restorebox">
+  <div class="rt">⚠ SUB 원복 기준</div>
+  <div class="rrow"><span class="rtag">1:1</span><div class="rtext"><b>클러스터 페시아 2명 유지</b>(1인 축소 불가) · <b>에어덕트+BRKT 통합 가능</b>(191초÷263초=73%, 여유 있음)</div></div>
+  <div class="rrow"><span class="rtag">2:1</span><div class="rtext"><b>클러스터 페시아 2명 유지</b> · <b>에어덕트+BRKT 통합 가능</b>(191초÷197초=97%, 6초밖에 안 남아 아슬아슬)</div></div>
+  <div class="rrow"><span class="rtag warn">3:1</span><div class="rtext"><b>클러스터 페시아 2명 유지</b> · <b>에어덕트+BRKT 분리(원복)</b> — 191초＞175초로 초과, 2명으로 즉시 분리 필요</div></div>
+  <div class="rrow"><span class="rtag warn">4:1</span><div class="rtext"><b>클러스터 페시아 2명 유지</b> · <b>에어덕트+BRKT 분리 유지</b> — 3:1과 동일(191초＞164초)</div></div>
+  <div class="rrow"><span class="rtag warn">5:1</span><div class="rtext"><b>클러스터 페시아 2명 유지</b> · <b>에어덕트+BRKT 분리 유지</b> — 3:1과 동일(191초＞158초)</div></div>
+  <div class="rnote">클러스터 페시아는 1인 환산 292초로 모든 공피치에서 축소 불가(항상 2명) · 에어덕트+BRKT는 3:1 이상에서 2:1 이하로 낮아지면 다시 통합해 1명으로 전환 가능</div>
 </div>
 
 <div class="restorebox">
