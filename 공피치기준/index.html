@@ -118,7 +118,7 @@ b { font-weight:700; }
 .mv2 .ls { font-size:13.5px; font-weight:500; line-height:1.4; color:#454d57; letter-spacing:-0.5px; word-break:keep-all; overflow-wrap:normal; }
 .mv2 .go { color:#d43c3c; font-weight:700; font-size:14.5px; margin-top:3px; }
 .mv2.blue .go, .mv2.navy .go { color:#2f6fd0; }
-.mv2 .verdict { display:inline-block; margin-top:4px; padding:3px 10px; border-radius:8px; font-size:15px; font-weight:700; }
+.mv2 .verdict { display:inline-block; margin-top:4px; padding:3px 10px; border-radius:8px; font-size:15px; font-weight:700; white-space:nowrap; }
 .mv2 .verdict.ok { background:#e6f4e8; color:#1e7a3a; }
 .mv2 .verdict.no { background:#fde8e8; color:#c0392b; }
 
@@ -281,11 +281,11 @@ b { font-weight:700; }
   <div class="pcard" data-hc="3" onclick="setMainHc(this)">
     <div class="ph"><div class="pn">1 : 1</div><div class="pi">실차 간격 263초</div><div class="pi2">일 납품 4회</div></div>
     <div class="hn"><div class="num">3명</div><div class="lbl">하네스 투입 인원</div></div>
-    <div class="prow"><span class="pl">AVN(11공정) 삭제</span><span class="pill ok movepill" onclick="showDetail('avn',this)">가능</span></div>
-    <div class="prow"><span class="pl">글로브(13공정) 삭제</span><span class="pill ok movepill" onclick="showDetail('glv',this)">가능</span></div>
-    <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill ok movepill" onclick="showDetail('both',this)">가능</span></div>
+    <div class="prow"><span class="pl">AVN(11공정) 삭제</span><span class="pill ok movepill" data-card="1" onclick="showDetail('avn',this)">가능</span></div>
+    <div class="prow"><span class="pl">글로브(13공정) 삭제</span><span class="pill ok movepill" data-card="1" onclick="showDetail('glv',this)">가능</span></div>
+    <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill ok movepill" data-card="1" onclick="showDetail('both',this)">가능</span></div>
     <div class="prow"><span class="pl">클러스터 페시아(SUB)</span><span class="pill no">1명 축소 불가</span></div>
-    <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill ok subpill" onclick="showSubDetail(1,this)">가능(73%)</span></div>
+    <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill ok subpill" data-card="1" onclick="showSubDetail(1,this)">가능(73%)</span></div>
     <div class="foot">
       <div class="calc">(하네스 3명 <span class="plus">+</span> 공정 1명 <span class="plus">+</span> SUB 1명) <span class="plus">×2조</span></div>
       <div class="calctot">-10<span class="u">명/일</span></div>
@@ -299,11 +299,11 @@ b { font-weight:700; }
   <div class="pcard" data-hc="4" onclick="setMainHc(this)">
     <div class="ph"><div class="pn">2 : 1</div><div class="pi">실차 간격 197초</div><div class="pi2">일 납품 5회</div></div>
     <div class="hn"><div class="num">4명</div><div class="lbl">하네스 투입 인원</div></div>
-    <div class="prow"><span class="pl">AVN(11공정) 삭제</span><span class="pill ok movepill" onclick="showDetail('avn',this)">가능</span></div>
-    <div class="prow"><span class="pl">글로브(13공정) 삭제</span><span class="pill ok movepill" onclick="showDetail('glv',this)">가능</span></div>
-    <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill no movepill" onclick="showDetail('both',this)">불가·원복</span></div>
+    <div class="prow"><span class="pl">AVN(11공정) 삭제</span><span class="pill ok movepill" data-card="2" onclick="showDetail('avn',this)">가능</span></div>
+    <div class="prow"><span class="pl">글로브(13공정) 삭제</span><span class="pill ok movepill" data-card="2" onclick="showDetail('glv',this)">가능</span></div>
+    <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill no movepill" data-card="2" onclick="showDetail('both',this)">불가·원복</span></div>
     <div class="prow"><span class="pl">클러스터 페시아(SUB)</span><span class="pill no">1명 축소 불가</span></div>
-    <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill ok subpill" onclick="showSubDetail(2,this)">가능(97%)</span></div>
+    <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill ok subpill" data-card="2" onclick="showSubDetail(2,this)">가능(97%)</span></div>
     <div class="foot">
       <div class="calc">(하네스 2명 <span class="plus">+</span> 공정 1명 <span class="plus">+</span> SUB 1명) <span class="plus">×2조</span></div>
       <div class="calctot">-8<span class="u">명/일</span></div>
@@ -313,11 +313,11 @@ b { font-weight:700; }
   <div class="pcard" data-hc="5" onclick="setMainHc(this)">
     <div class="ph"><div class="pn">3 : 1</div><div class="pi">실차 간격 175초</div><div class="pi2">일 납품 6회</div></div>
     <div class="hn"><div class="num">5명</div><div class="lbl">하네스 투입 인원</div></div>
-    <div class="prow"><span class="pl">AVN(11공정) 삭제</span><span class="pill ok movepill" onclick="showDetail('avn',this)">가능</span></div>
-    <div class="prow"><span class="pl">글로브(13공정) 삭제</span><span class="pill ok movepill" onclick="showDetail('glv',this)">가능</span></div>
-    <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill no movepill" onclick="showDetail('both',this)">불가·원복</span></div>
+    <div class="prow"><span class="pl">AVN(11공정) 삭제</span><span class="pill ok movepill" data-card="3" onclick="showDetail('avn',this)">가능</span></div>
+    <div class="prow"><span class="pl">글로브(13공정) 삭제</span><span class="pill ok movepill" data-card="3" onclick="showDetail('glv',this)">가능</span></div>
+    <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill no movepill" data-card="3" onclick="showDetail('both',this)">불가·원복</span></div>
     <div class="prow"><span class="pl">클러스터 페시아(SUB)</span><span class="pill no">1명 축소 불가</span></div>
-    <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill no subpill" onclick="showSubDetail(3,this)">불가(초과)</span></div>
+    <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill no subpill" data-card="3" onclick="showSubDetail(3,this)">불가(초과)</span></div>
     <div class="foot">
       <div class="calc">(하네스 1명 <span class="plus">+</span> 공정 1명) <span class="plus">×2조</span></div>
       <div class="calctot">-4<span class="u">명/일</span></div>
@@ -327,11 +327,11 @@ b { font-weight:700; }
   <div class="pcard" data-hc="5" onclick="setMainHc(this)">
     <div class="ph"><div class="pn">4 : 1</div><div class="pi">실차 간격 164초</div><div class="pi2">일 납품 7회</div></div>
     <div class="hn"><div class="num">5명</div><div class="lbl">하네스 투입 인원</div></div>
-    <div class="prow"><span class="pl">AVN(11공정) 삭제</span><span class="pill no movepill" onclick="showDetail('avn',this)">불가·원복(80%)</span></div>
-    <div class="prow"><span class="pl">글로브(13공정) 삭제</span><span class="pill no movepill" onclick="showDetail('glv',this)">불가·원복(87%)</span></div>
-    <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill no movepill" onclick="showDetail('both',this)">불가·원복</span></div>
+    <div class="prow"><span class="pl">AVN(11공정) 삭제</span><span class="pill no movepill" data-card="4" onclick="showDetail('avn',this)">불가·원복(80%)</span></div>
+    <div class="prow"><span class="pl">글로브(13공정) 삭제</span><span class="pill no movepill" data-card="4" onclick="showDetail('glv',this)">불가·원복(87%)</span></div>
+    <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill no movepill" data-card="4" onclick="showDetail('both',this)">불가·원복</span></div>
     <div class="prow"><span class="pl">클러스터 페시아(SUB)</span><span class="pill no">1명 축소 불가</span></div>
-    <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill no subpill" onclick="showSubDetail(4,this)">불가(초과)</span></div>
+    <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill no subpill" data-card="4" onclick="showSubDetail(4,this)">불가(초과)</span></div>
     <div class="foot">
       <div class="calc">(하네스 1명 <span class="plus">+</span> 공정 0명) <span class="plus">×2조</span></div>
       <div class="calctot">-2<span class="u">명/일</span></div>
@@ -341,11 +341,11 @@ b { font-weight:700; }
   <div class="pcard" data-hc="6" onclick="setMainHc(this)">
     <div class="ph"><div class="pn">5 : 1</div><div class="pi">실차 간격 158초</div><div class="pi2">일 납품 7회</div></div>
     <div class="hn"><div class="num">6명</div><div class="lbl">하네스 투입 인원</div></div>
-    <div class="prow"><span class="pl">AVN(11공정) 삭제</span><span class="pill no movepill" onclick="showDetail('avn',this)">불가·원복(83%)</span></div>
-    <div class="prow"><span class="pl">글로브(13공정) 삭제</span><span class="pill no movepill" onclick="showDetail('glv',this)">불가·원복(90%)</span></div>
-    <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill no movepill" onclick="showDetail('both',this)">불가·원복</span></div>
+    <div class="prow"><span class="pl">AVN(11공정) 삭제</span><span class="pill no movepill" data-card="5" onclick="showDetail('avn',this)">불가·원복(83%)</span></div>
+    <div class="prow"><span class="pl">글로브(13공정) 삭제</span><span class="pill no movepill" data-card="5" onclick="showDetail('glv',this)">불가·원복(90%)</span></div>
+    <div class="prow"><span class="pl">11공정+13공정 동시 삭제</span><span class="pill no movepill" data-card="5" onclick="showDetail('both',this)">불가·원복</span></div>
     <div class="prow"><span class="pl">클러스터 페시아(SUB)</span><span class="pill no">1명 축소 불가</span></div>
-    <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill no subpill" onclick="showSubDetail(5,this)">불가(초과)</span></div>
+    <div class="prow"><span class="pl">에어덕트+BRKT 통합</span><span class="pill no subpill" data-card="5" onclick="showSubDetail(5,this)">불가(초과)</span></div>
     <div class="foot">
       <div class="calclbl">감축 없음<br>(실차 간격 대비 여유 부족 — AVN 83%·글로브 90%로 단독 삭제도 금지)</div>
     </div>
@@ -597,8 +597,26 @@ function setMainHc(el){
   el.querySelector('.ph').classList.add('hcsel');
   document.querySelector('#mainHcBanner .hcsub').textContent = '('+el.querySelector('.pn').textContent+' 기준)';
 }
+function closeStaleSub(cardIdx){
+  var activeSub = document.querySelector('.subpill.active');
+  if (activeSub && activeSub.dataset.card !== cardIdx) {
+    activeSub.classList.remove('active');
+    document.querySelectorAll('#dzoneSub .dpanel').forEach(p=>p.classList.remove('show'));
+    document.getElementById('dzoneSub').classList.remove('open');
+  }
+}
+function closeStaleMove(cardIdx){
+  var activeMove = document.querySelector('.movepill.active');
+  if (activeMove && activeMove.dataset.card !== cardIdx) {
+    activeMove.classList.remove('active');
+    document.querySelectorAll('#dzoneUpper .dpanel, #dzoneLower .dpanel').forEach(p=>p.classList.remove('show'));
+    document.getElementById('dzoneUpper').classList.remove('open');
+    document.getElementById('dzoneLower').classList.remove('open');
+  }
+}
 function showDetail(which, el){
   var already = el.classList.contains('active');
+  closeStaleSub(el.dataset.card);
   document.querySelectorAll('.movepill').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('#dzoneUpper .dpanel, #dzoneLower .dpanel').forEach(p=>p.classList.remove('show'));
   document.getElementById('dzoneUpper').classList.remove('open');
@@ -613,6 +631,7 @@ function showDetail(which, el){
 }
 function showSubDetail(n, el){
   var already = el.classList.contains('active');
+  closeStaleMove(el.dataset.card);
   document.querySelectorAll('.subpill').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('#dzoneSub .dpanel').forEach(p=>p.classList.remove('show'));
   document.getElementById('dzoneSub').classList.remove('open');
