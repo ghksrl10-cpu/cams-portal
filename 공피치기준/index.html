@@ -147,10 +147,11 @@ b { font-weight:700; }
 
 /* SUB 상세 + 컨베어(8공정) 상세를 한 줄에 나란히 */
 .dzoneRow { display:flex; gap:16px; align-items:flex-start; }
+#dzoneLower { margin-left:auto; }
 #dzoneSub, #dzoneLower { display:none; height:auto; overflow:visible; transition:none; }
 #dzoneSub.open, #dzoneLower.open { display:block; }
 .mvrow { display:flex; gap:14px; align-items:flex-start; padding:14px 0; flex-wrap:wrap; }
-.mvcard { position:relative; flex:0 0 auto; width:390px; border:2px solid; border-radius:12px; background:#fff; padding:11px 14px 10px; box-shadow:0 2px 7px rgba(30,50,90,.08); box-sizing:border-box; }
+.mvcard { position:relative; flex:0 0 auto; width:max-content; border:2px solid; border-radius:12px; background:#fff; padding:11px 14px 10px; box-shadow:0 2px 7px rgba(30,50,90,.08); box-sizing:border-box; }
 .mvcard.blue { border-color:#4a7fd4; }
 .mvcard.red { border-color:#e35050; }
 .mvcard .badge { position:absolute; top:-13px; left:12px; border:2px solid; border-radius:14px; background:#fff; font-size:13.5px; font-weight:700; padding:1px 12px; }
@@ -162,12 +163,20 @@ b { font-weight:700; }
 .mvcard .mvbody { display:flex; gap:8px; align-items:flex-start; }
 .mvcard .mvbody img { width:52px; max-height:52px; object-fit:contain; flex:0 0 auto; }
 .mvcard .mvbody > div { flex:1; min-width:0; }
-.mvcard .ls { font-size:12px; font-weight:500; color:#454d57; line-height:1.4; word-break:keep-all; overflow-wrap:normal; }
+.mvcard .ls { font-size:12px; font-weight:500; color:#454d57; line-height:1.4; white-space:nowrap; }
 .mvcard .go { color:#d43c3c; font-weight:700; font-size:13px; margin-top:3px; }
 .mvcard.blue .go { color:#2f6fd0; }
 .mvcard .verdict { display:inline-block; margin-top:4px; padding:3px 10px; border-radius:8px; font-size:13.5px; font-weight:700; white-space:nowrap; }
 .mvcard .verdict.ok { background:#e6f4e8; color:#1e7a3a; }
 .mvcard .verdict.no { background:#fde8e8; color:#c0392b; }
+.mvcol { display:flex; flex-direction:column; align-items:center; }
+.mvarrow { display:flex; flex-direction:column; align-items:center; margin-top:2px; }
+.mvarrow .vl { width:3px; height:12px; background:#4a7fd4; border-radius:2px; }
+.mvarrow .ah { width:0; height:0; border-left:7px solid transparent; border-right:7px solid transparent; border-top:9px solid #4a7fd4; margin-top:-1px; }
+.mvarrow.red .vl { background:#e35050; }
+.mvarrow.red .ah { border-top-color:#e35050; }
+.mvconverge { display:inline-block; padding-bottom:24px; }
+.mvconn { position:relative; height:22px; }
 
 /* 원복 기준 */
 .restorebox { margin-top:18px; border:2.5px solid #d99a2b; border-radius:12px; background:linear-gradient(180deg,#fffaf0,#fff3dd); padding:20px 26px; }
@@ -465,25 +474,39 @@ b { font-weight:700; }
 <div id="dzoneLower" class="dzone lower">
   <div id="panel-avn-dn" class="dpanel">
     <div class="mvrow">
+      <div class="mvcol">
       <div class="mvcard red"><div class="badge">1안</div><div class="t">AVN 공수 선행 47.4초</div>
         <div class="mvbody"><img src="phc_mv_avn_pre.png"><div><div class="ls">공수 : AVN 후크 4EA · 스크류 3EA · 하네스 체결 3EA · 바코드 1EA</div><div class="go">▶ 8공정으로</div><div class="verdict no">152.7+47.4=200.1초 · 180초 초과 불가</div></div></div>
+      </div>
+      <div class="mvarrow red"><div class="vl"></div><div class="ah"></div></div>
       </div>
     </div>
   </div>
   <div id="panel-glv-dn" class="dpanel">
     <div class="mvrow">
+      <div class="mvcol">
       <div class="mvcard blue"><div class="badge">2안</div><div class="t">글로브 공수 선행 5초</div>
         <div class="mvbody"><img src="phc_mv_glv_fcover.png"><div><div class="ls">공수 : 퓨즈박스 커버 1EA 조립</div><div class="go">▶ 8공정으로</div><div class="verdict ok">152.7+5=157.7초 · C/T 가능</div></div></div>
+      </div>
+      <div class="mvarrow"><div class="vl"></div><div class="ah"></div></div>
       </div>
     </div>
   </div>
   <div id="panel-both-dn" class="dpanel">
-    <div class="mvrow">
+    <div class="mvconverge">
+      <div class="mvrow">
       <div class="mvcard blue"><div class="badge">글로브</div><div class="t">글로브 공수 선행 21.5초</div>
         <div class="mvbody"><img src="phc_mv_glv_pre_full.png"><div><div class="ls">공수 : 박스 1EA · 너트 1EA · 퓨즈박스 커버 1EA 조립</div><div class="go">▶ 8공정으로</div><div class="verdict no">152.7+21.5+47.4=221.6초 · 180초 초과 불가</div></div></div>
       </div>
       <div class="mvcard red"><div class="badge">AVN</div><div class="t">AVN 공수 선행 47.4초</div>
         <div class="mvbody"><img src="phc_mv_avn_pre.png"><div><div class="ls">공수 : AVN 후크 4EA · 스크류 3EA · 하네스 체결 3EA · 바코드 1EA</div><div class="go">▶ 8공정으로</div><div class="verdict no">152.7+21.5+47.4=221.6초 · 180초 초과 불가</div></div></div>
+      </div>
+      </div>
+      <div class="mvconn">
+        <div class="vline" style="left:185px; top:0; height:16px;"></div>
+        <div class="vline red" style="left:637px; top:0; height:16px;"></div>
+        <div class="hline" style="left:185px; top:16px; width:452px; background:linear-gradient(to right, #4a7fd4, #e35050);"></div>
+        <div class="arrowhead down" style="left:576px; top:19px; border-top-color:#7a5fa8;"></div>
       </div>
     </div>
   </div>
