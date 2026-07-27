@@ -88,7 +88,7 @@ b { font-weight:700; }
 .dzone { position:relative; height:0; overflow:hidden; transition:height .22s ease; }
 .dzone.open { height:185px; }
 .dzone.lower.open { height:185px; }
-.dzone.subz.open { height:150px; }
+.dzone.subz.open { height:225px; }
 .dpanel { display:none; position:relative; height:100%; }
 .dpanel.show { display:block; }
 .vline { position:absolute; width:3px; background:#4a7fd4; border-radius:2px; }
@@ -123,7 +123,9 @@ b { font-weight:700; }
 .mv2 .verdict.no { background:#fde8e8; color:#c0392b; }
 
 /* SUB 통합 상세(에어덕트+BRKT) */
-.subwrap { display:flex; align-items:center; gap:14px; padding:14px 20px; height:100%; box-sizing:border-box; }
+.subwrap { display:flex; align-items:center; justify-content:center; padding:14px 20px; height:100%; box-sizing:border-box; }
+.subcol { display:flex; flex-direction:column; gap:10px; }
+.subrow { display:flex; align-items:center; gap:14px; }
 .subcard { position:relative; flex:0 0 auto; border:2px solid #4a7fd4; border-radius:12px; background:#fff; padding:11px 14px 10px; width:220px; box-shadow:0 2px 7px rgba(30,50,90,.08); }
 .subcard .badge { position:absolute; top:-13px; left:12px; border:2px solid #4a7fd4; border-radius:14px; background:#fff; font-size:13.5px; font-weight:700; padding:1px 12px; color:#2f6fd0; }
 .subcard .t { font-size:15px; font-weight:700; margin:2px 0 6px 1px; color:#2f5fa8; letter-spacing:-0.3px; }
@@ -132,7 +134,7 @@ b { font-weight:700; }
 .subcard .ct { font-size:20px; font-weight:800; color:#1f4e8c; }
 .subcard .ls { font-size:12px; font-weight:500; color:#454d57; margin-top:2px; word-break:keep-all; overflow-wrap:normal; }
 .subplus { flex:0 0 auto; font-size:24px; font-weight:800; color:#98a1ac; }
-.subresult { flex:1; padding:12px 16px; border-radius:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.subresult { width:100%; box-sizing:border-box; padding:10px 16px; border-radius:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .subresult.ok { background:#e6f4e8; }
 .subresult.no { background:#fde8e8; }
 .subresult .sum { font-size:14px; font-weight:700; word-break:keep-all; overflow-wrap:normal; }
@@ -354,52 +356,82 @@ b { font-weight:700; }
 <div id="dzoneSub" class="dzone subz">
   <div id="panel-sub-1" class="dpanel">
     <div class="subwrap">
-      <div class="subcard"><div class="badge">SUB 1</div><div class="t">에어덕트</div>
-        <div class="sbody"><img src="phc_subB.png"><div><div class="ct">111.5초</div><div class="ls">에어덕트·USB 모듈</div></div></div></div>
-      <div class="subplus">+</div>
-      <div class="subcard"><div class="badge">SUB 2</div><div class="t">LTE/AVN BRKT</div>
-        <div class="sbody"><img src="phc_subC.png"><div><div class="ct">79.5초</div><div class="ls">AVN BRKT·LTE 모듈</div></div></div></div>
-      <div class="subresult ok"><div class="sum">111.5초+79.5초=<b>191초</b>(1명이 순서대로 처리)</div><div class="vd">263초의 73% · 여유 72초</div></div>
+      <div class="subcol">
+        <div class="subrow">
+          <div class="subcard"><div class="badge">SUB 1</div><div class="t">에어덕트</div>
+            <div class="sbody"><img src="phc_subB.png"><div><div class="ct">111.5초</div><div class="ls">에어덕트·USB 모듈</div></div></div>
+          </div>
+          <div class="subplus">+</div>
+          <div class="subcard"><div class="badge">SUB 2</div><div class="t">LTE/AVN BRKT</div>
+            <div class="sbody"><img src="phc_subC.png"><div><div class="ct">79.5초</div><div class="ls">AVN BRKT·LTE 모듈</div></div></div>
+          </div>
+        </div>
+        <div class="subresult ok"><div class="sum">111.5초+79.5초=<b>191초</b>(1명이 순서대로 처리)</div><div class="vd">263초의 73% · 여유 72초</div></div>
+      </div>
     </div>
   </div>
   <div id="panel-sub-2" class="dpanel">
     <div class="subwrap">
-      <div class="subcard"><div class="badge">SUB 1</div><div class="t">에어덕트</div>
-        <div class="sbody"><img src="phc_subB.png"><div><div class="ct">111.5초</div><div class="ls">에어덕트·USB 모듈</div></div></div></div>
-      <div class="subplus">+</div>
-      <div class="subcard"><div class="badge">SUB 2</div><div class="t">LTE/AVN BRKT</div>
-        <div class="sbody"><img src="phc_subC.png"><div><div class="ct">79.5초</div><div class="ls">AVN BRKT·LTE 모듈</div></div></div></div>
-      <div class="subresult ok"><div class="sum">111.5초+79.5초=<b>191초</b>(1명이 순서대로 처리)</div><div class="vd">197초의 97% · 여유 6초</div></div>
+      <div class="subcol">
+        <div class="subrow">
+          <div class="subcard"><div class="badge">SUB 1</div><div class="t">에어덕트</div>
+            <div class="sbody"><img src="phc_subB.png"><div><div class="ct">111.5초</div><div class="ls">에어덕트·USB 모듈</div></div></div>
+          </div>
+          <div class="subplus">+</div>
+          <div class="subcard"><div class="badge">SUB 2</div><div class="t">LTE/AVN BRKT</div>
+            <div class="sbody"><img src="phc_subC.png"><div><div class="ct">79.5초</div><div class="ls">AVN BRKT·LTE 모듈</div></div></div>
+          </div>
+        </div>
+        <div class="subresult ok"><div class="sum">111.5초+79.5초=<b>191초</b>(1명이 순서대로 처리)</div><div class="vd">197초의 97% · 여유 6초</div></div>
+      </div>
     </div>
   </div>
   <div id="panel-sub-3" class="dpanel">
     <div class="subwrap">
-      <div class="subcard"><div class="badge">SUB 1</div><div class="t">에어덕트</div>
-        <div class="sbody"><img src="phc_subB.png"><div><div class="ct">111.5초</div><div class="ls">에어덕트·USB 모듈</div></div></div></div>
-      <div class="subplus">+</div>
-      <div class="subcard"><div class="badge">SUB 2</div><div class="t">LTE/AVN BRKT</div>
-        <div class="sbody"><img src="phc_subC.png"><div><div class="ct">79.5초</div><div class="ls">AVN BRKT·LTE 모듈</div></div></div></div>
-      <div class="subresult no"><div class="sum">111.5초+79.5초=<b>191초</b>(1명 통합 시 초과 → 2명 분리)</div><div class="vd">175초의 109% · 16초 초과</div></div>
+      <div class="subcol">
+        <div class="subrow">
+          <div class="subcard"><div class="badge">SUB 1</div><div class="t">에어덕트</div>
+            <div class="sbody"><img src="phc_subB.png"><div><div class="ct">111.5초</div><div class="ls">에어덕트·USB 모듈</div></div></div>
+          </div>
+          <div class="subplus">+</div>
+          <div class="subcard"><div class="badge">SUB 2</div><div class="t">LTE/AVN BRKT</div>
+            <div class="sbody"><img src="phc_subC.png"><div><div class="ct">79.5초</div><div class="ls">AVN BRKT·LTE 모듈</div></div></div>
+          </div>
+        </div>
+        <div class="subresult no"><div class="sum">111.5초+79.5초=<b>191초</b>(1명 통합 시 초과 → 2명 분리)</div><div class="vd">175초의 109% · 16초 초과</div></div>
+      </div>
     </div>
   </div>
   <div id="panel-sub-4" class="dpanel">
     <div class="subwrap">
-      <div class="subcard"><div class="badge">SUB 1</div><div class="t">에어덕트</div>
-        <div class="sbody"><img src="phc_subB.png"><div><div class="ct">111.5초</div><div class="ls">에어덕트·USB 모듈</div></div></div></div>
-      <div class="subplus">+</div>
-      <div class="subcard"><div class="badge">SUB 2</div><div class="t">LTE/AVN BRKT</div>
-        <div class="sbody"><img src="phc_subC.png"><div><div class="ct">79.5초</div><div class="ls">AVN BRKT·LTE 모듈</div></div></div></div>
-      <div class="subresult no"><div class="sum">111.5초+79.5초=<b>191초</b>(1명 통합 시 초과 → 2명 분리 유지)</div><div class="vd">164초의 116% · 27초 초과</div></div>
+      <div class="subcol">
+        <div class="subrow">
+          <div class="subcard"><div class="badge">SUB 1</div><div class="t">에어덕트</div>
+            <div class="sbody"><img src="phc_subB.png"><div><div class="ct">111.5초</div><div class="ls">에어덕트·USB 모듈</div></div></div>
+          </div>
+          <div class="subplus">+</div>
+          <div class="subcard"><div class="badge">SUB 2</div><div class="t">LTE/AVN BRKT</div>
+            <div class="sbody"><img src="phc_subC.png"><div><div class="ct">79.5초</div><div class="ls">AVN BRKT·LTE 모듈</div></div></div>
+          </div>
+        </div>
+        <div class="subresult no"><div class="sum">111.5초+79.5초=<b>191초</b>(1명 통합 시 초과 → 2명 분리 유지)</div><div class="vd">164초의 116% · 27초 초과</div></div>
+      </div>
     </div>
   </div>
   <div id="panel-sub-5" class="dpanel">
     <div class="subwrap">
-      <div class="subcard"><div class="badge">SUB 1</div><div class="t">에어덕트</div>
-        <div class="sbody"><img src="phc_subB.png"><div><div class="ct">111.5초</div><div class="ls">에어덕트·USB 모듈</div></div></div></div>
-      <div class="subplus">+</div>
-      <div class="subcard"><div class="badge">SUB 2</div><div class="t">LTE/AVN BRKT</div>
-        <div class="sbody"><img src="phc_subC.png"><div><div class="ct">79.5초</div><div class="ls">AVN BRKT·LTE 모듈</div></div></div></div>
-      <div class="subresult no"><div class="sum">111.5초+79.5초=<b>191초</b>(1명 통합 시 초과 → 2명 분리 유지)</div><div class="vd">158초의 121% · 33초 초과</div></div>
+      <div class="subcol">
+        <div class="subrow">
+          <div class="subcard"><div class="badge">SUB 1</div><div class="t">에어덕트</div>
+            <div class="sbody"><img src="phc_subB.png"><div><div class="ct">111.5초</div><div class="ls">에어덕트·USB 모듈</div></div></div>
+          </div>
+          <div class="subplus">+</div>
+          <div class="subcard"><div class="badge">SUB 2</div><div class="t">LTE/AVN BRKT</div>
+            <div class="sbody"><img src="phc_subC.png"><div><div class="ct">79.5초</div><div class="ls">AVN BRKT·LTE 모듈</div></div></div>
+          </div>
+        </div>
+        <div class="subresult no"><div class="sum">111.5초+79.5초=<b>191초</b>(1명 통합 시 초과 → 2명 분리 유지)</div><div class="vd">158초의 121% · 33초 초과</div></div>
+      </div>
     </div>
   </div>
 </div>
