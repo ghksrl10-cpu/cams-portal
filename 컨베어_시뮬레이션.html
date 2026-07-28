@@ -630,7 +630,13 @@
           }
           localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));changed=true;
         });
-        if(changed&&typeof loadLineData==='function'){loadLineData();if(typeof renderScenarios==='function')renderScenarios();}
+        if(changed&&typeof loadLineData==='function'){
+          loadLineData();
+          // 클라우드에서 받은 시나리오를 메모리와 화면에 즉시 반영
+          try{scenarios=JSON.parse(localStorage.getItem('conv_scen4')||'[]');}catch(e){}
+          if(typeof renderScen==='function')renderScen();
+          if(typeof renderMain==='function')renderMain();
+        }
         document.getElementById('syncDot').style.background='#22c55e';
         document.getElementById('syncDot').title='클라우드 동기화 완료';
       }).catch(()=>{document.getElementById('syncDot').style.background='#f59e0b';});
@@ -664,7 +670,13 @@
           const nv=typeof v==='string'?v:JSON.stringify(v);
           if(nv!==cur){localStorage.setItem(k,nv);changed=true;}
         });
-        if(changed&&typeof loadLineData==='function'){loadLineData();if(typeof renderScenarios==='function')renderScenarios();}
+        if(changed&&typeof loadLineData==='function'){
+          loadLineData();
+          // 클라우드에서 받은 시나리오를 메모리와 화면에 즉시 반영
+          try{scenarios=JSON.parse(localStorage.getItem('conv_scen4')||'[]');}catch(e){}
+          if(typeof renderScen==='function')renderScen();
+          if(typeof renderMain==='function')renderMain();
+        }
       });
     }catch(e){console.warn('Firebase init 실패',e);}
   }
