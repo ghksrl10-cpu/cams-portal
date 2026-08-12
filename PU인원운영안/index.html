@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light only">
+<style>
+:root { color-scheme: light only; }
+html { forced-color-adjust: none; }
+@font-face { font-family:'Pretendard'; font-weight:400; src:url('Pretendard-Regular.woff2') format('woff2'); }
+@font-face { font-family:'Pretendard'; font-weight:700; src:url('Pretendard-Bold.woff2') format('woff2'); }
+@font-face { font-family:'Pretendard'; font-weight:800; src:url('Pretendard-ExtraBold.woff2') format('woff2'); }
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { overflow-x:hidden; }
+body { font-family:'Pretendard','Malgun Gothic',sans-serif; background:#fff; max-width:1700px; padding:20px 24px 16px; color:#333a42;
+       -webkit-font-smoothing:antialiased; }
+img { max-width:100%; }
+b { font-weight:700; }
+
+.tab { display:inline-block; border-radius:10px; padding:8px 24px; font-weight:800; font-size:24px; letter-spacing:-0.4px; color:#fff; }
+.tab.navy { background:#1f4e8c; }
+.secrow { display:flex; align-items:center; margin-bottom:9px; gap:12px; }
+.subtab { background:#7a3fb5; color:#fff; font-weight:800; font-size:15px; padding:5px 16px; border-radius:9px; }
+
+.block { border:2.5px solid #2c5794; border-radius:14px; background:#fff; overflow:hidden; }
+.block.green { border-color:#2e7d4f; }
+.row9 { display:grid; grid-template-columns:78px repeat(9,1fr); }
+.row9 > div { border-right:1px solid #e4e9ef; border-bottom:1px solid #e4e9ef; padding:9px 8px; text-align:center; }
+.row9 > div:last-child { border-right:none; }
+.rowlbl { background:#eef2f8; font-weight:800; font-size:13.5px; color:#3c4a5e; display:flex; align-items:center; justify-content:center; }
+.block.green .rowlbl { background:#eef7ef; }
+.hn { font-weight:700; font-size:19px; color:#1f4e8c; }
+.block.green .hn { color:#2e7d4f; }
+.hn.empty { color:#9aa5b1; font-size:17px; }
+.hds { font-size:13.5px; color:#454d57; font-weight:500; margin-top:2px; line-height:1.5;
+        word-break:keep-all; overflow-wrap:normal; letter-spacing:-0.35px; }
+.hchg { font-size:13px; font-weight:700; color:#2f6fd0; line-height:1.5; margin-top:2px;
+        word-break:keep-all; overflow-wrap:normal; letter-spacing:-0.35px; }
+.hchg.del { color:#c0392b; }
+.hchg .sub { font-size:11.5px; color:#8f99a6; font-weight:600; }
+.hchg.mrg { background:#f5f8fe; border:2px dashed #4a7fd4; border-radius:9px; margin:3px; padding:8px 6px;
+            display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.block.green .hchg.mrg { background:#fdf4f4; border-color:#d98b8b; }
+.hchg .wk { display:inline-block; margin-top:5px; background:#c0392b; color:#fff; font-size:13px; font-weight:800;
+            border-radius:8px; padding:2px 10px; letter-spacing:-0.3px; }
+
+/* 인원 행 */
+.hc { font-size:19px; font-weight:800; color:#1f4e8c; }
+.block.green .hc { color:#2e7d4f; }
+.hc .u { font-size:14px; font-weight:700; }
+.hc.zero { color:#c7ccd3; font-size:17px; }
+.hc.fix { color:#5a6572; }
+.hc .fixnote { display:block; font-size:12px; font-weight:700; color:#8f99a6; margin-top:1px; }
+.hc.pool { background:#eef2f8; border:2px solid #4a7fd4; border-radius:9px; margin:3px; padding:6px 4px;
+           display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.block.green .hc.pool { background:#eef7ef; border-color:#2e7d4f; }
+.hc .cut { display:inline-block; margin-left:5px; background:#c0392b; color:#fff; font-size:12.5px; font-weight:800;
+           border-radius:7px; padding:1px 8px; vertical-align:2px; }
+.row9 > div { word-break:keep-all; overflow-wrap:normal; }
+.hempty { color:#c7ccd3; font-size:13px; font-weight:600; }
+.condtag { display:inline-block; background:#d99a2b; color:#fff; font-size:12px; font-weight:700; border-radius:10px; padding:1px 8px; letter-spacing:-0.3px; margin-left:4px; vertical-align:2px; }
+.imgrow { grid-column:1 / -1; border-right:none !important; border-bottom:none !important; padding:14px 10px !important; text-align:center; }
+.imgrow img { max-width:100%; }
+.illustrow { display:block; margin-top:12px; }
+.illustrow img { width:87.35%; margin:0 auto; height:auto; display:block; }
+
+.secrow2 { display:flex; align-items:center; margin:26px 0 9px; gap:10px; }
+
+.subrow2 { display:grid; grid-template-columns:78px repeat(9,1fr); gap:0; margin-top:6px; align-items:start; }
+.outcard { border:2px solid #b8781c; border-radius:12px; overflow:hidden; background:#fff7e0; align-self:start; }
+.subcard3 { border:2px solid #c0392b; border-radius:10px; overflow:hidden; background:#fff; align-self:start; }
+.subcard3 .t { background:#fde8e8; color:#c0392b; font-weight:800; font-size:14.5px; text-align:center; padding:6px 0; }
+.subcard3 .n { font-size:12.5px; font-weight:600; text-align:center; padding:5px 2px; border-bottom:1px solid #eee; color:#454d57; }
+.subcard3 .ph { display:block; padding:0; }
+.subcard3 .ph img { width:100%; height:auto; display:block; }
+.subcard3 .hcn { border-top:1px solid #eee; background:#fdf6f6; text-align:center; padding:7px 4px;
+                 font-size:18px; font-weight:800; color:#c0392b; word-break:keep-all;
+                 min-height:54px; display:flex; align-items:center; justify-content:center; }
+.subcard3 .hcn .u { font-size:13px; font-weight:700; }
+.subcard3 .hcn.follow { font-size:13px; font-weight:800; color:#5a6572; line-height:1.45; }
+.outcard .ph { display:block; padding:0; background:#fff; }
+.outcard .ph img { width:100%; height:auto; display:block; }
+.arrow3 { font-size:64px; line-height:1; color:#c0392b; font-weight:900; align-self:center; justify-self:center; padding:0; margin-top:80px; }
+.outcard .t { background:#b8781c; color:#fff; font-weight:800; font-size:15px; text-align:center; padding:6px 0; }
+.outcard .n { font-size:13px; font-weight:600; text-align:center; padding:5px 0; color:#5a4620; }
+.outcard img { width:100%; display:block; }
+
+.resultbox { grid-column:1 / 5; margin-right:14px; border:2.5px solid #1f4e8c; border-radius:14px; background:#eef2f8; padding:18px 22px;
+             word-break:keep-all; overflow-wrap:normal; }
+.resultbox .ttl { font-size:18.5px; font-weight:800; color:#1f4e8c; margin-bottom:8px; letter-spacing:-0.4px; }
+.resultbox .line { font-size:14px; font-weight:600; color:#3c4a5e; line-height:1.75; letter-spacing:-0.3px; }
+.resultbox b { color:#1f4e8c; }
+.resultbox .del { color:#c0392b; font-weight:800; }
+.resultbox .secttl { font-weight:800; color:#333a42; display:block; margin-bottom:2px; }
+.resultbox .twocol { display:grid; grid-template-columns:1fr 1fr; gap:10px 18px; margin-top:12px; padding-top:10px;
+                     border-top:1.5px dashed #c8d3e2; font-size:14px; font-weight:600; color:#3c4a5e; line-height:1.75; }
+.resultbox .totrow { display:flex; justify-content:flex-start; align-items:center; flex-wrap:wrap; gap:8px;
+                     margin-top:12px; padding-top:10px; border-top:1.5px dashed #c8d3e2; }
+.resultbox .tot { font-weight:800; color:#c0392b; font-size:19px; margin-top:10px; }
+.resultbox .totsub { display:inline-block; margin-left:8px; background:#c0392b; color:#fff; font-size:13.5px; font-weight:700; border-radius:9px; padding:3px 11px; vertical-align:2px; letter-spacing:-0.3px; }
+.resultbox .totsub b { color:#fff; font-size:15px; }
+.resultbox .cond { color:#c0392b; font-weight:700; font-size:14px; margin-top:2px; }
+
+/* PU 인원 — 위치별 담당자 */
+.row9 > div.pn { font-size:14.5px; font-weight:700; color:#222; min-height:64px; text-align:left;
+      padding-left:10px; word-break:keep-all; line-height:1.75; display:flex; flex-direction:column;
+      justify-content:center; align-items:flex-start; }
+.pn .jo { color:#1f4e8c; font-weight:800; }
+.block.green .pn .jo { color:#2e7d4f; }
+.row9 > div.pn.todo { color:#d6dbe1; font-weight:600; font-size:13px; text-align:center; align-items:center; }
+.pn.blank { min-height:64px; }
+.hn.red { color:#c0392b; }
+.pncard { border-top:1px solid #eee; background:#fafbfc; text-align:left; padding:8px 10px;
+          font-size:14px; font-weight:700; color:#222; min-height:56px; word-break:keep-all; line-height:1.7; }
+.pncard .jo { color:#c0392b; font-weight:800; }
+.pncard.todo { color:#d6dbe1; font-weight:600; font-size:13px; text-align:center; }
+.pncard.follow { font-size:13px; font-weight:800; color:#5a6572; text-align:center; line-height:1.45; }
+.pncard.vacant { font-size:14.5px; font-weight:800; color:#b8781c; background:#fff8e8; text-align:center; line-height:1.5; }
+
+/* 시나리오 탭 */
+.tabbar { display:flex; gap:8px; margin-bottom:16px; border-bottom:3px solid #d7dde6; padding-bottom:0; }
+.tabbtn { appearance:none; border:2.5px solid #d7dde6; border-bottom:none; background:#f3f6fa; color:#7a8694;
+          font-family:inherit; font-weight:800; font-size:17px; letter-spacing:-0.4px;
+          padding:11px 30px 10px; border-radius:12px 12px 0 0; cursor:pointer; position:relative; top:3px; }
+.tabbtn .sub { display:block; font-size:12.5px; font-weight:600; margin-top:2px; color:#9aa5b1; }
+.tabbtn.on { background:#1f4e8c; border-color:#1f4e8c; color:#fff; }
+.tabbtn.on .sub { color:#c7dbf5; }
+.scen { display:none; }
+.scen.on { display:block; }
+
+/* 인쇄 / PDF : 두 시나리오 모두 각 1페이지 */
+@media print {
+  @page { size:466mm 336mm; margin:6mm; }
+  html, body { max-width:none; width:1700px; padding:0; }
+  .tabbar { display:none !important; }
+  .scen { display:block !important; }
+  #scen5m { break-before:page; page-break-before:always; }
+  .block, .subrow2, .illustrow, .subcard3, .outcard, .resultbox { break-inside:avoid; page-break-inside:avoid; }
+  .tabbtn { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}
+</style>
+</head>
+<body>
+
+<div class="tabbar">
+  <button class="tabbtn on" id="btn41" onclick="showScen('41')">4 : 1 공피치<span class="sub">UPH 21 · C/T 168.3초 · 일 164대</span></button>
+  <button class="tabbtn" id="btn5m" onclick="showScen('5m')">연 5만대<span class="sub">UPH 13 · C/T 270.7초 · 일 106대</span></button>
+  <button class="tabbtn" id="btnpu" onclick="showScen('pu')">PU 인원<span class="sub">공정별 담당자</span></button>
+</div>
+
+<!-- ================= 4:1 ================= -->
+<div class="scen on" id="scen41">
+
+<div class="secrow">
+  <div class="tab navy">C/PAD 컨베어 공수</div>
+  <span class="subtab">4 : 1 공피치 기준 — 11·6공정 공수 재배치</span>
+</div>
+
+<div class="block">
+  <div class="row9">
+    <div class="rowlbl">공정</div>
+    <div class="hn empty">18공정</div>
+    <div class="hn">17공정</div>
+    <div class="hn">16공정<span class="condtag" style="background:#4a7fd4;">통합</span></div>
+    <div class="hn empty">15공정</div>
+    <div class="hn empty">14공정</div>
+    <div class="hn" style="color:#c0392b;">13공정<span class="condtag">통합</span></div>
+    <div class="hn empty">12공정</div>
+    <div class="hn" style="color:#c0392b;">11공정</div>
+    <div class="hn empty">10공정</div>
+
+    <div class="rowlbl">변경 전</div>
+    <div class="hempty">-</div>
+    <div class="hds">전장 검사</div>
+    <div class="hds">클러스터페시아 조립</div>
+    <div class="hempty">-</div>
+    <div class="hempty">-</div>
+    <div class="hds">글로브 박스 조립<br>퓨즈 박스 조립</div>
+    <div class="hempty">-</div>
+    <div class="hds">AVN / 패드 부착<br>퓨즈 박스 스캔</div>
+    <div class="hempty">-</div>
+
+    <div class="rowlbl" style="grid-row:3; grid-column:1;">변경 후<br>(추가/삭제)</div>
+    <div class="hempty" style="grid-row:3; grid-column:2;">-</div>
+    <div class="hempty" style="grid-row:3; grid-column:3;">-</div>
+    <div class="hchg mrg" style="grid-row:3; grid-column:4 / 6;">포토센서 추가, AVN 커버 조립 추가<br><span class="sub">*avn공수분배 및 15~16공정 합침</span></div>
+    <div class="hempty" style="grid-row:3; grid-column:6;">-</div>
+    <div class="hchg mrg" style="grid-row:3; grid-column:7 / 10;">오토라이트, AVN 커넥터 체결 및 조립만 유지<br><span class="sub">*avn공수분배 및 11~13공정 합침</span></div>
+    <div class="hempty" style="grid-row:3; grid-column:10;">-</div>
+
+    <div class="rowlbl" style="grid-row:4; grid-column:1;">인원</div>
+    <div class="hc zero" style="grid-row:4; grid-column:2;">-</div>
+    <div class="hc fix" style="grid-row:4; grid-column:3;">2<span class="u">명</span><span class="fixnote">고정</span></div>
+    <div class="hc pool" style="grid-row:4; grid-column:4 / 6;"><span>1<span class="u">명</span></span></div>
+    <div class="hc zero" style="grid-row:4; grid-column:6;">-</div>
+    <div class="hc pool" style="grid-row:4; grid-column:7 / 10;"><span>1<span class="u">명</span><span class="cut">2명 → 1명</span></span></div>
+    <div class="hc zero" style="grid-row:4; grid-column:10;">-</div>
+
+  </div>
+</div>
+
+<div class="illustrow">
+  <div></div>
+  <div style="grid-column:2 / 11;"><img src="illust_band.png"></div>
+</div>
+
+<div class="block green" style="margin-top:20px;">
+  <div class="row9">
+    <div class="rowlbl">공정</div>
+    <div class="hn">1공정</div>
+    <div class="hn">2공정</div>
+    <div class="hn">3공정</div>
+    <div class="hn">4공정</div>
+    <div class="hn">5공정</div>
+    <div class="hn">6공정</div>
+    <div class="hn empty">7공정</div>
+    <div class="hn">8공정</div>
+    <div class="hn empty">9공정</div>
+
+    <div class="rowlbl">변경 전</div>
+    <div class="hds">카울 크로스<br>기준핀 고정 단품</div>
+    <div class="hds">ETACS, 다이오드<br>퓨즈박스, 핸드프리<br>RPAS,&nbsp;라디오&nbsp;피더</div>
+    <div class="hds">와이어 하네스 조립<br>부품 커넥터 결선</div>
+    <div class="hds">사양별 커넥터 결선<br>리저브 탱크 조립</div>
+    <div class="hds">C/PAD 조립</div>
+    <div class="hds">오토라이트, 포토센서<br>파워아울렛, 노즐 L/R 조립</div>
+    <div class="hempty">빈 공정</div>
+    <div class="hds">클러스터, 헤드 유닛<br>커넥터 체결</div>
+    <div class="hempty">빈 공정</div>
+
+    <div class="rowlbl">변경 후<br>(추가/삭제)</div>
+    <div class="hempty">-</div>
+    <div class="hempty">-</div>
+    <div class="hempty">-</div>
+    <div class="hempty">-</div>
+    <div class="hempty">-</div>
+    <div class="hchg del">오토라이트, 포토센서<br>노즐 L/R 삭제<br><span class="sub" style="color:#2f6fd0; font-weight:700;">파워아울렛 조립 유지</span></div>
+    <div class="hempty">-</div>
+    <div class="hchg">패드 부착 추가</div>
+    <div class="hempty">-</div>
+
+    <div class="rowlbl" style="grid-row:4; grid-column:1;">인원</div>
+    <div class="hc pool" style="grid-row:4; grid-column:2 / 8;">
+      <span style="font-size:13px; font-weight:700; color:#5a6572; margin-bottom:2px;">1~6공정 순회</span>
+      <span>5<span class="u">명</span><span class="cut">6명 → 5명</span></span>
+    </div>
+    <div class="hc zero" style="grid-row:4; grid-column:8;">-</div>
+    <div class="hc" style="grid-row:4; grid-column:9;">1<span class="u">명</span></div>
+    <div class="hc zero" style="grid-row:4; grid-column:10;">-</div>
+  </div>
+</div>
+
+<div class="secrow2">
+  <div class="tab navy" style="font-size:19px; padding:6px 18px;">SUB 공정 · 외주 검토</div>
+</div>
+<div class="subrow2">
+  <div class="resultbox">
+    <div class="ttl">4 : 1 → UPH : 21, C/T : 168.3초</div>
+    <div class="line">
+      일 생산량 : 164대<br>
+      정상 대비 <span class="del">-41대 감소</span>, 부하율 22%, 1인 작업 수량 33대<br>
+      AVN 사양 월 22% · 월 1,411대 생산, 하네스 5인 유지, AVN 공정 삭제 공수 분배
+    </div>
+    <div class="twocol">
+      <div>
+        <span class="secttl">컨베어</span>
+        하네스 6인 → 5인 <b class="del">(-1명)</b><br>
+        AVN공정 1인 → 0인 <b class="del">(-1인)</b>
+      </div>
+      <div>
+        <span class="secttl">서브</span>
+        AVN BRKT, LTE BRKT 공정<br>
+        1인 → 0인 <b class="del">(-1인)</b>
+      </div>
+    </div>
+    <div class="totrow">
+      <div class="tot" style="margin-top:0;">총 한 조당 3인 삭감 가능<span class="totsub">주·야 2개 조 <b>6인</b> 삭감</span></div>
+    </div>
+    <div class="cond">※단 외주로 빠질 시 가능</div>
+  </div>
+  <div class="subcard3" style="grid-column:5;"><div class="t">SUB 공정</div><div class="n">에어백</div><div class="ph"><img src="sub_img2.png"></div>
+    <div class="hcn follow">인원 별도 없음<br>컨베어 인원 따라감</div></div>
+  <div class="subcard3" style="grid-column:6;"><div class="t">SUB 공정</div><div class="n">클러스터 페시아</div><div class="ph"><img src="sub_img1.png"></div>
+    <div class="hcn">2<span class="u">명</span></div></div>
+  <div class="subcard3" style="grid-column:7;"><div class="t">SUB 공정</div><div class="n">에어 덕트</div><div class="ph"><img src="sub_img3.png"></div>
+    <div class="hcn">1<span class="u">명</span></div></div>
+  <div class="subcard3" style="grid-column:8;"><div class="t">SUB 공정</div><div class="n">AVN BRKT, LTE</div><div class="ph"><img src="sub_img4.png"></div>
+    <div class="hcn">1<span class="u">명</span></div>
+    <div style="font-size:14px; font-weight:800; color:#c0392b; text-align:center; padding:9px 4px; border-top:1px dashed #eee; line-height:1.5; word-break:keep-all;">외주 빠질 시 공정 삭제<br>작업자 1명 삭제</div></div>
+  <div class="arrow3" style="grid-column:9;">→</div>
+  <div class="outcard" style="grid-column:10;"><div class="t">외주</div><div class="n">AVN BRKT, LTE, 노즐</div><div class="ph"><img src="sub_out.png"></div>
+    <div style="font-size:14px; font-weight:800; color:#8a6512; text-align:center; padding:9px 4px; border-top:1px dashed #e0cfa0; line-height:1.5; word-break:keep-all;">외주로 빠질 시<br>서브 작업 및 비닐 제거<br>작업 대행 없음</div></div>
+</div>
+
+</div><!-- /scen41 -->
+
+<!-- ================= 연 5만대 ================= -->
+<div class="scen" id="scen5m">
+
+<div class="secrow">
+  <div class="tab navy">C/PAD 컨베어 공수</div>
+  <span class="subtab">연 5만대 기준 — 4:1 재배치 구조 그대로 적용</span>
+</div>
+
+<div class="block">
+  <div class="row9">
+    <div class="rowlbl">공정</div>
+    <div class="hn empty">18공정</div>
+    <div class="hn">17공정</div>
+    <div class="hn">16공정<span class="condtag" style="background:#4a7fd4;">통합</span></div>
+    <div class="hn empty">15공정</div>
+    <div class="hn empty">14공정</div>
+    <div class="hn" style="color:#c0392b;">13공정<span class="condtag">통합</span></div>
+    <div class="hn empty">12공정</div>
+    <div class="hn" style="color:#c0392b;">11공정</div>
+    <div class="hn empty">10공정</div>
+
+    <div class="rowlbl">변경 전</div>
+    <div class="hempty">-</div>
+    <div class="hds">전장 검사</div>
+    <div class="hds">클러스터페시아 조립</div>
+    <div class="hempty">-</div>
+    <div class="hempty">-</div>
+    <div class="hds">글로브 박스 조립<br>퓨즈 박스 조립</div>
+    <div class="hempty">-</div>
+    <div class="hds">AVN / 패드 부착<br>퓨즈 박스 스캔</div>
+    <div class="hempty">-</div>
+
+    <div class="rowlbl" style="grid-row:3; grid-column:1;">변경 후<br>(추가/삭제)</div>
+    <div class="hempty" style="grid-row:3; grid-column:2;">-</div>
+    <div class="hempty" style="grid-row:3; grid-column:3;">-</div>
+    <div class="hchg mrg" style="grid-row:3; grid-column:4 / 6;">포토센서 추가, AVN 커버 조립 추가<br><span class="sub">*avn공수분배 및 15~16공정 합침</span></div>
+    <div class="hempty" style="grid-row:3; grid-column:6;">-</div>
+    <div class="hchg mrg" style="grid-row:3; grid-column:7 / 10;">오토라이트, AVN 커넥터 체결 및 조립만 유지<br><span class="sub">*avn공수분배 및 11~13공정 합침</span></div>
+    <div class="hempty" style="grid-row:3; grid-column:10;">-</div>
+
+    <div class="rowlbl" style="grid-row:4; grid-column:1;">인원</div>
+    <div class="hc zero" style="grid-row:4; grid-column:2;">-</div>
+    <div class="hc fix" style="grid-row:4; grid-column:3;">2<span class="u">명</span><span class="fixnote">고정</span></div>
+    <div class="hc pool" style="grid-row:4; grid-column:4 / 6;"><span>1<span class="u">명</span></span></div>
+    <div class="hc zero" style="grid-row:4; grid-column:6;">-</div>
+    <div class="hc pool" style="grid-row:4; grid-column:7 / 10;"><span>1<span class="u">명</span><span class="cut">2명 → 1명</span></span></div>
+    <div class="hc zero" style="grid-row:4; grid-column:10;">-</div>
+
+  </div>
+</div>
+
+<div class="illustrow">
+  <div></div>
+  <div style="grid-column:2 / 11;"><img src="illust_band.png"></div>
+</div>
+
+<div class="block green" style="margin-top:20px;">
+  <div class="row9">
+    <div class="rowlbl">공정</div>
+    <div class="hn">1공정</div>
+    <div class="hn">2공정</div>
+    <div class="hn">3공정</div>
+    <div class="hn">4공정</div>
+    <div class="hn">5공정</div>
+    <div class="hn">6공정</div>
+    <div class="hn empty">7공정</div>
+    <div class="hn">8공정</div>
+    <div class="hn empty">9공정</div>
+
+    <div class="rowlbl">변경 전</div>
+    <div class="hds">카울 크로스<br>기준핀 고정 단품</div>
+    <div class="hds">ETACS, 다이오드<br>퓨즈박스, 핸드프리<br>RPAS,&nbsp;라디오&nbsp;피더</div>
+    <div class="hds">와이어 하네스 조립<br>부품 커넥터 결선</div>
+    <div class="hds">사양별 커넥터 결선<br>리저브 탱크 조립</div>
+    <div class="hds">C/PAD 조립</div>
+    <div class="hds">오토라이트, 포토센서<br>파워아울렛, 노즐 L/R 조립</div>
+    <div class="hempty">빈 공정</div>
+    <div class="hds">클러스터, 헤드 유닛<br>커넥터 체결</div>
+    <div class="hempty">빈 공정</div>
+
+    <div class="rowlbl">변경 후<br>(추가/삭제)</div>
+    <div class="hempty">-</div>
+    <div class="hempty">-</div>
+    <div class="hempty">-</div>
+    <div class="hempty">-</div>
+    <div class="hempty">-</div>
+    <div class="hchg del">오토라이트, 포토센서<br>노즐 L/R 삭제<br><span class="sub" style="color:#2f6fd0; font-weight:700;">파워아울렛 조립 유지</span></div>
+    <div class="hempty">-</div>
+    <div class="hchg">패드 부착 추가</div>
+    <div class="hempty">-</div>
+
+    <div class="rowlbl" style="grid-row:4; grid-column:1;">인원</div>
+    <div class="hc pool" style="grid-row:4; grid-column:2 / 8;">
+      <span style="font-size:13px; font-weight:700; color:#5a6572; margin-bottom:2px;">1~6공정 순회</span>
+      <span>3<span class="u">명</span><span class="cut">6명 → 3명</span></span>
+    </div>
+    <div class="hc zero" style="grid-row:4; grid-column:8;">-</div>
+    <div class="hc" style="grid-row:4; grid-column:9;">1<span class="u">명</span></div>
+    <div class="hc zero" style="grid-row:4; grid-column:10;">-</div>
+  </div>
+</div>
+
+<div class="secrow2">
+  <div class="tab navy" style="font-size:19px; padding:6px 18px;">SUB 공정 · 외주 검토</div>
+</div>
+<div class="subrow2">
+  <div class="resultbox">
+    <div class="ttl">연 5만대 → UPH : 13, C/T : 270.7초</div>
+    <div class="line">
+      일 생산량 : 106대<br>
+      정상 대비 <span class="del">-99대 감소</span>, 부하율 22%, 1인 작업 수량 35대<br>
+      AVN 사양 월 22% · 월 902대 생산, 하네스 3인 유지, AVN 공정 삭제 공수 분배
+    </div>
+    <div class="twocol">
+      <div>
+        <span class="secttl">컨베어</span>
+        하네스 6인 → 3인 <b class="del">(-3명)</b><br>
+        AVN공정 1인 → 0인 <b class="del">(-1인)</b>
+      </div>
+      <div>
+        <span class="secttl">서브</span>
+        AVN BRKT, LTE BRKT 공정<br>
+        1인 → 0인 <b class="del">(-1인)</b>
+      </div>
+    </div>
+    <div class="totrow">
+      <div class="tot" style="margin-top:0;">총 한 조당 5인 삭감 가능<span class="totsub">주·야 2개 조 <b>10인</b> 삭감</span></div>
+    </div>
+    <div class="cond">※단 외주로 빠질 시 가능</div>
+  </div>
+  <div class="subcard3" style="grid-column:5;"><div class="t">SUB 공정</div><div class="n">에어백</div><div class="ph"><img src="sub_img2.png"></div>
+    <div class="hcn follow">인원 별도 없음<br>컨베어 인원 따라감</div></div>
+  <div class="subcard3" style="grid-column:6;"><div class="t">SUB 공정</div><div class="n">클러스터 페시아</div><div class="ph"><img src="sub_img1.png"></div>
+    <div class="hcn">2<span class="u">명</span></div></div>
+  <div class="subcard3" style="grid-column:7;"><div class="t">SUB 공정</div><div class="n">에어 덕트</div><div class="ph"><img src="sub_img3.png"></div>
+    <div class="hcn">1<span class="u">명</span></div></div>
+  <div class="subcard3" style="grid-column:8;"><div class="t">SUB 공정</div><div class="n">AVN BRKT, LTE</div><div class="ph"><img src="sub_img4.png"></div>
+    <div class="hcn">1<span class="u">명</span></div>
+    <div style="font-size:14px; font-weight:800; color:#c0392b; text-align:center; padding:9px 4px; border-top:1px dashed #eee; line-height:1.5; word-break:keep-all;">외주 빠질 시 공정 삭제<br>작업자 1명 삭제</div></div>
+  <div class="arrow3" style="grid-column:9;">→</div>
+  <div class="outcard" style="grid-column:10;"><div class="t">외주</div><div class="n">AVN BRKT, LTE, 노즐</div><div class="ph"><img src="sub_out.png"></div>
+    <div style="font-size:14px; font-weight:800; color:#8a6512; text-align:center; padding:9px 4px; border-top:1px dashed #e0cfa0; line-height:1.5; word-break:keep-all;">외주로 빠질 시<br>서브 작업 및 비닐 제거<br>작업 대행 없음</div></div>
+</div>
+
+</div><!-- /scen5m -->
+
+<!-- ================= PU 인원 ================= -->
+<div class="scen" id="scenpu">
+
+<div class="secrow">
+  <div class="tab navy">PU 인원</div>
+  <span class="subtab">공정 위치별 담당자</span>
+</div>
+
+<div class="block">
+  <div class="row9">
+    <div class="rowlbl">공정</div>
+    <div class="hn empty">18공정</div>
+    <div class="hn">17공정</div>
+    <div class="hn">16공정</div>
+    <div class="hn empty">15공정</div>
+    <div class="hn empty">14공정</div>
+    <div class="hn red">13공정</div>
+    <div class="hn empty">12공정</div>
+    <div class="hn red">11공정</div>
+    <div class="hn empty">10공정</div>
+
+    <div class="rowlbl">변경 전</div>
+    <div class="hempty">-</div>
+    <div class="hds">전장 검사</div>
+    <div class="hds">클러스터페시아 조립</div>
+    <div class="hempty">-</div>
+    <div class="hempty">-</div>
+    <div class="hds">글로브 박스 조립<br>퓨즈 박스 조립</div>
+    <div class="hempty">-</div>
+    <div class="hds">AVN / 패드 부착<br>퓨즈 박스 스캔</div>
+    <div class="hempty">-</div>
+
+    <div class="rowlbl" style="grid-row:3; grid-column:1;">변경 후<br>(추가/삭제)</div>
+    <div class="hempty" style="grid-row:3; grid-column:2;">-</div>
+    <div class="hempty" style="grid-row:3; grid-column:3;">-</div>
+    <div class="hchg mrg" style="grid-row:3; grid-column:4 / 6;">포토센서 추가, AVN 커버 조립 추가<br><span class="sub">*avn공수분배 및 15~16공정 합침</span></div>
+    <div class="hempty" style="grid-row:3; grid-column:6;">-</div>
+    <div class="hchg mrg" style="grid-row:3; grid-column:7 / 10;">오토라이트, AVN 커넥터 체결 및 조립만 유지<br><span class="sub">*avn공수분배 및 11~13공정 합침</span></div>
+    <div class="hempty" style="grid-row:3; grid-column:10;">-</div>
+
+    <div class="rowlbl" style="grid-row:4; grid-column:1;">인원</div>
+    <div class="pn blank" style="grid-row:4; grid-column:2;"></div>
+    <div class="pn" style="grid-row:4; grid-column:3;"><span><span class="jo">A조 :</span> 장민수, 김은주</span><span><span class="jo">B조 :</span> 석경곤, 조성나</span></div>
+    <div class="pn" style="grid-row:4; grid-column:4 / 6;"><span><span class="jo">A조 :</span> 이종훈, 이상구, 김영중</span><span><span class="jo">B조 :</span> 최우창, 조은규, 제성춘</span></div>
+    <div class="pn blank" style="grid-row:4; grid-column:6;"></div>
+    <div class="pn" style="grid-row:4; grid-column:7;"><span><span class="jo">A조 :</span> 황상식</span><span><span class="jo">B조 :</span> 박철희</span></div>
+    <div class="pn blank" style="grid-row:4; grid-column:8;"></div>
+    <div class="pn" style="grid-row:4; grid-column:9;"><span><span class="jo">A조 :</span> 노해송</span><span><span class="jo">B조 :</span> 김기연</span></div>
+    <div class="pn blank" style="grid-row:4; grid-column:10;"></div>
+  </div>
+</div>
+
+<div class="illustrow">
+  <div></div>
+  <div style="grid-column:2 / 11;"><img src="illust_band.png"></div>
+</div>
+
+<div class="block green" style="margin-top:20px;">
+  <div class="row9">
+    <div class="rowlbl">공정</div>
+    <div class="hn">1공정</div>
+    <div class="hn">2공정</div>
+    <div class="hn">3공정</div>
+    <div class="hn">4공정</div>
+    <div class="hn">5공정</div>
+    <div class="hn">6공정</div>
+    <div class="hn">7공정</div>
+    <div class="hn">8공정</div>
+    <div class="hn">9공정</div>
+
+    <div class="rowlbl">변경 전</div>
+    <div class="hds">카울 크로스<br>기준핀 고정 단품</div>
+    <div class="hds">ETACS, 다이오드<br>퓨즈박스, 핸드프리<br>RPAS,&nbsp;라디오&nbsp;피더</div>
+    <div class="hds">와이어 하네스 조립<br>부품 커넥터 결선</div>
+    <div class="hds">사양별 커넥터 결선<br>리저브 탱크 조립</div>
+    <div class="hds">C/PAD 조립</div>
+    <div class="hds">오토라이트, 포토센서<br>파워아울렛, 노즐 L/R 조립</div>
+    <div class="hempty">빈 공정</div>
+    <div class="hds">클러스터, 헤드 유닛<br>커넥터 체결</div>
+    <div class="hempty">빈 공정</div>
+
+    <div class="rowlbl">변경 후<br>(추가/삭제)</div>
+    <div class="hempty">-</div>
+    <div class="hempty">-</div>
+    <div class="hempty">-</div>
+    <div class="hempty">-</div>
+    <div class="hempty">-</div>
+    <div class="hchg del">오토라이트, 포토센서<br>노즐 L/R 삭제<br><span class="sub" style="color:#2f6fd0; font-weight:700;">파워아울렛 조립 유지</span></div>
+    <div class="hempty">-</div>
+    <div class="hchg">패드 부착 추가</div>
+    <div class="hempty">-</div>
+
+    <div class="rowlbl" style="grid-row:4; grid-column:1;">인원</div>
+    <div class="pn" style="grid-row:4; grid-column:2 / 9; padding-left:12px;"><span><span class="jo">A조 :</span> 김대진, 김경석, 박병환, 한재균, 한재현</span><span><span class="jo">B조 :</span> 김장명, 김동현, 김우상, 윤용택, 황인규, 백일룡</span></div>
+    <div class="pn" style="grid-row:4; grid-column:9;"><span><span class="jo">A조 :</span> 김수황</span><span><span class="jo">B조 :</span> 장길종</span></div>
+    <div class="pn blank" style="grid-row:4; grid-column:10;"></div>
+  </div>
+</div>
+
+<div class="secrow2">
+  <div class="tab navy" style="font-size:19px; padding:6px 18px;">SUB 공정 담당자</div>
+</div>
+<div class="subrow2">
+  <div class="subcard3" style="grid-column:3;"><div class="t">범퍼 공정</div><div class="n">안개등, 사이드, 빔,<br>넘버플레이트</div><div class="ph"><img src="sub_bumper.png"></div>
+    <div class="pncard"><span class="jo">A조 :</span> 김진혁, 김명석<br><span class="jo">B조 :</span> 문광성, 박윤진</div></div>
+  <div class="subcard3" style="grid-column:4;"><div class="t">SUB 공정</div><div class="n">설비, 센터 메쉬</div><div class="ph"><img src="sub_mesh.png"></div>
+    <div class="pncard"><span class="jo">A조 :</span> 신대식<br><span class="jo">B조 :</span> 윤형복</div></div>
+  <div class="subcard3" style="grid-column:5;"><div class="t">SUB 공정</div><div class="n">에어백</div><div class="ph"><img src="sub_img2.png"></div>
+    <div class="pncard follow">인원 별도 없음<br>컨베어 인원 따라감</div></div>
+  <div class="subcard3" style="grid-column:6;"><div class="t">SUB 공정</div><div class="n">클러스터 페시아</div><div class="ph"><img src="sub_img1.png"></div>
+    <div class="pncard follow">인원 별도 없음<br>컨베어 인원 따라감</div></div>
+  <div class="subcard3" style="grid-column:7;"><div class="t">SUB 공정</div><div class="n">에어 덕트</div><div class="ph"><img src="sub_img3.png"></div>
+    <div class="pncard"><span class="jo">A조 :</span> 최기철<br><span class="jo">B조 :</span> 고병수</div></div>
+  <div class="subcard3" style="grid-column:8;"><div class="t">SUB 공정</div><div class="n">AVN BRKT, LTE</div><div class="ph"><img src="sub_img4.png"></div>
+    <div class="pncard vacant">공석<br>임시 대체</div>
+    <div style="font-size:14px; font-weight:800; color:#c0392b; text-align:center; padding:9px 4px; border-top:1px dashed #eee; line-height:1.5; word-break:keep-all;">외주 빠질 시 공정 삭제<br>작업자 1명 삭제</div></div>
+  <div class="arrow3" style="grid-column:9;">→</div>
+  <div class="outcard" style="grid-column:10;"><div class="t">외주</div><div class="n">AVN BRKT, LTE, 노즐</div><div class="ph"><img src="sub_out.png"></div>
+    <div style="font-size:14px; font-weight:800; color:#8a6512; text-align:center; padding:9px 4px; border-top:1px dashed #e0cfa0; line-height:1.5; word-break:keep-all;">외주로 빠질 시<br>서브 작업 및 비닐 제거<br>작업 대행 없음</div></div>
+</div>
+
+</div><!-- /scenpu -->
+
+<script>
+var SCENS = { '41':['scen41','btn41'], '5m':['scen5m','btn5m'], 'pu':['scenpu','btnpu'] };
+function showScen(k){
+  Object.keys(SCENS).forEach(function(key){
+    var on = (key === k);
+    document.getElementById(SCENS[key][0]).classList.toggle('on', on);
+    document.getElementById(SCENS[key][1]).classList.toggle('on', on);
+  });
+}
+</script>
+
+</body>
+</html>
