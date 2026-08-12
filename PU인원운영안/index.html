@@ -65,21 +65,25 @@ b { font-weight:700; }
 
 .secrow2 { display:flex; align-items:center; margin:26px 0 9px; gap:10px; }
 
-.subrow2 { display:grid; grid-template-columns:78px repeat(9,1fr); gap:0; margin-top:6px; align-items:start; }
-.outcard { border:2px solid #b8781c; border-radius:12px; overflow:hidden; background:#fff7e0; align-self:start; }
-.subcard3 { border:2px solid #c0392b; border-radius:10px; overflow:hidden; background:#fff; align-self:start; }
+.subrow2 { display:grid; grid-template-columns:78px repeat(9,1fr); gap:0; margin-top:6px; align-items:stretch; }
+.outcard { border:2px solid #b8781c; border-radius:12px; overflow:hidden; background:#fff7e0;
+           align-self:stretch; display:flex; flex-direction:column; }
+.subcard3 { border:2px solid #c0392b; border-radius:10px; overflow:hidden; background:#fff;
+            align-self:stretch; display:flex; flex-direction:column; }
 .subcard3 .t { background:#fde8e8; color:#c0392b; font-weight:800; font-size:14.5px; text-align:center; padding:6px 0; }
-.subcard3 .n { font-size:12.5px; font-weight:600; text-align:center; padding:5px 2px; border-bottom:1px solid #eee; color:#454d57; }
-.subcard3 .ph { display:block; padding:0; }
-.subcard3 .ph img { width:100%; height:auto; display:block; }
+.subcard3 .n { font-size:12.5px; font-weight:600; text-align:center; padding:5px 4px; border-bottom:1px solid #eee; color:#454d57;
+               min-height:44px; display:flex; align-items:center; justify-content:center; line-height:1.4;
+               word-break:keep-all; }
+.subcard3 .ph { flex:1; display:flex; align-items:center; justify-content:center; padding:0; min-height:0; }
+.subcard3 .ph img { width:100%; height:auto; max-height:100%; object-fit:contain; display:block; }
 .subcard3 .hcn { border-top:1px solid #eee; background:#fdf6f6; text-align:center; padding:7px 4px;
                  font-size:18px; font-weight:800; color:#c0392b; word-break:keep-all;
                  min-height:54px; display:flex; align-items:center; justify-content:center; }
 .subcard3 .hcn .u { font-size:13px; font-weight:700; }
 .subcard3 .hcn.follow { font-size:13px; font-weight:800; color:#5a6572; line-height:1.45; }
-.outcard .ph { display:block; padding:0; background:#fff; }
-.outcard .ph img { width:100%; height:auto; display:block; }
-.arrow3 { font-size:64px; line-height:1; color:#c0392b; font-weight:900; align-self:center; justify-self:center; padding:0; margin-top:80px; }
+.outcard .ph { flex:1; display:flex; align-items:center; justify-content:center; padding:0; background:#fff; min-height:0; }
+.outcard .ph img { width:100%; height:auto; max-height:100%; object-fit:contain; display:block; }
+.arrow3 { font-size:64px; line-height:1; color:#c0392b; font-weight:900; align-self:center; justify-self:center; padding:0; }
 .outcard .t { background:#b8781c; color:#fff; font-weight:800; font-size:15px; text-align:center; padding:6px 0; }
 .outcard .n { font-size:13px; font-weight:600; text-align:center; padding:5px 0; color:#5a4620; }
 .outcard img { width:100%; display:block; }
@@ -109,8 +113,11 @@ b { font-weight:700; }
 .row9 > div.pn.todo { color:#d6dbe1; font-weight:600; font-size:13px; text-align:center; align-items:center; }
 .pn.blank { min-height:64px; }
 .hn.red { color:#c0392b; }
-.pncard { border-top:1px solid #eee; background:#fafbfc; text-align:left; padding:8px 10px;
-          font-size:14px; font-weight:700; color:#222; min-height:56px; word-break:keep-all; line-height:1.7; }
+.pncard { border-top:1px solid #eee; background:#fafbfc; text-align:left; padding:8px 8px;
+          font-size:13.5px; font-weight:700; color:#222; min-height:62px; line-height:1.7;
+          display:block; margin-top:auto; white-space:nowrap; }
+.pncard .jo { white-space:nowrap; }
+.pncard.follow, .pncard.vacant, .pncard.todo { text-align:center; white-space:normal; }
 .pncard .jo { color:#c0392b; font-weight:800; }
 .pncard.todo { color:#d6dbe1; font-weight:600; font-size:13px; text-align:center; }
 .pncard.follow { font-size:13px; font-weight:800; color:#5a6572; text-align:center; line-height:1.45; }
