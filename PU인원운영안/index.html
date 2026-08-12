@@ -69,20 +69,20 @@ b { font-weight:700; }
 .outcard { border:2px solid #b8781c; border-radius:12px; overflow:hidden; background:#fff7e0;
            align-self:stretch; display:flex; flex-direction:column; }
 .subcard3 { border:2px solid #c0392b; border-radius:10px; overflow:hidden; background:#fff;
-            align-self:stretch; display:flex; flex-direction:column; }
+            align-self:start; display:flex; flex-direction:column; }
 .subcard3 .t { background:#fde8e8; color:#c0392b; font-weight:800; font-size:14.5px; text-align:center; padding:6px 0; }
 .subcard3 .n { font-size:12.5px; font-weight:600; text-align:center; padding:5px 4px; border-bottom:1px solid #eee; color:#454d57;
                min-height:44px; display:flex; align-items:center; justify-content:center; line-height:1.4;
                word-break:keep-all; }
-.subcard3 .ph { flex:1; display:flex; align-items:center; justify-content:center; padding:0; min-height:0; }
-.subcard3 .ph img { width:100%; height:auto; max-height:100%; object-fit:contain; display:block; }
+.subcard3 .ph { height:168px; display:flex; align-items:center; justify-content:center; padding:4px 2px; }
+.subcard3 .ph img { max-width:100%; max-height:100%; width:auto; height:auto; display:block; }
 .subcard3 .hcn { border-top:1px solid #eee; background:#fdf6f6; text-align:center; padding:7px 4px;
                  font-size:18px; font-weight:800; color:#c0392b; word-break:keep-all;
                  min-height:54px; display:flex; align-items:center; justify-content:center; }
 .subcard3 .hcn .u { font-size:13px; font-weight:700; }
 .subcard3 .hcn.follow { font-size:13px; font-weight:800; color:#5a6572; line-height:1.45; }
-.outcard .ph { flex:1; display:flex; align-items:center; justify-content:center; padding:0; background:#fff; min-height:0; }
-.outcard .ph img { width:100%; height:auto; max-height:100%; object-fit:contain; display:block; }
+.outcard .ph { height:168px; display:flex; align-items:center; justify-content:center; padding:4px 2px; background:#fff; }
+.outcard .ph img { max-width:100%; max-height:100%; width:auto; height:auto; display:block; }
 .arrow3 { font-size:64px; line-height:1; color:#c0392b; font-weight:900; align-self:center; justify-self:center; padding:0; }
 .outcard .t { background:#b8781c; color:#fff; font-weight:800; font-size:15px; text-align:center; padding:6px 0; }
 .outcard .n { font-size:13px; font-weight:600; text-align:center; padding:5px 0; color:#5a4620; }
@@ -115,7 +115,7 @@ b { font-weight:700; }
 .hn.red { color:#c0392b; }
 .pncard { border-top:1px solid #eee; background:#fafbfc; text-align:left; padding:8px 8px;
           font-size:13.5px; font-weight:700; color:#222; min-height:62px; line-height:1.7;
-          display:block; margin-top:auto; white-space:nowrap; }
+          display:block; white-space:nowrap; }
 .pncard .jo { white-space:nowrap; }
 .pncard.follow, .pncard.vacant, .pncard.todo { text-align:center; white-space:normal; }
 .pncard .jo { color:#c0392b; font-weight:800; }
@@ -561,7 +561,7 @@ b { font-weight:700; }
   <div class="subcard3" style="grid-column:7;"><div class="t">SUB 공정</div><div class="n">에어 덕트</div><div class="ph"><img src="sub_img3.png"></div>
     <div class="pncard"><span class="jo">A조 :</span> 최기철<br><span class="jo">B조 :</span> 고병수</div></div>
   <div class="subcard3" style="grid-column:8;"><div class="t">SUB 공정</div><div class="n">AVN BRKT, LTE</div><div class="ph"><img src="sub_img4.png"></div>
-    <div class="pncard vacant">공석<br>임시 대체</div>
+    <div class="pncard vacant">공석 임시 대체</div>
     <div style="font-size:14px; font-weight:800; color:#c0392b; text-align:center; padding:9px 4px; border-top:1px dashed #eee; line-height:1.5; word-break:keep-all;">외주 빠질 시 공정 삭제<br>작업자 1명 삭제</div></div>
   <div class="arrow3" style="grid-column:9;">→</div>
   <div class="outcard" style="grid-column:10;"><div class="t">외주</div><div class="n">AVN BRKT, LTE, 노즐</div><div class="ph"><img src="sub_out.png"></div>
