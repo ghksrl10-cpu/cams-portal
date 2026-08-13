@@ -1016,6 +1016,19 @@ function parseChat(text){
         const part=single?gPart(content):'';
         const locCols=Object.fromEntries(LOCS.map(l=>[l,'']));if(loc)locCols[loc]=1;
         const pairs=gPairs(content,sender);
+        // 차종/아이템 미상인 후속 메시지(…번도 요청)는 같은 날 같은 발신자 직전 건에서 상속
+        for(const p of pairs){
+          if(p[0]==='?'||p[1]==='?'){
+            for(let ri=recs.length-1;ri>=0;ri--){
+              const pv=recs[ri];
+              if(pv.일자===day&&pv._sender===sender&&pv.차종!=='?'){
+                if(p[0]==='?')p[0]=pv.차종;
+                if(p[1]==='?'&&pv.아이템!=='?')p[1]=pv.아이템;
+                break;
+              }
+            }
+          }
+        }
         for(const[vm,item,cnt] of pairs){
           for(let ci=0;ci<cnt;ci++){
             const def=rawDef?rawDef:(g==='캠스'?(altIdx++%2===0?'도장':'찍힘'):'');
