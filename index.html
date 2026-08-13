@@ -466,7 +466,9 @@ function doActivate(idx) {
   tabs[idx].classList.add('active');
   frames[idx].classList.add('active');
   if (!frames[idx].src || frames[idx].src === location.href) {
-    frames[idx].src = frames[idx].dataset.src;
+    const s = frames[idx].dataset.src;
+    // 같은 저장소의 html은 캐시 무효화 쿼리 부착 (배포 직후 구버전 방지)
+    frames[idx].src = /^[^/]*\.html/.test(s) || s.includes('/index.html') ? s + (s.includes('?') ? '&' : '?') + 'v=' + Date.now() : s;
   } else {
     setTimeout(() => sendThemeToFrame(frames[idx]), 100);
   }
