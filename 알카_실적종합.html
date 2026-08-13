@@ -416,7 +416,7 @@
             <tbody>
               <tr style="border-bottom:1px solid #1e2230"><td style="padding:9px 14px;font-weight:700;color:#60a5fa">NQ5</td><td style="padding:9px 14px">스포티지 (공용 — 단종 후 PE 포함)</td><td style="padding:9px 14px;color:#94a3b8">NQ5 / NQ5 PE / NQ PE / NQ / 스포티지(GYW.../JWW...)</td></tr>
               <tr style="border-bottom:1px solid #1e2230"><td style="padding:9px 14px;font-weight:700;color:#60a5fa">SP2</td><td style="padding:9px 14px">셀토스 (TH)</td><td style="padding:9px 14px;color:#94a3b8">SP2 / SP2PE</td></tr>
-              <tr style="border-bottom:1px solid #1e2230;background:#0f1117"><td style="padding:9px 14px;font-weight:700;color:#60a5fa">SP3</td><td style="padding:9px 14px">셀토스 풀체인지 (1S)</td><td style="padding:9px 14px;color:#94a3b8">SP3</td></tr>
+              <tr style="border-bottom:1px solid #1e2230;background:#0f1117"><td style="padding:9px 14px;font-weight:700;color:#60a5fa">SP3</td><td style="padding:9px 14px">셀토스 풀체인지 (1S)</td><td style="padding:9px 14px;color:#94a3b8">SP3 / 셀토스 (TH 단종 후 "셀토스"만 오면 SP3)</td></tr>
               <tr style="border-bottom:1px solid #1e2230"><td style="padding:9px 14px;font-weight:700;color:#60a5fa">OV1</td><td style="padding:9px 14px">EV5</td><td style="padding:9px 14px;color:#94a3b8">OV1 / Ov1 / X9</td></tr>
               <tr style="border-bottom:1px solid #1e2230;background:#0f1117"><td style="padding:9px 14px;font-weight:700;color:#60a5fa">AX</td><td style="padding:9px 14px">캐스퍼</td><td style="padding:9px 14px;color:#94a3b8">AX / AX PE</td></tr>
               <tr><td style="padding:9px 14px;font-weight:700;color:#60a5fa">JX</td><td style="padding:9px 14px">캐스퍼 EV</td><td style="padding:9px 14px;color:#94a3b8">AX EV / AX EV LOUNGE / AX EV CROSS</td></tr>
@@ -494,16 +494,20 @@
               <div style="color:#f87171;font-weight:700;margin-top:8px;margin-bottom:4px">X (ASSY):</div>
               <div>앗세이 / BPR / 번호만 나열</div>
               <div>전장제외 + 풀범퍼 (완성품 기준)</div>
-              <div style="color:#f59e0b;font-weight:700;margin-top:8px;margin-bottom:4px">❌ 미등록 (목록 외 품목):</div>
-              <div><b style="color:#fcd34d">FOG커버 / 포그커버 / FOG카바 / 코너레이더 / 센서 / PDW / UWB</b> → 신청 와도 입력 안 함</div>
+              <div style="color:#f59e0b;font-weight:700;margin-top:8px;margin-bottom:4px">❌ 미등록 (목록 외 품목 전수 차단):</div>
+              <div><b style="color:#fcd34d">스키드·몰딩·가니쉬·그릴 외 단품은 전부 미등록</b></div>
+              <div>예: FOG커버 / 코너레이더(레이다) / 센서 / PDW / UWB / 빽빔 → 신청 와도 입력 안 함</div>
+              <div style="font-size:11px;color:#64748b">※ "센서부 찍힘"처럼 불량 위치 설명은 정상 등록됨</div>
             </div>
           </div>
 
           <div style="background:#0f1117;border:1px solid var(--bd);border-radius:10px;padding:14px">
             <div style="font-weight:700;color:#f87171;margin-bottom:10px">⚠️ 예외 처리</div>
             <div style="font-size:12px;color:#94a3b8;line-height:1.9">
-              <div><b style="color:#e2e8f0">"알카 취소" / "취소해주세요"</b> → 미입력/삭제</div>
+              <div><b style="color:#e2e8f0">"취소" 포함 메시지</b> → 당일 같은 발신자의 직전 건 자동 제거</div>
               <div><b style="color:#e2e8f0">"알카 보류"</b> → 미입력</div>
+              <div><b style="color:#e2e8f0">"815, 832번도 요청" (번호만 후속)</b> → 직전 건 차종·아이템 상속</div>
+              <div><b style="color:#e2e8f0">3자리 커밋번호 (746, 570, 812번)</b> → 개수만큼 행 생성</div>
               <div><b style="color:#e2e8f0">"재알카 신청" / "재신청"</b> → 새 행으로 입력</div>
               <div><b style="color:#e2e8f0">번호 정정 (xxxx→yyyy)</b> → yyyy로 교체</div>
               <div><b style="color:#e2e8f0">비알 번호 여러 개 나열</b> → 각 1행씩</div>
