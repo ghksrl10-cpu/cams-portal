@@ -1425,12 +1425,6 @@ function renderKpiData(){
   const recs=DB.months[mon];
   renderKpiSlide1(recs,mon);
   renderKpiSlide2(recs,mon);
-  setTimeout(()=>{
-    const lastSvg=id=>{const nl=document.querySelectorAll(id+' svg');return nl[nl.length-1]||null;};
-    const sync=(lId,rId)=>{const l=lastSvg(lId),r=lastSvg(rId);if(l&&r){const h=l.getBoundingClientRect().height;if(h>0){r.style.height=h+'px';r.setAttribute('preserveAspectRatio','none');}}};
-    sync('#r1L','#r1R');
-    sync('#r2L','#r2R');
-  },50);
 }
 function kpiCnt(recs,pred){return recs.filter(pred).length;}
 function pct(n,t){return t?Math.round(n/t*100):0;}
@@ -1630,33 +1624,33 @@ function renderKpiSlide1(recs,mon){
     </div>
     <div style="border-top:2px solid #222;margin-bottom:14px"></div>
 
-    <!-- row1: 차종별 + 월별합계 한 줄 통합 -->
+    <!-- row1: 차종별 + 월별합계 한 줄 (그룹별 자체 스케일, 막대 크기 동일) -->
     <div style="margin-bottom:14px" id="r1L">
       <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 월별 발생 추이 <span style="font-size:10px;font-weight:400;color:#555">차종별(당월, 귀책 합산) · 월별 합계(연간)</span></div>
-      <div style="position:relative;padding-bottom:22px">
-        ${_bars([...vehBars,{v:0,label:''},...monBars],80,30,8,true)}
-        ${_barsX([...vehBars,{v:0,label:''},...monBars],30,8)}
+      <div style="display:flex;gap:26px;align-items:flex-end">
+        <div style="flex:106 1 0;position:relative;padding-bottom:22px">
+          ${_bars(vehBars,80,30,8,true)}
+          ${_barsX(vehBars,30,8)}
+        </div>
+        <div style="flex:448 1 0;position:relative;padding-bottom:22px;border-left:1px solid #ddd;padding-left:26px">
+          ${_bars(monBars,80,30,8,true)}
+          ${_barsX(monBars,30,8)}
+        </div>
       </div>
     </div>
 
-    <!-- row2: 1fr:1fr, JS로 오른쪽 SVG 높이 동기화 -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:14px;align-items:end">
-
-      <!-- row2 좌: 연 발생 추이 -->
-      <div id="r2L">
-        <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 연 발생 추이</div>
-        <div style="font-size:10px;color:#555;margin-bottom:4px">차종별(누계, 귀책 합산)</div>
-        <div style="position:relative;padding-bottom:20px">
-          ${_bars(vehYtdBars,70,28,101,true)}
-          ${_barsX(vehYtdBars,28,101)}
-        </div>
+    <!-- row2: 연 발생 추이 + 알카비용 한 줄 (그룹별 자체 스케일) -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;gap:26px;align-items:baseline;margin-bottom:6px">
+        <div style="font-size:13px;font-weight:700;color:#111">◎ 연 발생 추이 <span style="font-size:10px;font-weight:400;color:#555">차종별(누계, 귀책 합산)</span></div>
+        <div style="font-size:13px;font-weight:700;color:#111;margin-left:auto">◎ 알카비용 추이 <span style="font-size:10px;font-weight:400">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스']])} <span style="color:#555">단위:만원</span></span></div>
       </div>
-
-      <!-- row2 우: 알카비용 추이 -->
-      <div id="r2R">
-        <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 알카비용 추이</div>
-        <div style="font-size:10px;color:#555;margin-bottom:4px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스']])} 단위:만원</div>
-        <div style="position:relative;padding-bottom:20px">
+      <div style="display:flex;gap:26px;align-items:flex-end">
+        <div id="r2L" style="flex:136 1 0;position:relative;padding-bottom:20px">
+          ${_bars(vehYtdBars,70,28,8,true)}
+          ${_barsX(vehYtdBars,28,8)}
+        </div>
+        <div id="r2R" style="flex:486 1 0;position:relative;padding-bottom:20px;border-left:1px solid #ddd;padding-left:26px">
           ${_gbarsI(g금액,[_SC.N,_SC.G],70,16,2,6,1,0,true)}
           ${_gbarsIX(g금액,2,16,2,6)}
         </div>
