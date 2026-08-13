@@ -1630,26 +1630,12 @@ function renderKpiSlide1(recs,mon){
     </div>
     <div style="border-top:2px solid #222;margin-bottom:14px"></div>
 
-    <!-- 상단 2컬럼 50/50: row1 -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:14px;align-items:end">
-
-      <!-- row1 좌: 월별 발생 추이 -->
-      <div id="r1L">
-        <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 월별 발생 추이</div>
-        <div style="font-size:10px;color:#555;margin-bottom:4px">차종별(당월, 귀책 합산)</div>
-        <div style="position:relative;padding-bottom:22px">
-          ${_bars(vehBars,80,30,162,true)}
-          ${_barsX(vehBars,30,162)}
-        </div>
-      </div>
-
-      <!-- row1 우: 월별 합계(연간) -->
-      <div id="r1R">
-        <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 월별 합계(연간)</div>
-        <div style="position:relative;padding-bottom:22px">
-          ${_bars(monBars,80,30,5,true)}
-          ${_barsX(monBars,30,5)}
-        </div>
+    <!-- row1: 차종별 + 월별합계 한 줄 통합 -->
+    <div style="margin-bottom:14px" id="r1L">
+      <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 월별 발생 추이 <span style="font-size:10px;font-weight:400;color:#555">차종별(당월, 귀책 합산) · 월별 합계(연간)</span></div>
+      <div style="position:relative;padding-bottom:22px">
+        ${_bars([...vehBars,{v:0,label:''},...monBars],80,30,8,true)}
+        ${_barsX([...vehBars,{v:0,label:''},...monBars],30,8)}
       </div>
     </div>
 
