@@ -923,7 +923,7 @@ function gPart(c){
   return '';
 }
 function defVeh(c,s){const t=c+s;if(t.includes('1공장'))return 'SP3';if(t.includes('2공장'))return 'NQ5';return '?';}
-function normV(v){const u=v.toUpperCase().replace(/\s+/g,'');if(u.startsWith('NQ'))return 'NQ5';if(u.startsWith('OV'))return 'OV1';if(u.startsWith('SP3'))return 'SP3';return u;}
+function normV(v){const u=v.toUpperCase().replace(/\s+/g,'');if(u==='셀토스')return 'SP3';if(u.startsWith('NQ'))return 'NQ5';if(u.startsWith('OV'))return 'OV1';if(u.startsWith('SP3'))return 'SP3';return u;}
 function cntNums(s){
   // 4자리 차체번호 + 3자리 커밋번호(번/쉼표 목록 형태만) 카운트
   const clean=s.replace(/\d+\/\d+일자?/g,'');
@@ -939,7 +939,7 @@ function gPairs(content,sender){
   for(const line of lines){
     const frt=[...line.matchAll(/프런트|프런트범퍼|FRT|frt|Frt|프론트|프렌트/g)].map(m=>m.index);
     const rr=[...line.matchAll(/리어|리어범퍼|RR(?![A-Za-z0-9_])/gi)].map(m=>m.index);
-    const vms=[...line.matchAll(/NQ\s*PE|NQ5|NQ(?![A-Z0-9])|OV1|OV(?![A-Z0-9])|SP3/gi)];
+    const vms=[...line.matchAll(/NQ\s*PE|NQ5|NQ(?![A-Z0-9])|OV1|OV(?![A-Z0-9])|SP3|셀토스/gi)];
     if(!vms.length)continue;
     const sorted=vms.map(vm=>({vp:vm.index,vn:normV(vm[0])})).sort((a,b)=>a.vp-b.vp);
     for(let vi=0;vi<sorted.length;vi++){
