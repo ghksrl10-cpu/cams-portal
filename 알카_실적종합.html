@@ -1449,7 +1449,7 @@ function _sbarsWon(data,maxH,bw,gp){
   // 기아(남)+캠스(골드) 스택 막대, 귀책별 금액(원) 각각 표기 — 지그재그 2단 배치로 겹침 방지
   const mx=Math.max(...data.map(d=>d.k+d.c),1);
   const W=data.length*(bw+gp)-gp;
-  const TOP=42;
+  const TOP=58;
   let s=`<svg viewBox="0 ${-TOP} ${W} ${maxH+6+TOP}" style="width:100%;height:auto;display:block;overflow:visible">`;
   data.forEach((d,i)=>{
     const t=d.k+d.c;
@@ -1460,7 +1460,7 @@ function _sbarsWon(data,maxH,bw,gp){
     const yK=maxH-hK,yC=yK-hC;
     if(hC)s+=`<rect x="${x}" y="${yC}" width="${bw}" height="${hC}" fill="${_SC.G}"/>`;
     if(hK)s+=`<rect x="${x}" y="${yK}" width="${bw}" height="${hK}" fill="${_SC.N}"/>`;
-    const base=yC-4-(i%2?20:0);
+    const base=yC-4-((i%3)*17);
     if(d.k)s+=`<text x="${cx}" y="${base}" text-anchor="middle" font-size="9" fill="${_SC.N}" font-weight="600">${d.k.toLocaleString()}</text>`;
     if(d.c)s+=`<text x="${cx}" y="${base-(d.k?10:0)}" text-anchor="middle" font-size="9" fill="#B8770A" font-weight="600">${d.c.toLocaleString()}</text>`;
   });
@@ -1646,7 +1646,7 @@ function renderKpiSlide1(recs,mon){
     <div style="border-top:2px solid #222;margin-bottom:14px"></div>
 
     <!-- 본문 2컬럼: 좌(추이 차트들) | 우(공급 아이템) -->
-    <div style="display:grid;grid-template-columns:1fr 555px;gap:20px;align-items:start;margin-bottom:8px">
+    <div style="display:grid;grid-template-columns:1fr 640px;gap:20px;align-items:start;margin-bottom:8px">
     <div>
     <!-- row1: 차종별 + 월별합계 한 줄 (그룹별 자체 스케일, 막대 크기 동일) -->
     <div style="margin-bottom:14px" id="r1L">
@@ -1689,18 +1689,18 @@ function renderKpiSlide1(recs,mon){
         <div style="font-size:11px;color:#888">단위 : 개</div>
       </div>
       <div style="display:flex;gap:10px;align-items:stretch">
-        <div style="flex:0 0 85px;border:1px solid #bbb;padding:8px 10px;display:flex;flex-direction:column;justify-content:flex-end">
-          ${_bars([{v:FRT,label:'FRT',color:_SC.N},{v:RR,label:'RR',color:_SC.G}],83,25,10)}
-          <div style="display:grid;grid-template-columns:repeat(2,35px);gap:14px;border-top:1px solid #ddd;margin-top:3px">
+        <div style="flex:0 0 110px;border:1px solid #bbb;padding:8px 10px;display:flex;flex-direction:column;justify-content:flex-end">
+          ${_bars([{v:FRT,label:'FRT',color:_SC.N},{v:RR,label:'RR',color:_SC.G}],105,30,12)}
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);border-top:1px solid #ddd;margin-top:3px">
             <div style="text-align:center;font-size:11px;font-weight:700;color:#111">${FRT}</div>
             <div style="text-align:center;font-size:11px;font-weight:700;color:#111">${RR}</div>
           </div>
         </div>
-        <div style="flex:0 0 140px;border:1px solid #bbb;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between">
-          <div style="font-size:9px;color:#CC4400;text-align:right;white-space:nowrap">기타: 그릴/어퍼가니쉬</div>
+        <div style="flex:0 0 190px;border:1px solid #bbb;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between">
+          <div style="font-size:10px;color:#CC4400;text-align:right;white-space:nowrap">기타: 그릴/어퍼가니쉬</div>
           <div>
-            ${_bars([{v:ASSY,label:'ASSY',color:_SC.N},{v:리어,label:'몰딩',color:_SC.G},{v:스키드,label:'스키드',color:'#BBB'},{v:기타,label:'기타',color:'#DDD'}],84,26,6)}
-            <div style="display:grid;grid-template-columns:repeat(4,30px);gap:7px;border-top:1px solid #ddd;margin-top:3px">
+            ${_bars([{v:ASSY,label:'ASSY',color:_SC.N},{v:리어,label:'몰딩',color:_SC.G},{v:스키드,label:'스키드',color:'#BBB'},{v:기타,label:'기타',color:'#DDD'}],105,32,8)}
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #ddd;margin-top:3px">
               <div style="text-align:center;font-size:11px;font-weight:700;color:#111">${ASSY}</div>
               <div style="text-align:center;font-size:11px;font-weight:700;color:#111">${리어}</div>
               <div style="text-align:center;font-size:11px;font-weight:700;color:#111">${스키드}</div>
@@ -1708,10 +1708,10 @@ function renderKpiSlide1(recs,mon){
             </div>
           </div>
         </div>
-        <div style="flex:0 0 280px;border:1px solid #bbb;padding:8px 10px">
+        <div style="flex:0 0 300px;border:1px solid #bbb;padding:8px 10px">
           <div style="font-size:10px;color:#555;margin-bottom:3px">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스'],['#AAA','부영']])}</div>
-          <div style="display:grid;grid-template-columns:170px 1fr;gap:8px;align-items:stretch">
-            <div>${_gbars([{label:'ASSY',v:[기아ASSY,캠스ASSY,부영ASSY]},{label:'단품',v:[기아단품,캠스단품,부영단품]}],[_SC.N,_SC.G,'#AAA'],145,16,3,10)}</div>
+          <div style="display:grid;grid-template-columns:185px 1fr;gap:8px;align-items:stretch">
+            <div>${_gbars([{label:'ASSY',v:[기아ASSY,캠스ASSY,부영ASSY]},{label:'단품',v:[기아단품,캠스단품,부영단품]}],[_SC.N,_SC.G,'#AAA'],170,18,3,12)}</div>
             <div style="height:100%">
               <table style="border-collapse:collapse;width:100%;line-height:1.0;table-layout:fixed;height:100%">
                 <tr><th style="background:${_SC.H};border:1px solid #bbb;padding:0 3px;font-size:11px;color:#555">구분</th><th style="background:${_SC.H};border:1px solid #bbb;padding:0 3px;font-size:11px;color:#555">ASSY</th><th style="background:${_SC.H};border:1px solid #bbb;padding:0 3px;font-size:11px;color:#555">단품</th></tr>
