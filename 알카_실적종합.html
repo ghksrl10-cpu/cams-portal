@@ -1449,7 +1449,7 @@ function _sbarsWon(data,maxH,bw,gp){
   // 기아(남)+캠스(골드) 스택 막대, 귀책별 금액(원) 각각 표기 — 지그재그 2단 배치로 겹침 방지
   const mx=Math.max(...data.map(d=>d.k+d.c),1);
   const W=data.length*(bw+gp)-gp;
-  const TOP=60;
+  const TOP=42;
   let s=`<svg viewBox="0 ${-TOP} ${W} ${maxH+6+TOP}" style="width:100%;height:auto;display:block;overflow:visible">`;
   data.forEach((d,i)=>{
     const t=d.k+d.c;
@@ -1460,9 +1460,9 @@ function _sbarsWon(data,maxH,bw,gp){
     const yK=maxH-hK,yC=yK-hC;
     if(hC)s+=`<rect x="${x}" y="${yC}" width="${bw}" height="${hC}" fill="${_SC.G}"/>`;
     if(hK)s+=`<rect x="${x}" y="${yK}" width="${bw}" height="${hK}" fill="${_SC.N}"/>`;
-    const base=yC-5-(i%2?26:0);
-    if(d.c)s+=`<text x="${cx}" y="${base}" text-anchor="middle" font-size="10" fill="#B8770A" font-weight="600">${d.c.toLocaleString()}</text>`;
-    if(d.k)s+=`<text x="${cx}" y="${base-(d.c?11:0)}" text-anchor="middle" font-size="10" fill="${_SC.N}" font-weight="600">${d.k.toLocaleString()}</text>`;
+    const base=yC-4-(i%2?20:0);
+    if(d.c)s+=`<text x="${cx}" y="${base}" text-anchor="middle" font-size="9" fill="#B8770A" font-weight="600">${d.c.toLocaleString()}</text>`;
+    if(d.k)s+=`<text x="${cx}" y="${base-(d.c?10:0)}" text-anchor="middle" font-size="9" fill="${_SC.N}" font-weight="600">${d.k.toLocaleString()}</text>`;
   });
   return s+'</svg>';
 }
@@ -1672,7 +1672,7 @@ function renderKpiSlide1(recs,mon){
           ${_barsX(vehYtdBars,28,8)}
         </div>
         <div id="r2R" style="flex:456 1 0;position:relative;padding-bottom:20px;border-left:1px solid #ddd;padding-left:26px">
-          ${_sbarsWon(g금액,70,16,24)}
+          ${_sbarsWon(g금액,50,16,24)}
           ${_barsX(g금액,16,24)}
         </div>
       </div>
