@@ -998,6 +998,7 @@ function isAlka(c,s){
 function parseChat(text){
   const recs=[],lines=text.trim().split('\n');
   let day=null,i=0,altIdx=0;
+  const photos={}; // 발신자별 직전 연속 사진 장수
   while(i<lines.length){
     const line=lines[i].trim();
     const dm=line.match(/(\d{4})년 (\d{1,2})월 (\d{1,2})일/);
@@ -1008,6 +1009,9 @@ function parseChat(text){
       let j=i+1;
       while(j<lines.length){const nl=lines[j].trim();if(/^\[.+?\] \[/.test(nl)||/^\d{4}년 \d/.test(nl))break;if(nl&&nl!=='메시지가 삭제되었습니다')content+='\n'+nl;j++;}
       i=j;
+      const pm=content.trim().match(/^사진(?:\s*(\d+)\s*장)?$/);
+      if(pm){photos[sender]=(photos[sender]||0)+(pm[1]?+pm[1]:1);continue;}
+      const pcnt=photos[sender]||0;photos[sender]=0;
       if(day&&!sender.startsWith('디에프_')&&content.includes('취소')){
         for(let ri=recs.length-1;ri>=0;ri--){
           if(recs[ri].일자===day&&recs[ri]._sender===sender){recs.splice(ri,1);break;}
@@ -1020,6 +1024,10 @@ function parseChat(text){
         const part=single?gPart(content):'';
         const locCols=Object.fromEntries(LOCS.map(l=>[l,'']));if(loc)locCols[loc]=1;
         const pairs=gPairs(content,sender);
+        // 차종 미상 + 번호 없음 + 직전 사진 여러 장 → 사진 장수만큼 행 생성(각각 확인 유도)
+        if(pcnt>1&&cntNums(content)===0){
+          for(const p of pairs)if(p[0]==='?')p[2]=pcnt;
+        }
         // 차종/아이템 미상인 후속 메시지(…번도 요청)는 같은 날 같은 발신자 직전 건에서 상속
         for(const p of pairs){
           if(p[0]==='?'||p[1]==='?'){
