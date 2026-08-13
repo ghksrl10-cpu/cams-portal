@@ -1750,7 +1750,7 @@ function renderKpiSlide2(recs,mon){
     if(LOCS.some(l=>r[l]==1))LOCS.forEach(l=>{if(r[l]==1)vd[v][l]++;});
     else if(r.발생==1||(!r.발생&&!_k2v2.has(v)))vd[v].K1++; else vd[v].K2++;
   });
-  const usedLocs=LOCS.filter(l=>VEHS.some(v=>vd[v][l]>0));
+  const usedLocs=LOCS; // 출하장 전체 항상 표시
   const k1t=VEHS.reduce((s,v)=>s+vd[v].K1,0);
   const k2t=VEHS.reduce((s,v)=>s+vd[v].K2,0);
   const locT=total-k1t-k2t;
@@ -1967,7 +1967,7 @@ function _sld6Tbl1(recs,LOCS_LIST){
       else vd[v].K2++;
     });
   });
-  const usedL=LOCS_LIST.filter(l=>VEHS.some(v=>vd[v][l]>0));
+  const usedL=LOCS_LIST; // 출하장 전체 항상 표시
   const cols=['K1','K2',...usedL];
   const nc=cols.length;
   const lw=700000,tw=700000,cw=Math.round((cx-lw-tw)/nc);
