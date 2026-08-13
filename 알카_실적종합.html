@@ -905,13 +905,18 @@ function gG(c){
   if(new RegExp('기아\\s*('+dp+')').test(c))return '기아';
   if(new RegExp('부영\\s*('+dp+')').test(c))return '부영';
   if(c.includes('기아 알카 요청'))return '기아';
+  if(/서비스\s*센터|오토큐/.test(c))return '기아'; // 서비스센터 알카 귀책 미표기 → 기아
   return '캠스';
 }
 function gL(c){for(const[n,ks] of LOCATION_MAP)for(const k of ks)if(c.includes(k))return n;return null;}
 function gD(c){for(const[n,ks] of DEFECTS)for(const k of ks)if(c.includes(k))return n;return '';}
-function isSingle(c){return c.includes('몰딩')||c.includes('스키드')||c.includes('어퍼가니쉬')||c.includes('라디에이터그릴')||c.includes('그릴');}
+function isSingle(c){
+  // BPR/전장제외/앗세이 맥락이면 단품 언급(불량위치 설명)이 있어도 ASSY
+  if(/앗세이|ASSY|BPR|전장\s*제외|풀\s*아세이/i.test(c))return false;
+  return c.includes('몰딩')||c.includes('스키드')||c.includes('어퍼가니쉬')||c.includes('가니쉬')||c.includes('라디에이터그릴')||c.includes('그릴');
+}
 function gPart(c){
-  if(c.includes('어퍼가니쉬'))return '어퍼가니쉬';
+  if(c.includes('어퍼가니쉬')||c.includes('가니쉬'))return '어퍼가니쉬';
   if(c.includes('스키드'))return '스키드';
   if(c.includes('라디에이터그릴')||c.includes('그릴'))return '그릴';
   if(c.includes('몰딩'))return '리어몰딩';
@@ -933,7 +938,7 @@ function gPairs(content,sender){
   const lines=content.split('\n'),pairCounts=new Map();
   for(const line of lines){
     const frt=[...line.matchAll(/프런트|프런트범퍼|FRT|frt|Frt|프론트|프렌트/g)].map(m=>m.index);
-    const rr=[...line.matchAll(/리어|리어범퍼|RR(?!\w)/g)].map(m=>m.index);
+    const rr=[...line.matchAll(/리어|리어범퍼|RR(?![A-Za-z0-9_])/gi)].map(m=>m.index);
     const vms=[...line.matchAll(/NQ\s*PE|NQ5|NQ(?![A-Z0-9])|OV1|OV(?![A-Z0-9])|SP3/gi)];
     if(!vms.length)continue;
     const sorted=vms.map(vm=>({vp:vm.index,vn:normV(vm[0])})).sort((a,b)=>a.vp-b.vp);
@@ -951,7 +956,7 @@ function gPairs(content,sender){
       } else if(nf.length)item='FRT';
       else if(nr.length)item='RR';
       else{const b=line.slice(Math.max(0,vp-80),vp+40);item=/프런트|FRT|frt|프론트|프렌트/i.test(b)?'FRT':/리어|RR/.test(b)?'RR':'?';
-        if(item==='?'){item=/프런트|프런트범퍼|FRT|frt|프론트|프렌트/i.test(content)?'FRT':/리어|리어범퍼|RR(?!\w)|범퍼몰딩/.test(content)?'RR':'?';}}
+        if(item==='?'){item=/프런트|프런트범퍼|FRT|frt|프론트|프렌트/i.test(content)?'FRT':/리어|RR(?![A-Za-z0-9_])|몰딩/i.test(content)?'RR':'?';}}
       // 차체번호를 이 차종 구간에서만 카운트 (다음 차종 이전까지)
       const segEnd=vi+1<sorted.length?sorted[vi+1].vp:line.length;
       // 번호가 차종 앞에 나오는 경우(746, 570, 812번 NQ 리어)도 포함해 줄 전체에서 카운트
@@ -965,7 +970,7 @@ function gPairs(content,sender){
     const v=defVeh(content,sender);
     const cnt=Math.max(1,cntNums(content));
     if(/프런트|프런트범퍼|FRT|frt|프론트|프렌트/i.test(content))pairCounts.set(v+'|FRT',cnt);
-    if(/리어|리어범퍼|RR(?!\w)|범퍼몰딩/.test(content))pairCounts.set(v+'|RR',cnt);
+    if(/리어|RR(?![A-Za-z0-9_])|몰딩/i.test(content))pairCounts.set(v+'|RR',cnt);
     if(!pairCounts.size)pairCounts.set(v+'|?',cnt);
   }
   return[...pairCounts.entries()].map(([k,cnt])=>[...k.split('|'),cnt]);
@@ -975,9 +980,9 @@ function isAlka(c,s){
   const skip=['출하됐습니다','출하됬습니다','알카진행하겠습니다','취소해주세요','총검 측정','알겠습니다','입고 안됌','업체직원부재','폼 말씀','측정용 범퍼','검사구 측정','알카 취소','수정했습니다','나갔습니다','사양같은지','AMEW','AMAW','그릴이 다르','센서3호차','보내주시면'];
   if(skip.some(p=>c.includes(p)))return false;
   // 비승인 품목이 '요청 대상'일 때만 차단 (센서부=불량위치는 통과)
-  if(/코너\s*레이더?|코너레이다|FOG\s*커버|포그커버|FOG\s*카바|FOG\s*COVER|PDW|UWB/i.test(c))return false;
+  if(/코너\s*레이더?|코너레이다|FOG\s*커버|포그커버|FOG\s*카바|FOG\s*COVER|PDW|UWB|빽빔|백빔/i.test(c))return false;
   if(/PDC\s*센서|센서\s*(하나|한\s*개|\d+\s*개)|센서\s*보내/.test(c))return false;
-  const _ap=/몰딩|스키드|어퍼가니쉬|라디에이터그릴|그릴/.test(c);
+  const _ap=/몰딩|스키드|어퍼가니쉬|가니쉬|라디에이터그릴|그릴/.test(c);
   const _as=/앗세이|assy|전장제외|전장 제외|BPR/i.test(c);
   const _vn=/\b\d{4}\b/.test(c)||/\b\d{3,4}\s*번/.test(c)||/\b\d{3}\s*,\s*\d{3}\b/.test(c);
   const _bc=/프런트|프론트|FRT|frt|리어|RR(?!\w)/i.test(c);
