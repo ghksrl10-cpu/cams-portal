@@ -1461,8 +1461,8 @@ function _sbarsWon(data,maxH,bw,gp){
     if(hC)s+=`<rect x="${x}" y="${yC}" width="${bw}" height="${hC}" fill="${_SC.G}"/>`;
     if(hK)s+=`<rect x="${x}" y="${yK}" width="${bw}" height="${hK}" fill="${_SC.N}"/>`;
     const base=yC-4-(i%2?20:0);
-    if(d.c)s+=`<text x="${cx}" y="${base}" text-anchor="middle" font-size="9" fill="#B8770A" font-weight="600">${d.c.toLocaleString()}</text>`;
-    if(d.k)s+=`<text x="${cx}" y="${base-(d.c?10:0)}" text-anchor="middle" font-size="9" fill="${_SC.N}" font-weight="600">${d.k.toLocaleString()}</text>`;
+    if(d.k)s+=`<text x="${cx}" y="${base}" text-anchor="middle" font-size="9" fill="${_SC.N}" font-weight="600">${d.k.toLocaleString()}</text>`;
+    if(d.c)s+=`<text x="${cx}" y="${base-(d.k?10:0)}" text-anchor="middle" font-size="9" fill="#B8770A" font-weight="600">${d.c.toLocaleString()}</text>`;
   });
   return s+'</svg>';
 }
@@ -1645,6 +1645,9 @@ function renderKpiSlide1(recs,mon){
     </div>
     <div style="border-top:2px solid #222;margin-bottom:14px"></div>
 
+    <!-- 본문 2컬럼: 좌(추이 차트들) | 우(공급 아이템) -->
+    <div style="display:grid;grid-template-columns:1fr 555px;gap:20px;align-items:start;margin-bottom:8px">
+    <div>
     <!-- row1: 차종별 + 월별합계 한 줄 (그룹별 자체 스케일, 막대 크기 동일) -->
     <div style="margin-bottom:14px" id="r1L">
       <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">◎ 월별 발생 추이 <span style="font-size:10px;font-weight:400;color:#555">차종별(당월, 귀책 합산) · 월별 합계(연간)</span></div>
@@ -1677,9 +1680,10 @@ function renderKpiSlide1(recs,mon){
         </div>
       </div>
     </div>
+    </div>
 
-    <!-- 중단: 공급 아이템 (전폭) -->
-    <div style="border-top:1px solid #ddd;border-bottom:1px solid #ddd;padding:8px 0;margin-bottom:14px">
+    <!-- 우측 컬럼: 공급 아이템 -->
+    <div style="border-left:1px solid #ddd;padding-left:16px">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px">
         <div style="font-size:13px;font-weight:700;color:#111">◎ 공급 아이템</div>
         <div style="font-size:11px;color:#888">단위 : 개</div>
@@ -1719,6 +1723,7 @@ function renderKpiSlide1(recs,mon){
           </div>
         </div>
       </div>
+    </div>
     </div>
 
     <!-- 하단: 귀책 비교 (좌) | 공장 구분 (우) -->
