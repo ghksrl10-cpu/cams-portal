@@ -1460,7 +1460,7 @@ function _sbarsWon(data,maxH,bw,gp){
     const yK=maxH-hK,yC=yK-hC;
     if(hC)s+=`<rect x="${x}" y="${yC}" width="${bw}" height="${hC}" fill="${_SC.G}"/>`;
     if(hK)s+=`<rect x="${x}" y="${yK}" width="${bw}" height="${hK}" fill="${_SC.N}"/>`;
-    const base=yC-4-((i%3)*22);
+    const base=-6-((i%3)*22); // 차트 상단 고정 3단 — 막대 높이와 무관하게 겹침 없음
     if(d.k)s+=`<text x="${cx}" y="${base}" text-anchor="middle" font-size="9" fill="${_SC.N}" font-weight="600">${d.k.toLocaleString()}</text>`;
     if(d.c)s+=`<text x="${cx}" y="${base-(d.k?10:0)}" text-anchor="middle" font-size="9" fill="#B8770A" font-weight="600">${d.c.toLocaleString()}</text>`;
   });
