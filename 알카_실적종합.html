@@ -1445,6 +1445,26 @@ function _bars(data,maxH,bw,gp,noXLabel){
   });
   return s+'</svg>';
 }
+function _sbarsWon(data,maxH,bw,gp){
+  // 기아(남)+캠스(골드) 스택 막대, 합계 금액(원) 빨간 라벨 — 지그재그 2단 배치로 겹침 방지
+  const mx=Math.max(...data.map(d=>d.k+d.c),1);
+  const W=data.length*(bw+gp)-gp;
+  const TOP=36;
+  let s=`<svg viewBox="0 ${-TOP} ${W} ${maxH+6+TOP}" style="width:100%;height:auto;display:block;overflow:visible">`;
+  data.forEach((d,i)=>{
+    const t=d.k+d.c;
+    const x=i*(bw+gp),cx=x+bw/2;
+    if(!t)return;
+    const hK=d.k?Math.max(1,Math.round(d.k/mx*maxH)):0;
+    const hC=d.c?Math.max(1,Math.round(d.c/mx*maxH)):0;
+    const yK=maxH-hK,yC=yK-hC;
+    if(hC)s+=`<rect x="${x}" y="${yC}" width="${bw}" height="${hC}" fill="${_SC.G}"/>`;
+    if(hK)s+=`<rect x="${x}" y="${yK}" width="${bw}" height="${hK}" fill="${_SC.N}"/>`;
+    const ly=yC-5-(i%2?15:0);
+    s+=`<text x="${cx}" y="${ly}" text-anchor="middle" font-size="10" fill="#CC0000" font-weight="600">${t.toLocaleString()}</text>`;
+  });
+  return s+'</svg>';
+}
 function _barsX(data,bw,gp){
   const W=data.length*(bw+gp)-gp;
   return`<div style="position:absolute;bottom:0;left:0;right:0;height:20px;font-size:12px;color:#555">${
@@ -1589,7 +1609,7 @@ function renderKpiSlide1(recs,mon){
   const g공장=mon12.map((m,i)=>({label:lbl12[i],v:[_get(m,'K1'),_get(m,'K2'),_get(m,'loc')]}));
   // 금액 (만원) — auto: UNIT 기반, manual: DB.histAmounts 우선
   const _amt=(m,g)=>{let s=0;for(const r of(DB.months[m]||[]).filter(x=>x.귀책===g&&!x['단품만 요청']))s+=(UNIT[r.차종]?.[r.아이템]||0);const man=+(((DB.histAmounts?.[g]?.[m])||'').toString().replace(/,/g,''))||0;return man||s;};
-  const g금액=mon12.map((m,i)=>({label:lbl12[i],v:[Math.round(_amt(m,'기아')/10000),Math.round(_amt(m,'캠스')/10000)]}));
+  const g금액=mon12.map((m,i)=>({label:lbl12[i],k:_amt(m,'기아'),c:_amt(m,'캠스')}));
 
   // 공통 헬퍼 (색상 명시 포함)
   const C='color:#111;';
@@ -1643,16 +1663,16 @@ function renderKpiSlide1(recs,mon){
     <div style="margin-bottom:14px">
       <div style="display:flex;gap:26px;align-items:baseline;margin-bottom:6px">
         <div style="font-size:13px;font-weight:700;color:#111">◎ 연 발생 추이 <span style="font-size:10px;font-weight:400;color:#555">차종별(누계, 귀책 합산)</span></div>
-        <div style="font-size:13px;font-weight:700;color:#111;margin-left:auto">◎ 알카비용 추이 <span style="font-size:10px;font-weight:400">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스']])} <span style="color:#555">단위:만원</span></span></div>
+        <div style="font-size:13px;font-weight:700;color:#111;margin-left:auto">◎ 알카비용 추이 <span style="font-size:10px;font-weight:400">${_legnd([[_SC.N,'기아'],[_SC.G,'캠스']])} <span style="color:#555">단위:원</span></span></div>
       </div>
       <div style="display:flex;gap:26px;align-items:flex-end">
         <div id="r2L" style="flex:136 1 0;position:relative;padding-bottom:20px">
           ${_bars(vehYtdBars,70,28,8,true)}
           ${_barsX(vehYtdBars,28,8)}
         </div>
-        <div id="r2R" style="flex:486 1 0;position:relative;padding-bottom:20px;border-left:1px solid #ddd;padding-left:26px">
-          ${_gbarsI(g금액,[_SC.N,_SC.G],70,16,2,6,1,0,true)}
-          ${_gbarsIX(g금액,2,16,2,6)}
+        <div id="r2R" style="flex:456 1 0;position:relative;padding-bottom:20px;border-left:1px solid #ddd;padding-left:26px">
+          ${_sbarsWon(g금액,70,16,24)}
+          ${_barsX(g금액,16,24)}
         </div>
       </div>
     </div>
