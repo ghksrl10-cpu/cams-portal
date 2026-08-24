@@ -6,14 +6,21 @@
 <title>범퍼 조립 토크 측정 관리</title>
 <style>
   :root{
-    --bd:#dde1e7; --line:#e8ebf0; --hd:#eef0f3; --hd2:#e4e7ec; --blue:#3b82f6; --blue2:#2563eb;
-    --ok:#16a34a; --okbg:#dcfce7; --ng:#dc2626; --ngbg:#fee2e2; --mut:#6b7280; --ink:#111827;
-    --side:#1e3a5f; --bg:#f8fafc; --card:#ffffff;
-  }
-  body.dark{
-    --bd:#2a2d35; --line:#23262f; --hd:#1a1d24; --hd2:#20232b;
+    --bd:#2a2d35; --line:#23262f; --hd:#1a1d24; --hd2:#20232b; --blue:#3b82f6; --blue2:#2563eb;
     --ok:#22c55e; --okbg:#052e16; --ng:#ef4444; --ngbg:#2d0a0a; --mut:#9ca3af; --ink:#f1f5f9;
-    --side:#13151c; --bg:#0f1117; --card:#1a1d24;
+    --side:#13151c; --bg:#0f1117;
+    --card:#1a1d24; --soft:#20232b; --softH:#2a2d35; --btnInk:#e2e8f0;
+    --navInk:#94a3b8; --inputBg:#0f1117; --focus:#1e2a3a;
+    --offbg:#f5f6f8; --histH:#20283a; --yoff:#20232b; --ovl:rgba(15,17,23,.95);
+  }
+  /* ☀️ 라이트 모드 */
+  :root.light{
+    --bd:#d6dbe4; --line:#e6e9ef; --hd:#eef1f6; --hd2:#e3e8f0; --blue:#2563eb; --blue2:#1d4ed8;
+    --ok:#15803d; --okbg:#dcfce7; --ng:#b91c1c; --ngbg:#fee2e2; --mut:#6b7280; --ink:#111827;
+    --side:#ffffff; --bg:#f3f4f6;
+    --card:#ffffff; --soft:#f4f6fa; --softH:#e9edf4; --btnInk:#374151;
+    --navInk:#4b5563; --inputBg:#ffffff; --focus:#eff6ff;
+    --offbg:#eceff4; --histH:#eef2ff; --yoff:#eceff4; --ovl:rgba(243,244,246,.95);
   }
   *{box-sizing:border-box}
   body{margin:0;font-family:"맑은 고딕","Malgun Gothic",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px}
@@ -26,11 +33,11 @@
   .brand .logo{width:44px;height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
   .brand b{font-size:15px} .brand small{display:block;color:var(--mut);font-size:12px;margin-top:1px}
   .nav{padding:10px;flex:1}
-  .nav-item{display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:9px;cursor:pointer;color:#94a3b8;font-weight:600;font-size:15px;margin-bottom:3px}
-  .nav-item:hover{background:#20232b}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:9px;cursor:pointer;color:var(--navInk);font-weight:600;font-size:15px;margin-bottom:3px}
+  .nav-item:hover{background:var(--soft)}
   .nav-item.active{background:var(--blue);color:#fff}
   .nav-item .ic{width:20px;text-align:center}
-  .side-foot{padding:14px 16px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px;color:#374151}
+  .side-foot{padding:14px 16px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px;color:var(--mut)}
   .side-foot .av{width:32px;height:32px;border-radius:50%;background:#e0e7ff;color:var(--blue2);display:flex;align-items:center;justify-content:center;font-weight:800}
   .side-foot small{display:block;color:var(--mut);font-size:12px}
 
@@ -40,33 +47,41 @@
   .page-h .sub{color:var(--mut);font-size:14px;width:100%;margin-top:-6px}
   .grow{flex:1}
 
-  .btn{padding:9px 14px;border:1px solid var(--bd);border-radius:9px;background:#20232b;cursor:pointer;font-size:14px;font-weight:600;color:#e2e8f0}
-  .btn:hover{background:#2a2d35}
+  .btn{padding:9px 14px;border:1px solid var(--bd);border-radius:9px;background:var(--soft);cursor:pointer;font-size:14px;font-weight:600;color:var(--btnInk)}
+  .btn:hover{background:var(--softH)}
   .btn.pri{background:var(--blue);color:#fff;border-color:var(--blue)} .btn.pri:hover{background:var(--blue2)}
   .save-note{font-size:13px;color:var(--mut)} .save-note b{color:var(--ok)}
 
   /* ===== 카드/통계 ===== */
   .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
-  .card{background:#1a1d24;border:1px solid var(--bd);border-radius:14px;padding:16px 18px}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px 18px}
   .card .ic{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:10px}
   .card .num{font-size:30px;font-weight:800;line-height:1} .card .lab{color:var(--mut);font-size:13px;margin-top:6px}
   .ic.b{background:#dbeafe;color:#2563eb} .ic.g{background:var(--okbg);color:var(--ok)}
   .ic.r{background:var(--ngbg);color:var(--ng)} .ic.y{background:#fef3c7;color:#b45309}
   .charts{display:grid;grid-template-columns:1.4fr 1fr;gap:14px}
-  .chart-box{background:#1a1d24;border:1px solid var(--bd);border-radius:14px;padding:16px}
+  .chart-box{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px}
   .chart-box h3{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:7px}
   .cv-wrap{position:relative;height:260px}
 
   /* ===== 입력 표 ===== */
   .tabs{display:flex;gap:8px;margin-bottom:14px}
-  .tab{padding:11px 22px;border:1px solid var(--bd);background:#1a1d24;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;color:#cbd5e1}
+  .tab{padding:11px 22px;border:1px solid var(--bd);background:var(--card);border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;color:var(--btnInk)}
   .tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
-  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#1a1d24;border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
-  .bar label{font-weight:700;color:#374151}
-  .bar input,.bar select{padding:8px;border:1px solid var(--bd);border-radius:8px;font-size:15px;background:#0f1117;color:#f1f5f9}
+  /* 이력조회 필터 */
+  .hfilter{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:12px}
+  .hfrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .hfrow+.hfrow{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+  .hflab{width:44px;flex-shrink:0;color:var(--mut);font-size:13px;font-weight:700}
+  .chip{padding:6px 14px;border:1px solid var(--bd);background:var(--soft);border-radius:20px;font-size:14px;font-weight:600;cursor:pointer;color:var(--btnInk)}
+  .chip:hover{background:var(--softH)}
+  .chip.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
+  .bar label{font-weight:700;color:var(--mut)}
+  .bar input,.bar select{padding:8px;border:1px solid var(--bd);border-radius:8px;font-size:15px;background:var(--inputBg);color:var(--ink)}
   .date-in{width:64px;text-align:center}
   .hint{font-size:13px;color:var(--mut);margin:0 0 12px;line-height:1.5}
-  .sec{background:#1a1d24;border:1px solid var(--bd);border-radius:12px;margin-bottom:12px;overflow:hidden}
+  .sec{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:12px;overflow:hidden}
   .sec-h{background:var(--hd);padding:9px 14px;font-weight:800;font-size:16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px}
   .sec-h .stat{font-size:13px;font-weight:600;color:var(--mut)}
   .scroll{overflow-x:auto}
@@ -74,10 +89,10 @@
   th,td{border:1px solid var(--bd);padding:0;text-align:center;height:46px}
   .rowlab{background:var(--hd2);font-weight:700;width:62px;position:sticky;left:0;z-index:2}
   th{background:var(--hd2);font-weight:700;font-size:15px}
-  td input{width:100%;height:100%;border:0;text-align:center;font-size:15px;background:transparent;outline:none;color:#f1f5f9}
-  td input:focus{background:#1e2a3a}
+  td input{width:100%;height:100%;border:0;text-align:center;font-size:15px;background:transparent;outline:none;color:var(--ink)}
+  td input:focus{background:var(--focus)}
   .meas-in{font-weight:700;font-size:16px}
-  td.off{background:#f5f6f8} td.off input{background:#f5f6f8}
+  td.off{background:var(--offbg)} td.off input{background:var(--offbg)}
   td.ok{background:var(--okbg)} td.ok .meas-in{color:var(--ok)}
   td.ng{background:var(--ngbg)} td.ng .meas-in{color:var(--ng)}
   .unit{font-size:12px;color:var(--mut)}
@@ -89,8 +104,8 @@
   #dashPhotos .ph img{width:100%;height:auto;max-height:none;border:1px solid var(--bd);border-radius:8px;cursor:pointer}
 
   /* ===== 이력 ===== */
-  .hist-item{display:flex;align-items:center;gap:8px;padding:14px;border:1px solid var(--bd);border-radius:10px;margin-bottom:7px;cursor:pointer;background:#1a1d24}
-  .hist-item:hover{background:#20283a;border-color:#3b82f6}
+  .hist-item{display:flex;align-items:center;gap:8px;padding:14px;border:1px solid var(--bd);border-radius:10px;margin-bottom:7px;cursor:pointer;background:var(--card)}
+  .hist-item:hover{background:var(--histH);border-color:#3b82f6}
   .badge{font-size:12px;font-weight:700;padding:2px 8px;border-radius:20px}
   .badge.line{background:#e0e7ff;color:var(--blue2)}
   .rep-head{font-size:16px;font-weight:700;margin:10px 0}
@@ -99,8 +114,18 @@
   .rep-area td.ok{background:var(--okbg);color:var(--ok);font-weight:700}
   .rep-area td.ng{background:var(--ngbg);color:var(--ng);font-weight:700}
   .rep-tools{display:flex;gap:8px;margin-bottom:12px}
+  /* 연간 종합표 */
+  .ytab{min-width:1040px}
+  .ytab th,.ytab td{height:34px;font-size:14px;padding:0 4px}
+  .ytab th{font-size:14px}
+  .ylab{background:var(--hd2);font-weight:800;white-space:nowrap}
+  .ycol{background:var(--hd);font-weight:700;white-space:nowrap}
+  .ybase{color:var(--mut);font-size:13px;white-space:nowrap}
+  .yoff{background:var(--yoff)}
+  .yday{font-size:12px;color:var(--mut)}
+  .ysum{font-size:12px;font-weight:700}
 
-  #overlay{position:fixed;inset:0;background:rgba(15,17,23,.95);display:flex;align-items:center;justify-content:center;text-align:center;font-size:17px;font-weight:700;color:#f1f5f9;z-index:80;padding:20px;line-height:1.6}
+  #overlay{position:fixed;inset:0;background:var(--ovl);display:flex;align-items:center;justify-content:center;text-align:center;font-size:17px;font-weight:700;color:var(--ink);z-index:80;padding:20px;line-height:1.6}
 
   /* ===== 모바일 ===== */
   .hamb{display:none}
@@ -108,7 +133,7 @@
     .side{transform:translateX(-100%);transition:.25s;box-shadow:0 0 30px rgba(0,0,0,.15)}
     .side.open{transform:translateX(0)}
     .main{margin-left:0;padding:14px 14px 70px}
-    .hamb{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border:1px solid var(--bd);border-radius:10px;background:#fff;font-size:20px;cursor:pointer}
+    .hamb{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border:1px solid var(--bd);border-radius:10px;background:var(--card);font-size:20px;cursor:pointer}
     .cards{grid-template-columns:repeat(2,1fr)}
     .charts{grid-template-columns:1fr}
     .page-h h1{font-size:19px}
@@ -119,31 +144,27 @@
     .side,.page-h .btn,.rep-tools,.hamb{display:none}
     .main{margin:0}
     body *{visibility:hidden}
-    #repArea,#repArea *{visibility:visible}
-    #repArea{position:absolute;left:0;top:0;width:100%}
+    #repArea,#repArea *,#yearArea,#yearArea *{visibility:visible}
+    #repArea,#yearArea{position:absolute;left:0;top:0;width:100%}
     table{min-width:0!important}
+    .ytab th,.ytab td{height:auto;font-size:11px}
+    :root{--card:#fff;--bg:#fff;--ink:#000;--soft:#fff}
   }
-  body:not(.dark) .btn{background:#fff;color:#374151;border-color:#d1d5db}
-  body:not(.dark) .btn:hover{background:#f3f4f6}
-  body:not(.dark) .btn.pri{background:var(--blue);color:#fff;border-color:var(--blue)}
-  body:not(.dark) .card,body:not(.dark) .chart-box,body:not(.dark) .sec,body:not(.dark) .hist-item{background:#fff;border-color:var(--bd);box-shadow:0 1px 4px rgba(0,0,0,.06)}
-  body:not(.dark) .bar{background:var(--hd);border-color:var(--bd)}
-  body:not(.dark) .bar input,body:not(.dark) .bar select{background:#fff;color:#111827;border-color:var(--bd)}
-  body:not(.dark) input,body:not(.dark) select,body:not(.dark) textarea{background:#fff;color:#111827;border-color:var(--bd)}
-  body:not(.dark) td input{color:#111827;background:transparent}
-  body:not(.dark) td.off{background:#f5f6f8}
-  body:not(.dark) td.off input{background:#f5f6f8}
-  body:not(.dark) .tab{background:#fff;color:#374151;border-color:var(--bd)}
-  body:not(.dark) .tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
-  body:not(.dark) tr:hover td{background:#eef2ff}
-  body:not(.dark) td input:focus{background:#eff6ff}
-  body:not(.dark) .nav-item{color:#cbd5e1}
-  body:not(.dark) .nav-item:hover{background:rgba(255,255,255,.12)}
-  body:not(.dark) .hist-item:hover{background:#eff6ff;border-color:var(--blue)}
-  body:not(.dark) .bar label{color:#374151}
-  body:not(.dark) .sec-h{background:var(--hd);color:var(--ink)}
-  body:not(.dark) #overlay{background:rgba(245,246,248,.95);color:#111827}
 </style>
+<script>
+/* 테마: 깜빡임 없이 <head> 에서 먼저 적용 */
+(function(){ try{ if(localStorage.getItem('cams_torque_theme')==='light') document.documentElement.classList.add('light'); }catch(e){} })();
+function applyTheme(t, persist){
+  const light = t==='light';
+  document.documentElement.classList.toggle('light', light);
+  if(persist!==false){ try{ localStorage.setItem('cams_torque_theme', light?'light':'dark'); }catch(e){} }
+  const b=document.getElementById('themeBtn');
+  if(b) b.textContent = light ? '🌙 다크모드' : '☀️ 라이트모드';
+  const dv=document.getElementById('view-dash');
+  if(dv && dv.style.display!=='none' && typeof renderDash==='function') renderDash();
+}
+function toggleTheme(){ applyTheme(document.documentElement.classList.contains('light')?'dark':'light'); }
+</script>
 </head>
 <body>
 <div id="overlay">불러오는 중…</div>
@@ -178,9 +199,12 @@
       <div class="nav-item" data-view="history" onclick="showView('history')"><span class="ic">📋</span> 이력 조회</div>
       <div class="nav-item" data-view="settings" onclick="showView('settings')"><span class="ic">⚙️</span> 설정</div>
     </nav>
+    <div id="themeWrap" style="padding:0 10px 6px">
+      <button class="btn" id="themeBtn" onclick="toggleTheme()" style="width:100%">☀️ 라이트모드</button>
+    </div>
     <div class="side-foot">
       <div class="av">김</div>
-      <div><b>김환기</b><small>캠스 담당자</small></div>
+      <div><b class="sf-name">김환기</b><small class="sf-dept">캠스 담당자</small></div>
     </div>
   </aside>
 
@@ -244,6 +268,7 @@
       <div class="tabs">
         <div class="tab active" data-line="1LINE" onclick="switchLine('1LINE')">◎ 조립 1LINE</div>
         <div class="tab" data-line="2LINE" onclick="switchLine('2LINE')">◎ 조립 2LINE</div>
+        <div class="tab" data-line="3LINE" onclick="switchLine('3LINE')">◎ 조립 3LINE</div>
       </div>
       <div class="bar">
         <label>측정일</label>
@@ -274,6 +299,7 @@
         <button class="btn" onclick="reloadFromServer()">🔄 새로고침</button>
         <div class="sub">월별 측정 기록을 보고, 필요하면 인쇄(PDF)할 수 있습니다</div>
       </div>
+      <div id="histFilter" class="hfilter"></div>
       <div id="histList"></div>
       <div id="histDetail"></div>
     </section>
@@ -297,8 +323,26 @@
       <div class="tabs">
         <div class="stab tab active" data-line="1LINE" onclick="switchSettingsLine('1LINE')">◎ 조립 1LINE</div>
         <div class="stab tab" data-line="2LINE" onclick="switchSettingsLine('2LINE')">◎ 조립 2LINE</div>
+        <div class="stab tab" data-line="3LINE" onclick="switchSettingsLine('3LINE')">◎ 조립 3LINE</div>
       </div>
       <div id="settingsTables"></div>
+
+      <div class="sec" style="margin-top:14px">
+        <div class="sec-h">☁️ OneDrive 자동 백업 <span class="stat" id="odStat" style="font-weight:400;font-size:12px;margin-left:8px">확인 중…</span></div>
+        <div style="padding:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+          <button class="btn pri" id="odBtnConnect" onclick="odConnect()">📁 OneDrive 폴더 연결</button>
+          <button class="btn" onclick="odBackupNow()">💾 지금 백업</button>
+          <button class="btn" onclick="odDownload()">⬇ JSON 파일로 내려받기</button>
+          <span class="grow"></span>
+          <button class="btn" onclick="odRestore()" style="color:#f59e0b;border-color:#78350f">⤓ 백업파일로 복원</button>
+        </div>
+        <div class="hint" style="padding:0 12px 12px;font-size:13px;line-height:1.8">
+          · 폴더를 한 번 연결해 두면 이후 저장될 때마다 <b>torque_backup.json</b> 이 자동으로 갱신됩니다.
+          · OneDrive 동기화 폴더를 지정하시면 클라우드에도 같이 올라갑니다.
+          · <b>복원</b>은 백업 파일 내용으로 Firestore를 덮어씁니다 — 관리자 확인 2번 필요합니다.
+          · 폴더 연결이 안 되는 브라우저(휴대폰 등)에서는 <b>JSON 파일로 내려받기</b>를 쓰세요.
+        </div>
+      </div>
     </section>
 
   </main>
@@ -323,6 +367,10 @@ const firebaseConfig = {
 const COLS = ['101','102','103','111','121','131','141','151','161','171','181','191'];
 const COLS_RR_2LINE = ['101','102','103','103-2','111','121','131','141','151','161','171','181','191'];
 const COLS_FRT = ['서브1','101','102','103','111','121','131','141','151','161','171','181','191'];
+/* 조립 3LINE : C/PAD & 범퍼 공정별 임팩 토크 */
+const COLS_3L_CPAD = ['SUB 1','SUB 2','10','30','40','50','60','70'];
+const COLS_3L_BUMP = ['SUB','10'];
+const LINES = ['1LINE','2LINE','3LINE'];
 function allBase(special){ const o={}; COLS.forEach(c=>o[c]='13~20'); return Object.assign(o, special||{}); }
 function allBaseFRT(special){ const o={'서브1':'13~20'}; COLS.forEach(c=>o[c]='13~20'); return Object.assign(o, special||{}); }
 const DEFAULT_BASE = {
@@ -333,6 +381,11 @@ const DEFAULT_BASE = {
   '2LINE':{
     FRT:allBaseFRT({'서브1':'25~40','101':'25~40','103':'25~40','151':'','181':'','191':''}),
     RR:Object.assign(allBase({'101':'','102':'','111':'25~40','151':'','171':'25~40','181':'','191':''}),{'103-2':'25~40'})
+  },
+  '3LINE':{
+    // FRT 키 = C/PAD 섹션, RR 키 = 범퍼 섹션 (데이터 구조 재사용)
+    FRT:{'SUB 1':'13~20','SUB 2':'13~20','10':'25~40','30':'25~40','40':'25~40','50':'13~20','60':'13~20','70':'13~20'},
+    RR:{'SUB':'13~20','10':'13~20'}
   }
 };
 const SECTIONS_1LINE = [
@@ -343,7 +396,15 @@ const SECTIONS_2LINE = [
   {key:'FRT', label:'FRT', cols:COLS_FRT},
   {key:'RR',  label:'RR',  cols:COLS_RR_2LINE},
 ];
-function getSections(line){ return line==='2LINE'?SECTIONS_2LINE:SECTIONS_1LINE; }
+const SECTIONS_3LINE = [
+  {key:'FRT', label:'C/PAD', cols:COLS_3L_CPAD},
+  {key:'RR',  label:'범 퍼', cols:COLS_3L_BUMP},
+];
+function getSections(line){
+  if(line==='3LINE') return SECTIONS_3LINE;
+  if(line==='2LINE') return SECTIONS_2LINE;
+  return SECTIONS_1LINE;
+}
 
 let TEMPLATE=null; // Firestore settings/dashboard.template 에서 로드
 function getDefaultBase(line){
@@ -351,7 +412,8 @@ function getDefaultBase(line){
   return JSON.parse(JSON.stringify(DEFAULT_BASE[line]));
 }
 
-let curLine='1LINE', curRecId='', DB={'1LINE':{records:{}},'2LINE':{records:{}}}, db=null;
+function blankDB(){ const o={}; LINES.forEach(l=>o[l]={records:{}}); return o; }
+let curLine='1LINE', curRecId='', DB=blankDB(), db=null;
 let SETTINGS={dashPhotos:[]};
 const ADMIN_ID='103518';
 let _authed=false;
@@ -375,7 +437,7 @@ function showOverlay(html){ const o=document.getElementById('overlay'); o.innerH
 function hideOverlay(){ document.getElementById('overlay').style.display='none'; }
 async function loadAll(){
   const snap=await db.collection('records').get();
-  DB={'1LINE':{records:{}},'2LINE':{records:{}}};
+  DB=blankDB();
   snap.forEach(d=>{ const v=d.data(); if(!DB[v.line])return;
     const b=v.base||{}, m=v.meas||{};
     DB[v.line].records[v.ym]={date:v.date||{y:'',m:'',d:''},base:{FRT:b.FRT||{},RR:b.RR||{}},meas:{FRT:m.FRT||{},RR:m.RR||{}},photos:v.photos||[]}; });
@@ -383,13 +445,108 @@ async function loadAll(){
   if(!SETTINGS.dashPhotos) SETTINGS.dashPhotos=[];
   if(SETTINGS.template) TEMPLATE=JSON.parse(JSON.stringify(SETTINGS.template));
 }
-async function saveSettings(){ if(!db) return; await db.collection('settings').doc('dashboard').set(SETTINGS); }
+async function saveSettings(){ if(!db) return; await db.collection('settings').doc('dashboard').set(SETTINGS); odSchedule(); }
 async function saveRecord(line,id){
   const rec=DB[line].records[id]; if(!rec||!db) return;
   await db.collection('records').doc(line+'_'+id).set({
     line, ym:id, date:rec.date, base:rec.base, meas:rec.meas, photos:rec.photos||[],
     updatedAt:firebase.firestore.FieldValue.serverTimestamp()
   });
+  odSchedule();
+}
+
+/* ===== OneDrive 폴더 자동 백업 ===== */
+const OD_FILE='torque_backup.json';
+const OD_IDB='cams_torque_od_v1';
+let odDir=null, odTimer=null;
+function odSupported(){ return typeof window.showDirectoryPicker==='function'; }
+function _odDB(){ return new Promise((res,rej)=>{ const q=indexedDB.open(OD_IDB,1);
+  q.onupgradeneeded=e=>e.target.result.createObjectStore('h'); q.onsuccess=e=>res(e.target.result); q.onerror=()=>rej(q.error); }); }
+async function _odGet(){ try{ const d=await _odDB(); return await new Promise(res=>{ const q=d.transaction('h','readonly').objectStore('h').get('dir'); q.onsuccess=()=>res(q.result||null); q.onerror=()=>res(null); }); }catch(e){ return null; } }
+async function _odPut(h){ try{ const d=await _odDB(); await new Promise(res=>{ const t=d.transaction('h','readwrite'); t.objectStore('h').put(h,'dir'); t.oncomplete=res; t.onerror=res; }); }catch(e){} }
+
+function odStatus(txt,cls){ const el=document.getElementById('odStat'); if(!el) return;
+  el.textContent=txt; el.style.color = cls==='ok'?'var(--ok)' : cls==='err'?'var(--ng)' : 'var(--mut)'; }
+
+async function odCheckPerm(ask){
+  odDir=await _odGet(); if(!odDir) return false;
+  try{
+    let p=await odDir.queryPermission({mode:'readwrite'});
+    if(p!=='granted'&&ask) p=await odDir.requestPermission({mode:'readwrite'});
+    if(p!=='granted'){ return false; }
+    return true;
+  }catch(e){ odDir=null; return false; }
+}
+function odPayload(){
+  return { savedAt:new Date().toISOString(), dataVersion:SETTINGS.dataVersion??null, settings:SETTINGS, db:DB };
+}
+async function odWrite(){
+  if(!odDir) return false;
+  try{
+    const fh=await odDir.getFileHandle(OD_FILE,{create:true});
+    const w=await fh.createWritable();
+    await w.write(JSON.stringify(odPayload()));
+    await w.close();
+    const t=new Date();
+    odStatus(`백업됨 · ${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}`,'ok');
+    return true;
+  }catch(e){ odStatus('백업 실패: '+e.message,'err'); return false; }
+}
+/* 저장이 몰릴 때(마이그레이션 등) 마지막 한 번만 기록 */
+function odSchedule(){ if(!odDir) return; if(odTimer) clearTimeout(odTimer); odTimer=setTimeout(()=>{odTimer=null;odWrite();},3000); }
+
+async function odConnect(){
+  if(!checkAdmin()) return;
+  if(!odSupported()){ alert('이 브라우저는 폴더 연결을 지원하지 않습니다.\n대신 [JSON 파일로 내려받기]를 사용하세요.'); return; }
+  try{
+    odDir=await window.showDirectoryPicker({mode:'readwrite'});
+    await _odPut(odDir);
+    odStatus('폴더 연결됨 — 백업 중…','ok');
+    await odWrite();
+    alert('✅ OneDrive 폴더가 연결되었습니다.\n앞으로 저장할 때마다 '+OD_FILE+' 이 자동 갱신됩니다.');
+  }catch(e){ /* 사용자가 취소 */ }
+}
+async function odBackupNow(){
+  if(!checkAdmin()) return;
+  if(!odDir){ const ok=await odCheckPerm(true); if(!ok){ alert('먼저 [OneDrive 폴더 연결]을 해주세요.'); return; } }
+  const ok=await odWrite();
+  alert(ok?('✅ 백업 완료 — '+OD_FILE):'백업에 실패했습니다.');
+}
+function odDownload(){
+  const b=new Blob([JSON.stringify(odPayload(),null,1)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(b);
+  const t=new Date(), p=n=>String(n).padStart(2,'0');
+  a.download=`torque_backup_${t.getFullYear()}${p(t.getMonth()+1)}${p(t.getDate())}.json`;
+  a.click();
+}
+async function odRestore(){
+  if(!checkAdmin()) return;
+  if(!odDir){ const ok=await odCheckPerm(true); if(!ok){ alert('먼저 [OneDrive 폴더 연결]을 해주세요.'); return; } }
+  let data=null;
+  try{ const fh=await odDir.getFileHandle(OD_FILE); data=JSON.parse(await (await fh.getFile()).text()); }
+  catch(e){ alert('백업 파일을 읽을 수 없습니다: '+e.message); return; }
+  if(!data||!data.db){ alert('백업 파일 형식이 올바르지 않습니다.'); return; }
+  let cnt=0; Object.keys(data.db).forEach(l=>{ cnt+=Object.keys(data.db[l]?.records||{}).length; });
+  if(!confirm(`⚠️ 백업 파일로 복원합니다.\n\n백업 시각: ${data.savedAt||'(알 수 없음)'}\n기록 수: ${cnt}건\n\n현재 클라우드 데이터를 이 내용으로 덮어씁니다.`)) return;
+  if(!confirm('되돌릴 수 없습니다. 정말 복원하시겠습니까?')) return;
+  showOverlay('복원 중…');
+  try{
+    DB=blankDB();
+    Object.keys(data.db).forEach(l=>{ if(DB[l]) DB[l]=data.db[l]; });
+    if(data.settings){ SETTINGS=data.settings; if(SETTINGS.template) TEMPLATE=JSON.parse(JSON.stringify(SETTINGS.template)); }
+    await saveSettings();
+    for(const l of LINES){ for(const ym of Object.keys(DB[l].records)) await saveRecord(l,ym); }
+    hideOverlay();
+    alert(`✅ 복원 완료 — ${cnt}건`);
+    switchLine(curLine); showView('dash');
+  }catch(e){ hideOverlay(); alert('복원 실패: '+e.message); }
+}
+async function odRefreshUI(){
+  if(!odSupported()){ odStatus('이 브라우저는 폴더 연결 미지원 — JSON 내려받기 사용','err');
+    const b=document.getElementById('odBtnConnect'); if(b){ b.disabled=true; b.style.opacity='.5'; } return; }
+  const ok=await odCheckPerm(false);
+  odStatus(ok?'폴더 연결됨 — 저장 시 자동 백업':'폴더 미연결 — [OneDrive 폴더 연결]을 눌러주세요', ok?'ok':'');
 }
 let saveTimer=null, saving=false, dirty=false;
 function note(html){ const n=document.getElementById('saveNote'); if(n)n.innerHTML=html; }
@@ -508,13 +665,11 @@ function fillAllBase(){
   const v=(prompt('모든 기준값을 이 값으로 채웁니다 (특수값 35~51, 20~25 제외)\n예: 13~20', '13~20')||'').trim();
   if(!v) return;
   const SPECIAL=['35~51','20~25','25~40','15~40','35~51kgf','20~25kgf','20~30'];
-  COLS_FRT.forEach(c=>{
-    const cv=rec.base.FRT[c];
-    if(cv!==undefined&&cv!==''&&!SPECIAL.includes(cv)) rec.base.FRT[c]=v;
-  });
-  getSections(curLine).find(s=>s.key==='RR').cols.forEach(c=>{
-    const cv=rec.base.RR[c];
-    if(cv!==undefined&&cv!==''&&!SPECIAL.includes(cv)) rec.base.RR[c]=v;
+  getSections(curLine).forEach(sec=>{
+    sec.cols.forEach(c=>{
+      const cv=rec.base[sec.key]?.[c];
+      if(cv!==undefined&&cv!==''&&!SPECIAL.includes(cv)) rec.base[sec.key][c]=v;
+    });
   });
   persist(); render();
 }
@@ -551,13 +706,13 @@ async function delPhoto(i){ const rec=cur(); if(!rec||!rec.photos[i])return; if(
 let chM=null,chD=null,chL=null;
 function computeStats(){
   const months={}; let ok=0,ng=0,meas=0,recCount=0;
-  const lineStats={'1LINE':{ok:0,ng:0},'2LINE':{ok:0,ng:0}};
-  ['1LINE','2LINE'].forEach(line=>{
+  const lineStats={}; LINES.forEach(l=>lineStats[l]={ok:0,ng:0});
+  LINES.forEach(line=>{
     Object.keys(DB[line].records).forEach(ym=>{
       recCount++; const rec=DB[line].records[ym];
       getSections(line).forEach(s=>Object.keys(rec.base[s.key]||{}).forEach(c=>{
         if(rec.base[s.key][c]==='') return;
-        const mv=rec.meas[s.key][c];
+        const mv=(rec.meas?.[s.key]||{})[c];
         if(mv!==undefined&&mv!==''){ meas++; const st=judge(rec.base[s.key][c],mv);
           months[ym]=months[ym]||{ok:0,ng:0};
           if(st==='ok'){ok++;lineStats[line].ok++;months[ym].ok++;}
@@ -587,9 +742,9 @@ function renderDash(){
     options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true,ticks:{precision:0}}},plugins:{legend:{position:'bottom'}}}});
   chD=new C(document.getElementById('cD'),{type:'doughnut',data:{labels:['OK','NG'],datasets:[{data:[s.ok,s.ng||0],backgroundColor:['#16a34a','#dc2626']}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});
-  chL=new C(document.getElementById('cL'),{type:'bar',data:{labels:['1LINE','2LINE'],datasets:[
-    {label:'OK',data:[s.lineStats['1LINE'].ok,s.lineStats['2LINE'].ok],backgroundColor:'#16a34a',borderRadius:5},
-    {label:'NG',data:[s.lineStats['1LINE'].ng,s.lineStats['2LINE'].ng],backgroundColor:'#dc2626',borderRadius:5}]},
+  chL=new C(document.getElementById('cL'),{type:'bar',data:{labels:LINES.slice(),datasets:[
+    {label:'OK',data:LINES.map(l=>s.lineStats[l].ok),backgroundColor:'#16a34a',borderRadius:5},
+    {label:'NG',data:LINES.map(l=>s.lineStats[l].ng),backgroundColor:'#dc2626',borderRadius:5}]},
     options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,ticks:{precision:0}}},plugins:{legend:{position:'bottom'}}}});
   renderDashPhotos();
 }
@@ -623,14 +778,94 @@ async function delDashPhoto(i){
 
 /* ===== 이력 조회 ===== */
 function countRec(line,rec){ let ok=0,ng=0,cnt=0; getSections(line).forEach(s=>{ const ms=rec.meas?.[s.key]||{}; Object.keys(rec.base[s.key]||{}).forEach(c=>{if(rec.base[s.key][c]==='')return;cnt++;const st=judge(rec.base[s.key][c],ms[c]);if(st==='ok')ok++;if(st==='ng')ng++;}); }); return{ok,ng,cnt}; }
+let histLine='ALL', histYear='ALL', histMode='list';
+function setHistLine(l){ histLine=l; backToList(); openHistory(); }
+function setHistYear(y){ histYear=y; backToList(); openHistory(); }
+function setHistMode(m){ histMode=m; backToList(); openHistory(); }
+
+/* ===== 연간 종합표 (공정 행 × 1~12월 열) ===== */
+function buildYearTable(line,year){
+  const mons=Array.from({length:12},(_,i)=>String(i+1).padStart(2,'0'));
+  const recs=mons.map(m=>DB[line].records[year+'-'+m]||null);
+  if(!recs.some(r=>r)) return '';
+  let rows='';
+  getSections(line).forEach(sec=>{
+    // 기준값이 한 달이라도 잡혀 있는 공정만 표시
+    const cols=sec.cols.filter(c=>recs.some(r=>r&&(r.base[sec.key]?.[c]??'')!==''));
+    if(!cols.length) return;
+    cols.forEach((c,i)=>{
+      const ref=recs.find(r=>r&&(r.base[sec.key]?.[c]??'')!=='');
+      const baseTxt=ref?ref.base[sec.key][c]:'';
+      const cells=recs.map(r=>{
+        if(!r) return '<td></td>';
+        const b=r.base[sec.key]?.[c]??'', m=(r.meas?.[sec.key]?.[c])??'';
+        if(b==='') return '<td class="yoff"></td>';
+        return `<td class="${judge(b,m)}">${m!==''?m:''}</td>`;
+      }).join('');
+      rows+=`<tr>${i===0?`<td class="ylab" rowspan="${cols.length}">${sec.label}</td>`:''}`
+          +`<td class="ycol">${c}</td><td class="ybase">${baseTxt}</td>${cells}</tr>`;
+    });
+  });
+  if(!rows) return '';
+  const dayRow=recs.map(r=>`<td class="yday">${r&&r.date&&r.date.d?(+r.date.d)+'일':''}</td>`).join('');
+  const sumRow=recs.map(r=>{
+    if(!r) return '<td></td>';
+    const n=countRec(line,r);
+    if(!n.ok&&!n.ng) return '<td class="ysum"></td>';
+    return `<td class="ysum" style="color:${n.ng?'var(--ng)':'var(--ok)'}">${n.ng?'NG '+n.ng:'OK '+n.ok}</td>`;
+  }).join('');
+  return `<div class="rep-sec">
+    <div class="rep-sech">■ ${year}년 조립 ${line} — 공정별 임팩 토크 연간 종합 <span class="unit">(단위: kgf)</span></div>
+    <div class="scroll"><table class="ytab">
+      <tr><th>구분</th><th>공정</th><th>기준값</th>${mons.map(m=>`<th>${+m}월</th>`).join('')}</tr>
+      ${rows}
+      <tr><td class="ylab" colspan="3">측정일</td>${dayRow}</tr>
+      <tr><td class="ylab" colspan="3">판정</td>${sumRow}</tr>
+    </table></div></div>`;
+}
+function renderYearView(years){
+  const showLines = histLine==='ALL' ? LINES : [histLine];
+  const yrs = histYear==='ALL' ? years : [histYear];
+  let body='', n=0;
+  yrs.forEach(y=>showLines.forEach(l=>{ const t=buildYearTable(l,y); if(t){ body+=t; n++; } }));
+  const el=document.getElementById('histList');
+  el.innerHTML = n
+    ? `<div id="yearArea" class="rep-area"><div class="rep-tools"><button class="btn pri" onclick="window.print()">🖨 인쇄 / PDF 저장</button></div>${body}</div>`
+    : '<div class="hint">조건에 맞는 기록이 없습니다.</div>';
+  el.style.display='block';
+  document.getElementById('histDetail').innerHTML='';
+}
+
 function openHistory(){
-  // 모든 월 목록 수집 (1LINE + 2LINE 합침)
+  // 모든 월 목록 수집 (전 라인 합침)
   const allYms=new Set();
-  ['1LINE','2LINE'].forEach(line=>Object.keys(DB[line].records).forEach(ym=>allYms.add(ym)));
-  const yms=[...allYms].sort().reverse();
+  LINES.forEach(line=>Object.keys(DB[line].records).forEach(ym=>allYms.add(ym)));
+
+  // ── 필터 UI (라인 / 연도) ──
+  const years=[...new Set([...allYms].map(x=>x.split('-')[0]))].sort().reverse();
+  if(histYear!=='ALL'&&!years.includes(histYear)) histYear='ALL';
+  const fl=document.getElementById('histFilter');
+  if(fl){
+    fl.style.display='block';   // 상세 보기에서 숨긴 상태로 돌아와도 항상 다시 표시
+    fl.innerHTML=
+      `<div class="hfrow"><span class="hflab">보기</span>`+
+      [['list','📋 월별 목록'],['year','📅 연간 종합표']].map(([m,t])=>`<div class="chip ${histMode===m?'on':''}" onclick="setHistMode('${m}')">${t}</div>`).join('')+
+      `</div><div class="hfrow"><span class="hflab">라인</span>`+
+      ['ALL',...LINES].map(l=>`<div class="chip ${histLine===l?'on':''}" onclick="setHistLine('${l}')">${l==='ALL'?'전체':'조립 '+l}</div>`).join('')+
+      `</div><div class="hfrow"><span class="hflab">연도</span>`+
+      ['ALL',...years].map(y=>`<div class="chip ${histYear===y?'on':''}" onclick="setHistYear('${y}')">${y==='ALL'?'전체':y+'년'}</div>`).join('')+
+      `</div>`;
+  }
+
+  if(histMode==='year'){ renderYearView(years); return; }
+
+  const showLines = histLine==='ALL' ? LINES : [histLine];
+  const yms=[...allYms].sort().reverse()
+    .filter(ym=>histYear==='ALL'||ym.startsWith(histYear+'-'))
+    .filter(ym=>showLines.some(l=>DB[l].records[ym]));
 
   if(!yms.length){
-    document.getElementById('histList').innerHTML='<div class="hint">아직 저장된 기록이 없습니다.</div>';
+    document.getElementById('histList').innerHTML='<div class="hint">조건에 맞는 기록이 없습니다.</div>';
     document.getElementById('histList').style.display='block';
     document.getElementById('histDetail').innerHTML='';
     return;
@@ -641,7 +876,7 @@ function openHistory(){
     const label=ym.replace('-','년 ')+'월';
     // 각 라인 요약
     let lineRows='';
-    ['1LINE','2LINE'].forEach(line=>{
+    showLines.forEach(line=>{
       const rec=DB[line].records[ym]; if(!rec) return;
       const n=countRec(line,rec), np=(rec.photos||[]).length;
       const d=rec.date.d?` · ${rec.date.m||ym.split('-')[1]}/${rec.date.d}`:'';
@@ -670,6 +905,7 @@ function openHistory(){
 }
 function viewRecord(line,id){
   document.getElementById('histList').style.display='none';
+  document.getElementById('histFilter').style.display='none';
   document.getElementById('histDetail').innerHTML=
     `<div class="rep-tools">
        <button class="btn" onclick="backToList()">‹ 목록</button>
@@ -686,7 +922,7 @@ function editRecord(line,id){
   loadRecord(id);
   showView('input');
 }
-function backToList(){ document.getElementById('histDetail').innerHTML=''; document.getElementById('histList').style.display='block'; }
+function backToList(){ document.getElementById('histDetail').innerHTML=''; document.getElementById('histList').style.display='block'; document.getElementById('histFilter').style.display='block'; }
 async function deleteRecord(line,id){
   if(!checkAdmin()) return;
   if(!confirm(`[${line}] ${id.replace('-','년 ')}월 기록을 삭제할까요?\n이 작업은 되돌릴 수 없습니다.`)) return;
@@ -698,7 +934,8 @@ async function deleteRecord(line,id){
 }
 function buildStatic(line,id){
   const rec=DB[line].records[id]; if(!rec) return '';
-  let html=`<div class="rep-head">■ ${(rec.date.y||id.split('-')[0]).toString().slice(2)}년 범퍼 조립 토크 측정 · 조립 ${line}<br>
+  const repTitle = line==='3LINE' ? 'C/PAD & 범퍼 공정별 임팩 토크 측정' : '범퍼 조립 토크 측정';
+  let html=`<div class="rep-head">■ ${(rec.date.y||id.split('-')[0]).toString().slice(2)}년 ${repTitle} · 조립 ${line}<br>
     측정일 : ${rec.date.y||id.split('-')[0]}년 ${rec.date.m||(+id.split('-')[1])}월 ${rec.date.d||''}일 &nbsp;<span class="unit">(단위: kgf)</span></div>`;
   getSections(line).forEach(sec=>{
     const cols=sec.cols.filter(c=>rec.base[sec.key][c]!==undefined); if(!cols.length) return;
@@ -721,7 +958,7 @@ let settingsDraft=null, settingsLine='1LINE';
 function openSettings(){
   // 현재 TEMPLATE(없으면 DEFAULT_BASE)로 draft 초기화
   settingsDraft={};
-  ['1LINE','2LINE'].forEach(line=>{
+  LINES.forEach(line=>{
     settingsDraft[line]={FRT:{},RR:{}};
     const src=(TEMPLATE&&TEMPLATE[line])?TEMPLATE[line]:DEFAULT_BASE[line];
     getSections(line).forEach(sec=>{
@@ -730,6 +967,7 @@ function openSettings(){
   });
   settingsLine='1LINE';
   renderSettings();
+  odRefreshUI();
 }
 
 function switchSettingsLine(line){
@@ -757,7 +995,7 @@ function renderSettingsTables(){
         data-sec="${sec.key}" data-col="${c}"
         value="${v}" placeholder="비움=공란"
         onchange="onTmplCell(this)"
-        style="width:100%;height:100%;border:0;text-align:center;font-size:14px;background:transparent;outline:none;color:#f1f5f9;padding:6px 2px"></td>`;
+        style="width:100%;height:100%;border:0;text-align:center;font-size:14px;background:transparent;outline:none;color:var(--ink);padding:6px 2px"></td>`;
     });
     html+=`<div class="sec" style="margin-bottom:12px">
       <div class="sec-h">${sec.label}
@@ -787,7 +1025,7 @@ async function saveTemplate(){
     await saveSettings();
     // 기존 기록에도 자동 일괄 적용
     const toSave=[];
-    ['1LINE','2LINE'].forEach(line=>{
+    LINES.forEach(line=>{
       const tmpl=TEMPLATE[line]; if(!tmpl) return;
       Object.keys(DB[line].records).forEach(ym=>{
         const rec=DB[line].records[ym];
@@ -809,8 +1047,8 @@ async function applyTemplateToAll(){
   if(!checkAdmin()) return;
   if(!confirm('⚠️ 기존 모든 월별 기록의 기준값을\n현재 설정으로 업데이트할까요?\n\n실측값은 그대로 유지됩니다.\n이 작업은 되돌릴 수 없습니다.')) return;
   const toSave=[];
-  ['1LINE','2LINE'].forEach(line=>{
-    const tmpl=settingsDraft[line];
+  LINES.forEach(line=>{
+    const tmpl=settingsDraft[line]; if(!tmpl) return;
     Object.keys(DB[line].records).forEach(ym=>{
       const rec=DB[line].records[ym];
       getSections(line).forEach(sec=>{
@@ -857,6 +1095,8 @@ const MEASURE_DATES={
   '2026-04':'10', // 금
   '2026-05':'08', // 금 (어린이날5/5 제외)
   '2026-06':'12', // 금
+  '2026-07':'10', // 금
+  '2026-08':'14', // 금 (광복절 8/15 토요일)
 };
 
 /* ===== 실측값 자동 생성 (소수점 1자리) ===== */
@@ -877,7 +1117,8 @@ function autoMeasVal(base, seed){
 async function initMonthlyRecords(){
   const months=[
     '2025-09','2025-10','2025-11','2025-12',
-    '2026-01','2026-02','2026-03','2026-04','2026-05','2026-06'
+    '2026-01','2026-02','2026-03','2026-04','2026-05','2026-06',
+    '2026-07','2026-08'
   ];
   const toSave=[];
   // ── V3 마이그레이션: 2LINE 기준값+실측값 직접 재생성 (1회만 실행) ──
@@ -1062,6 +1303,93 @@ async function initMonthlyRecords(){
     console.log('V10 마이그레이션 완료: 실측값 재생성');
   }
 
+  // ── V11 마이그레이션: 조립 3LINE (C/PAD & 범퍼) 신규 생성 ──
+  if(!SETTINGS.dataVersion||SETTINGS.dataVersion<11){
+    const def3=JSON.parse(JSON.stringify(DEFAULT_BASE['3LINE']));
+    months.forEach((ym,mi)=>{
+      if(!DB['3LINE'].records[ym]){
+        const [y,mo]=ym.split('-');
+        DB['3LINE'].records[ym]={date:{y,m:mo,d:MEASURE_DATES[ym]||''},base:{FRT:{},RR:{}},meas:{FRT:{},RR:{}},photos:[]};
+      }
+      const rec=DB['3LINE'].records[ym];
+      if(!rec.base.FRT) rec.base.FRT={}; if(!rec.base.RR) rec.base.RR={};
+      if(!rec.meas.FRT) rec.meas.FRT={}; if(!rec.meas.RR) rec.meas.RR={};
+      let ci=0;
+      SECTIONS_3LINE.forEach(sec=>{
+        sec.cols.forEach(c=>{
+          const bv=def3[sec.key][c]??'';
+          rec.base[sec.key][c]=bv;
+          if(bv==='') delete rec.meas[sec.key][c];
+          else rec.meas[sec.key][c]=autoMeasVal(bv,(mi+1)*1000+900+ci);
+          ci++;
+        });
+      });
+      toSave.push({line:'3LINE',ym});
+    });
+    if(!TEMPLATE) TEMPLATE={};
+    TEMPLATE['3LINE']=def3;
+    SETTINGS.template=TEMPLATE;
+    SETTINGS.dataVersion=11;
+    await saveSettings();
+    console.log('V11 마이그레이션 완료: 조립 3LINE 생성');
+  }
+
+  // ── V12 마이그레이션: 2026-07 / 2026-08 신규 생성 (전 라인) ──
+  if(!SETTINGS.dataVersion||SETTINGS.dataVersion<12){
+    const NEW_MONTHS=['2026-07','2026-08'];
+    NEW_MONTHS.forEach(ym=>{
+      const mi=months.indexOf(ym);
+      const [y,mo]=ym.split('-');
+      LINES.forEach(line=>{
+        if(!DB[line].records[ym]){
+          const rec=blankRecord(line);
+          rec.date={y,m:mo,d:MEASURE_DATES[ym]||''};
+          DB[line].records[ym]=rec;
+        }
+        const rec=DB[line].records[ym];
+        if(!rec.base.FRT) rec.base.FRT={}; if(!rec.base.RR) rec.base.RR={};
+        if(!rec.meas.FRT) rec.meas.FRT={}; if(!rec.meas.RR) rec.meas.RR={};
+        const def=getDefaultBase(line);
+        let ci=0;
+        getSections(line).forEach(sec=>{
+          sec.cols.forEach(c=>{
+            const bv=def[sec.key]?.[c]??'';
+            rec.base[sec.key][c]=bv;
+            if(bv===''){ delete rec.meas[sec.key][c]; ci++; return; }
+            // 이미 입력된 실측값은 건드리지 않음
+            const mv=rec.meas[sec.key][c];
+            if(mv===undefined||mv===''){
+              const off=line==='2LINE'?500:(line==='3LINE'?900:0);
+              rec.meas[sec.key][c]=autoMeasVal(bv,(mi+1)*1000+off+ci);
+            }
+            ci++;
+          });
+        });
+        toSave.push({line,ym});
+      });
+    });
+    SETTINGS.dataVersion=12;
+    await saveSettings();
+    console.log('V12 마이그레이션 완료: 2026-07/08 생성');
+  }
+
+  // ── 3LINE 누락 월 보정 ──
+  months.forEach(ym=>{
+    const [y,mo]=ym.split('-');
+    if(!DB['3LINE'].records[ym]){
+      const rec=blankRecord('3LINE');
+      rec.date={y,m:mo,d:MEASURE_DATES[ym]||''};
+      DB['3LINE'].records[ym]=rec;
+      toSave.push({line:'3LINE',ym});
+      return;
+    }
+    const rec=DB['3LINE'].records[ym];
+    rec.date={y,m:mo,d:MEASURE_DATES[ym]||''};
+    if(!rec.base.FRT) rec.base.FRT={}; if(!rec.base.RR) rec.base.RR={};
+    if(!rec.meas.FRT) rec.meas.FRT={}; if(!rec.meas.RR) rec.meas.RR={};
+    toSave.push({line:'3LINE',ym});
+  });
+
   ['1LINE','2LINE'].forEach(line=>{
     months.forEach((ym,mi)=>{
       const isNew=!DB[line].records[ym];
@@ -1115,27 +1443,55 @@ async function initMonthlyRecords(){
 (async function init(){
   if(!fbInit()) return;
   try{ await loadAll(); }catch(e){ showOverlay('데이터 불러오기 실패:<br>'+e.message); return; }
+  try{ await odCheckPerm(false); }catch(e){}   // OneDrive 폴더 권한이 남아 있으면 자동 백업 활성화
   await initMonthlyRecords();
   curLine='1LINE';
   const ids=Object.keys(DB['1LINE'].records).sort();
   if(ids.length) loadRecord(ids[ids.length-1]); else newRecord(true);
   showView('dash');
+  applyTheme(document.documentElement.classList.contains('light')?'light':'dark');
   hideOverlay();
 })();
+
+/* ===== 캠스 통합 포털 연동 (테마 · 로그인 사용자) ===== */
+const EMBEDDED = (function(){ try{ return !!window.parent && window.parent!==window; }catch(e){ return true; } })();
 window.addEventListener('message', e => {
-  if (!e.data) return;
-  if (e.data.type === 'cams_theme') { document.body.classList.toggle('dark', !!e.data.dark); return; }
-  if (e.data.type === 'cams_auth') {
-    const { name, dept } = e.data;
-    const av = document.querySelector('.side-foot .av');
-    const un = document.querySelector('.side-foot .sf-name');
-    const ud = document.querySelector('.side-foot .sf-dept');
-    if (av) av.textContent = name ? name.charAt(0) : '?';
-    if (un) un.textContent = name || '-';
-    if (ud) ud.textContent = dept || '캠스 담당자';
+  if(!e.data) return;
+  // 포털이 다크/라이트를 내려주면 그대로 따라감 (localStorage 에는 저장 안 함)
+  if(e.data.type==='cams_theme'){ applyTheme(e.data.dark?'dark':'light', false); return; }
+  // 포털 로그인 사용자 표시
+  if(e.data.type==='cams_auth'){
+    const {name,dept}=e.data;
+    const av=document.querySelector('.side-foot .av');
+    const un=document.querySelector('.side-foot .sf-name');
+    const ud=document.querySelector('.side-foot .sf-dept');
+    if(av) av.textContent = name ? name.charAt(0) : '?';
+    if(un) un.textContent = name || '-';
+    if(ud) ud.textContent = dept || '캠스 담당자';
+    return;
   }
 });
-window.parent.postMessage({ type: 'cams_request_theme' }, '*');
+if(EMBEDDED){
+  // 포털 안에서는 포털 토글을 쓰므로 자체 버튼 숨김
+  const tw=document.getElementById('themeWrap'); if(tw) tw.style.display='none';
+  try{ window.parent.postMessage({type:'cams_request_theme'},'*'); }catch(e){}
+}
+
+/* ===== 캠스 통합 포털 타일 통계 응답 ===== */
+window.addEventListener('message', e => {
+  if (!e.data || e.data.type !== 'cams_request_stat') return;
+  try {
+    const now = new Date();
+    const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    let thisMonth = 0, total = 0;
+    for (const line of Object.values(DB)) {
+      if (!line || !line.records) continue;
+      total += Object.keys(line.records).length;
+      thisMonth += Object.keys(line.records).filter(k => k.startsWith(ym)).length;
+    }
+    window.parent.postMessage({ type: 'cams_torque_stat', thisMonth, total }, '*');
+  } catch(e) {}
+});
 </script>
 </body>
 </html>
