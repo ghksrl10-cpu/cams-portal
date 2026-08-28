@@ -371,19 +371,24 @@ body.dark .alert-desc{color:#92400e;}
   else { status.textContent = 'API 키를 입력하면 업무일지 자동 분석 기능이 활성화됩니다'; }
 })();
 
+// 다크 토글 UI는 포털 상단으로 옮겨져 이 페이지엔 없을 수 있다 -> 있을 때만 갱신
+function paintDarkToggle(dark){
+  const cb = document.getElementById('darkToggle');
+  if(cb) cb.checked = dark;
+  const sl = document.getElementById('darkSlider');
+  if(sl) sl.style.background = dark ? '#0a84ff' : '#3a3a3c';
+  const kn = document.getElementById('darkKnob');
+  if(kn) kn.style.left = dark ? '22px' : '2px';
+}
+
 function setDark(dark) {
   localStorage.setItem('cams_dark_mode', dark);
-  document.getElementById('darkSlider').style.background = dark ? '#0a84ff' : '#3a3a3c';
-  document.getElementById('darkKnob').style.left = dark ? '22px' : '2px';
+  paintDarkToggle(dark);
   window.parent.postMessage({ type: 'cams_set_dark', dark }, '*');
 }
 
 (function(){
-  const dark = localStorage.getItem('cams_dark_mode') !== 'false';
-  const cb = document.getElementById('darkToggle');
-  cb.checked = dark;
-  document.getElementById('darkSlider').style.background = dark ? '#0a84ff' : '#3a3a3c';
-  document.getElementById('darkKnob').style.left = dark ? '22px' : '2px';
+  paintDarkToggle(localStorage.getItem('cams_dark_mode') !== 'false');
 })();
 
 function saveKey(){
