@@ -267,8 +267,8 @@
           <div style="font-size:16px;font-weight:800;color:#22c55e">저장 완료</div>
           <div id="saveBannerPath" style="font-size:13px;color:#86efac;margin-top:2px"></div>
         </div>
-        <button class="btn" onclick="openSaved('txt')" style="white-space:nowrap">📄 메모장</button>
-        <button class="btn suc" onclick="openSaved('excel')" style="white-space:nowrap">📊 엑셀</button>
+        <button data-server-only class="btn" onclick="openSaved('txt')" style="white-space:nowrap">📄 메모장</button>
+        <button data-server-only class="btn suc" onclick="openSaved('excel')" style="white-space:nowrap">📊 엑셀</button>
       </div>
 
       <!-- 미리보기 -->
@@ -402,10 +402,37 @@ async function pickAlcFolder(){
   document.getElementById('alcFolderInput').value = j.path;
 }
 
+// ===== 실행 모드 =====
+// 로컬 파이썬 서버가 config를 주입하면 서버 모드, 아니면 브라우저(웹 공유) 모드
+const HAS_SERVER = !!window._INIT_CFG;
+const LS_KEY = 'alc_cfg_v1';
+const WEB_DEFAULT_CFG = { models: [
+  {name:'NQ5',nq:'NQ5'},{name:'SP2',nq:'SP2'},{name:'SP3',nq:'SP3'},
+  {name:'OV1',nq:'OV1'},{name:'AX',nq:'AX'},{name:'JX',nq:'JX'}
+] };
+
+// 웹 모드에서 서버 전용 UI 숨기고 안내 배너 표시
+function applyModeUI(){
+  if(HAS_SERVER) return;
+  const banner = document.getElementById('convFolderBanner');
+  if(banner){
+    banner.innerHTML = '<span style="color:var(--mut)">🌐 웹 모드</span>'
+      + '<span style="color:#60a5fa;font-weight:600">파일을 직접 선택해 변환하고, 결과는 다운로드됩니다</span>';
+  }
+  const sub = document.getElementById('filePickSub');
+  if(sub) sub.textContent = 'xlsx 파일 선택 (여러 개 가능)';
+  document.querySelectorAll('[data-server-only]').forEach(el=>el.style.display='none');
+}
+
 async function loadCfg(){
   try{
     // 서버가 주입한 초기 config 우선 사용 (async 타이밍 문제 방지)
-    const d = window._INIT_CFG || await (await fetch('/api/alc-config')).json();
+    let d;
+    if(HAS_SERVER){ d = window._INIT_CFG; }
+    else{
+      try{ d = JSON.parse(localStorage.getItem(LS_KEY)||'null'); }catch(_){ d = null; }
+      if(!d || !d.models || !d.models.length) d = JSON.parse(JSON.stringify(WEB_DEFAULT_CFG));
+    }
     Object.assign(_cfg, d);
     models.length = 0;
     (_cfg.models || []).forEach(m => models.push(m));
@@ -413,6 +440,7 @@ async function loadCfg(){
 }
 async function saveModels(){
   _cfg.models = models;
+  if(!HAS_SERVER){ try{ localStorage.setItem(LS_KEY, JSON.stringify(_cfg)); }catch(e){} return; }
   try{ await fetch('/api/alc-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_cfg)}); }
   catch(e){}
 }
@@ -650,7 +678,51 @@ function detectModel(filename){
   return null;
 }
 
+// ===== 브라우저 xlsx 파싱 (서버 없는 웹 모드용) =====
+// 서버쪽 alc_parse_file() 과 동일 규칙: UPG/CODE 헤더 찾고 +3행부터,
+// CODE 있는 행만, PART NO 공백->하이픈, PART-NAME 으로 F/R 판정
+function parseAlcSheet(rows){
+  const cell = (r,i)=> (r && r[i]!=null) ? String(r[i]).trim() : '';
+  let header = -1;
+  for(let i=0;i<rows.length;i++){
+    if(cell(rows[i],0)==='UPG' && cell(rows[i],1)==='CODE'){ header = i; break; }
+  }
+  if(header < 0) return {error:'헤더를 찾을 수 없습니다 (UPG/CODE 행 없음)'};
+  const out = [];
+  for(let i=header+3;i<rows.length;i++){
+    const code = cell(rows[i],1);
+    if(!code) continue;
+    const partNo = cell(rows[i],2).replace(/ /g,'-');
+    const partName = cell(rows[i],6);
+    out.push({code, partNo, fr: partName.includes('BUMPER ASSY-RR') ? 'R' : 'F'});
+  }
+  return {rows: out, count: out.length};
+}
+
+async function parseFileInBrowser(file){
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, {type:'array'});
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, defval:null});
+  return parseAlcSheet(rows);
+}
+
+// 웹 모드: 파일 선택창으로 xlsx 고르기
+function openWebFilePick(){
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.xlsx'; inp.multiple = true;
+  inp.onchange = () => {
+    for(const file of inp.files){
+      if(selectedFiles.find(s=>s.name===file.name)) continue;
+      selectedFiles.push({path:file.name, name:file.name, fr:detectFR(file.name), rows:null, file});
+    }
+    closeFilePick();
+  };
+  inp.click();
+}
+
 async function openFilePick(){
+  if(!HAS_SERVER){ openWebFilePick(); return; }
   document.getElementById('fileList').innerHTML = '<div style="color:var(--mut);padding:20px;text-align:center">불러오는 중...</div>';
   document.getElementById('fileModal').style.display = 'flex';
   try{
@@ -701,8 +773,8 @@ function toggleFile(path, name){
   const idx = selectedFiles.findIndex(s=>s.path===path);
   if(idx>=0){ selectedFiles.splice(idx,1); }
   else { selectedFiles.push({path, name, fr:detectFR(name), rows:null}); }
-  // 모달 내 항목 스타일 갱신
-  openFilePick();
+  // 모달 내 항목 스타일 갱신 (웹 모드는 모달을 안 씀)
+  if(HAS_SERVER) openFilePick(); else renderSelectedFiles();
 }
 
 function renderSelectedFiles(){
@@ -739,8 +811,13 @@ async function doConvert(){
   for(const f of selectedFiles){
     if(f.rows) continue; // 이미 파싱됨
     try{
-      const r = await fetch('/api/alc-parse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:f.path})});
-      const res = await r.json();
+      let res;
+      if(HAS_SERVER){
+        const r = await fetch('/api/alc-parse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:f.path})});
+        res = await r.json();
+      }else{
+        res = await parseFileInBrowser(f.file);
+      }
       if(res.error){ toast('❌ '+f.name+': '+res.error); document.getElementById('btnConvert').disabled=false; return; }
       f.rows = res.rows;
     }catch(e){ toast('❌ 오류: '+e.message); document.getElementById('btnConvert').disabled=false; return; }
@@ -793,7 +870,7 @@ async function doDownload(){
   const fname = 'alcup.txt';
   const content = mergedRows.map(r=>[r.seq, r.nq, r.fr, r.code, r.partNo, r.series||''].join('\t')).join('\n');
 
-  if(_cfg.saveFolder){
+  if(HAS_SERVER && _cfg.saveFolder){
     try{
       const res = await fetch('/api/alc-save',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({folder:_cfg.saveFolder, filename:fname, content})});
@@ -875,6 +952,7 @@ function toast(msg){
 // 초기 렌더
 (async function init(){
   try{ await loadCfg(); }catch(e){ console.error(e); }
+  applyModeUI();
   renderDash();
   try{ loadSaveDir(); }catch(e){ console.error(e); }
 })();
