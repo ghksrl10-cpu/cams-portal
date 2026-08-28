@@ -2297,6 +2297,29 @@ showView('main');
   saveDB=function(){_orig();odSave();};
 })();
 
+/* ===== 서버 자동 백업 (버튼 불필요, 열기만 하면 alka_backup.json 생성/복원) ===== */
+(async()=>{
+  try{
+    if(location.protocol==='file:')return;
+    const push=()=>{try{
+      const raw=localStorage.getItem(DB_KEY);
+      if(!raw||raw.length<200)return;
+      fetch('/api/alka-backup',{method:'POST',headers:{'Content-Type':'application/json'},body:raw}).catch(()=>{});
+    }catch(e){}};
+    const raw=localStorage.getItem(DB_KEY);
+    if(raw&&raw.length>=200){
+      push();
+    }else{
+      const r=await fetch('/api/alka-backup').then(x=>x.json()).catch(()=>null);
+      if(r&&typeof r==='object'&&r.months){
+        localStorage.setItem(DB_KEY,JSON.stringify(r));DB=r;
+        applyCustomLocs();document.getElementById('targetIn').value=DB.targetCount||155;loadDefects();showView('main');
+      }
+    }
+    const _o=saveDB;saveDB=function(){_o();push();};
+  }catch(e){console.warn('server backup skip',e);}
+})();
+
 window.addEventListener('message', e => {
   if (!e.data) return;
   if (e.data.type === 'cams_theme') { document.body.classList.toggle('dark', !!e.data.dark); return; }

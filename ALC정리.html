@@ -267,7 +267,8 @@
           <div style="font-size:16px;font-weight:800;color:#22c55e">저장 완료</div>
           <div id="saveBannerPath" style="font-size:13px;color:#86efac;margin-top:2px"></div>
         </div>
-        <button class="btn suc" onclick="openInExcel()" style="white-space:nowrap">📊 엑셀로 열기</button>
+        <button class="btn" onclick="openSaved('txt')" style="white-space:nowrap">📄 메모장</button>
+        <button class="btn suc" onclick="openSaved('excel')" style="white-space:nowrap">📊 엑셀</button>
       </div>
 
       <!-- 미리보기 -->
@@ -817,12 +818,14 @@ async function doDownload(){
 }
 
 let _lastSavedPath = '';
-async function openInExcel(){
+async function openSaved(app){
   if(!_lastSavedPath){ toast('저장된 파일 경로가 없습니다'); return; }
   try{
-    await fetch('/api/open-file',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({path:_lastSavedPath})});
-  }catch(e){ toast('❌ 열기 실패'); }
+    const res = await fetch('/api/open-file',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({path:_lastSavedPath, app})});
+    const j = await res.json();
+    if(!j.ok) toast('❌ 열기 실패: '+(j.error||''));
+  }catch(e){ toast('❌ 열기 실패: '+e.message); }
 }
 
 // ===== 유틸 =====
@@ -882,7 +885,7 @@ window.addEventListener('message', e => {
     document.body.classList.toggle('dark', !!e.data.dark);
     return;
   }
-  if (e.data.type !== 'cams_auth') return;
+  if (!e.data || e.data.type !== 'cams_auth') return;
   const { name, dept } = e.data;
   const av = document.getElementById('userAv');
   const un = document.getElementById('userName');
@@ -904,7 +907,7 @@ window.parent.postMessage({ type: 'cams_request_theme' }, '*');
       <span class="grow"></span>
       <button class="btn sm" onclick="closeFilePick()">✕</button>
     </div>
-    <div style="overflow-y:auto;padding:12px" id="fileList"></div>
+    <div style="overflow-y:auto;padding:12px;flex:1;min-height:0" id="fileList"></div>
   </div>
 </div>
 </body>
