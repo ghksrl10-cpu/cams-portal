@@ -350,43 +350,54 @@ function setStatus(msg,type){
 /* ════════ 출력 생성 ════════ */
 let lastTxt='', lastItems=[], lastRelCount=0;
 function run(){
-  const raw=document.getElementById('inp')?.value||'';
+  // 입력/출력 요소 없으면 조용히 죽지 않고 원인을 알린다
+  const inpEl=document.getElementById('inp');
+  if(!inpEl){setStatus('입력창을 찾을 수 없습니다 - 새로고침 해주세요','warn');return;}
+  const outEl=document.getElementById('out-pre');
+  if(!outEl){setStatus('결과창을 찾을 수 없습니다 - 새로고침 해주세요','warn');return;}
+  const raw=inpEl.value||'';
+  if(!raw.trim()){setStatus('입력 내용이 없습니다','warn');return;}
   const items=parseToday(raw);
-  if(!items||!items.length){setStatus('입력 내용이 없습니다','warn');return;}
-  const hist=loadHist(), today=getToday();
-  const tl=[],hl=[];
-  function L(tv,hv){tl.push(tv);hl.push(hv!==undefined?hv:esc(tv));}
-  const _uname = window._authName || '김환기';
-  L(`${today}  업무일지   (생산팀 ${_uname})`,`<span class="c-hd">${today}  업무일지   (생산팀 ${_uname})</span>`);
-  L('='.repeat(46),`<span class="c-sep">${'='.repeat(46)}</span>`);
-  L('','');
-  let totalRel=0;
-  for(let n=0;n<items.length;n++){
-    const it=items[n],full=it.title+' '+it.details.join(' ');
-    const cat=classify(full),mdl=detectModel(full),tag=mdl?`[${cat} · ${mdl}]`:`[${cat}]`;
-    tl.push(`${n+1}. ${it.title}   ${tag}`);
-    let tgH=`<span class="c-cat">${esc(cat)}</span>`;
-    if(mdl) tgH+=` <span class="c-mdl">${esc(mdl)}</span>`;
-    hl.push(`<span class="c-num">${n+1}. ${esc(it.title)}</span>   ${tgH}`);
-    for(const d of it.details){
-      if(d.startsWith('ㄴ ')){const t=d.slice(2).trim();L(`        ㄴ ${t}`,`<span class="c-sub">        ㄴ ${esc(t)}</span>`);}
-      else if(d.startsWith('↳ ')){const t=d.slice(2).trim();L(`           ${t}`,`<span class="c-con">           ${esc(t)}</span>`);}
-      else{L(`   - ${d}`,`<span class="c-det">   - ${esc(d)}</span>`);}
-    }
-    const rel=findRel(it,hist); totalRel+=rel.length;
-    if(rel.length){
-      L('   📌 과거 유사 대응:',`<span class="c-rh">   📌 과거 유사 대응:</span>`);
-      for(const h of rel){const s=sumLine(h.details),tail=s?` → ${s}`:'';L(`      · [${h.date}] ${h.title}${tail}`,`<span class="c-rel">      · [${esc(h.date)}] ${esc(h.title)}${esc(tail)}</span>`);}
-    }
+  if(!items||!items.length){setStatus('파싱 실패 - 입력 형식을 확인해주세요','warn');return;}
+  try{
+    const hist=loadHist(), today=getToday();
+    const tl=[],hl=[];
+    function L(tv,hv){tl.push(tv);hl.push(hv!==undefined?hv:esc(tv));}
+    const _uname = window._authName || '김환기';
+    L(`${today}  업무일지   (생산팀 ${_uname})`,`<span class="c-hd">${today}  업무일지   (생산팀 ${_uname})</span>`);
+    L('='.repeat(46),`<span class="c-sep">${'='.repeat(46)}</span>`);
     L('','');
+    let totalRel=0;
+    for(let n=0;n<items.length;n++){
+      const it=items[n],full=it.title+' '+it.details.join(' ');
+      const cat=classify(full),mdl=detectModel(full),tag=mdl?`[${cat} · ${mdl}]`:`[${cat}]`;
+      tl.push(`${n+1}. ${it.title}   ${tag}`);
+      let tgH=`<span class="c-cat">${esc(cat)}</span>`;
+      if(mdl) tgH+=` <span class="c-mdl">${esc(mdl)}</span>`;
+      hl.push(`<span class="c-num">${n+1}. ${esc(it.title)}</span>   ${tgH}`);
+      for(const d of it.details){
+        if(d.startsWith('ㄴ ')){const t=d.slice(2).trim();L(`        ㄴ ${t}`,`<span class="c-sub">        ㄴ ${esc(t)}</span>`);}
+        else if(d.startsWith('↳ ')){const t=d.slice(2).trim();L(`           ${t}`,`<span class="c-con">           ${esc(t)}</span>`);}
+        else{L(`   - ${d}`,`<span class="c-det">   - ${esc(d)}</span>`);}
+      }
+      const rel=findRel(it,hist); totalRel+=rel.length;
+      if(rel.length){
+        L('   📌 과거 유사 대응:',`<span class="c-rh">   📌 과거 유사 대응:</span>`);
+        for(const h of rel){const s=sumLine(h.details),tail=s?` → ${s}`:'';L(`      · [${h.date}] ${h.title}${tail}`,`<span class="c-rel">      · [${esc(h.date)}] ${esc(h.title)}${esc(tail)}</span>`);}
+      }
+      L('','');
+    }
+    lastTxt=tl.join('\n').trimEnd()+'\n'; lastItems=items; lastRelCount=totalRel;
+    document.getElementById('out-pre').innerHTML=hl.join('\n');
+    saveHist(today,items,todayPhotos);
+    setStatus(`✅ ${items.length}건 처리 완료${totalRel?` (관련 사례 ${totalRel}건 첨부)`:''} ${todayPhotos.length?`📷 사진 ${todayPhotos.length}장`:''}`, 'ok');
+    // 카드 갱신
+    document.getElementById('c-count').textContent=items.length;
+    document.getElementById('c-rel').textContent=totalRel;
+  }catch(e){
+    console.error('run',e);
+    setStatus('처리 중 오류: '+(e && e.message ? e.message : e),'warn');
   }
-  lastTxt=tl.join('\n').trimEnd()+'\n'; lastItems=items; lastRelCount=totalRel;
-  document.getElementById('out-pre').innerHTML=hl.join('\n');
-  saveHist(today,items,todayPhotos);
-  setStatus(`✅ ${items.length}건 처리 완료${totalRel?` (관련 사례 ${totalRel}건 첨부)`:''} ${todayPhotos.length?`📷 사진 ${todayPhotos.length}장`:''}`, 'ok');
-  // 카드 갱신
-  document.getElementById('c-count').textContent=items.length;
-  document.getElementById('c-rel').textContent=totalRel;
 }
 
 /* ════════════════════════════════════════════════
