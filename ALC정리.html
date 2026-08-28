@@ -422,6 +422,11 @@ function applyModeUI(){
   const sub = document.getElementById('filePickSub');
   if(sub) sub.textContent = 'xlsx 파일 선택 (여러 개 가능)';
   document.querySelectorAll('[data-server-only]').forEach(el=>el.style.display='none');
+  // 서버 전용 설정 섹션(폴더 경로/저장 경로)은 웹에서 의미가 없으므로 숨김
+  document.querySelectorAll('#view-settings .sec').forEach(sec=>{
+    const t = (sec.querySelector('.sec-h')||{}).textContent || '';
+    if(t.includes('폴더 경로') || t.includes('저장 경로')) sec.style.display='none';
+  });
 }
 
 async function loadCfg(){
