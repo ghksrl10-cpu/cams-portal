@@ -709,7 +709,45 @@ function loadDB(){
 }
 function saveDB(){
   DB.targetCount=+document.getElementById('targetIn').value||155;
-  localStorage.setItem(DB_KEY,JSON.stringify(DB));
+  try{
+    localStorage.setItem(DB_KEY,JSON.stringify(DB));
+  }catch(e){
+    _dbWarn('저장 실패: '+(e.name||e)+' — 데이터가 저장되지 않았습니다. 화면을 닫지 마십시오.');
+    throw e;
+  }
+}
+// 월 개수 — 유실 감시용
+function _monKeys(o){return (o&&o.months)?Object.keys(o.months):[];}
+// 화면 상단 경고 배너 (조용한 실패 금지)
+function _dbWarn(msg,color){
+  try{
+    let el=document.getElementById('_dbWarnBar');
+    if(!el){
+      el=document.createElement('div');el.id='_dbWarnBar';
+      el.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;padding:10px 16px;font-size:14px;font-weight:700;color:#fff;background:#b91c1c;box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer';
+      el.onclick=()=>el.remove();
+      document.body.appendChild(el);
+    }
+    if(color)el.style.background=color;
+    el.textContent='⚠ '+msg+'  (클릭하면 닫힘)';
+  }catch(_){}
+  console.warn('[DB]',msg);
+}
+// 외부(OneDrive/서버) 데이터를 현재 DB에 병합 — 절대 덮어쓰지 않는다.
+// 로컬에 없는 월만 채우고, 양쪽에 있으면 로컬을 유지한다.
+function _mergeDB(incoming){
+  if(!incoming||typeof incoming!=='object'||!incoming.months)return {applied:false,added:[],dropped:[]};
+  const cur=_monKeys(DB), inc=_monKeys(incoming);
+  const added=[],dropped=inc.length?cur.filter(m=>!incoming.months[m]):[];
+  if(!cur.length){
+    // 로컬이 완전히 비었을 때만 통째로 채택
+    DB=incoming;
+    return {applied:true,added:inc,dropped:[]};
+  }
+  inc.forEach(m=>{ if(!DB.months[m]){ DB.months[m]=incoming.months[m]; added.push(m); } });
+  ['histAmounts','defects','customLocs','발생2'].forEach(k=>{ if(DB[k]==null&&incoming[k]!=null)DB[k]=incoming[k]; });
+  if(DB.targetCount==null&&incoming.targetCount!=null)DB.targetCount=incoming.targetCount;
+  return {applied:added.length>0,added,dropped};
 }
 function loadDefects(){
   if(DB.defects&&DB.defects.length)DEFECTS=DB.defects;
@@ -2261,7 +2299,9 @@ showView('main');
 
 /* ===== OneDrive 자동 백업 ===== */
 (async()=>{
-  const FILE='alka_backup.json';
+  // ⚠ server.py 백업(alka_backup.json)과 같은 파일을 쓰면 서로 덮어써서 데이터가 날아간다.
+  //   OneDrive 전용 파일로 분리한다. (2026-09-04 6·7월 유실 사고 대응)
+  const FILE='alka_od.json';
   const IDB='cams_od_v1';
   async function _db(){return new Promise(r=>{const q=indexedDB.open(IDB,1);q.onupgradeneeded=e=>e.target.result.createObjectStore('h');q.onsuccess=e=>r(e.target.result);});}
   async function _get(){const db=await _db();return new Promise(r=>{const t=db.transaction('h','readonly');const q=t.objectStore('h').get('dir');q.onsuccess=()=>r(q.result||null);});}
@@ -2272,7 +2312,15 @@ showView('main');
     try{const p=await dir.queryPermission({mode:'readwrite'});if(p==='granted')return true;const r=await dir.requestPermission({mode:'readwrite'});return r==='granted';}
     catch(e){dir=null;return false;}
   }
-  async function odSave(){if(!dir)return;try{const fh=await dir.getFileHandle(FILE,{create:true});const w=await fh.createWritable();await w.write(JSON.stringify(DB));await w.close();}catch(e){}}
+  async function odSave(){
+    if(!dir)return;
+    try{
+      const raw=JSON.stringify(DB);
+      if(raw.length<200){_dbWarn('OneDrive 백업 중단 — 데이터가 비어 있습니다.');return;}
+      const fh=await dir.getFileHandle(FILE,{create:true});
+      const w=await fh.createWritable();await w.write(raw);await w.close();
+    }catch(e){_dbWarn('OneDrive 백업 실패: '+(e.name||e));}
+  }
   async function odLoad(){if(!dir)return null;try{const fh=await dir.getFileHandle(FILE);return JSON.parse(await(await fh.getFile()).text());}catch(e){return null;}}
 
   const btn=document.createElement('button');
@@ -2290,7 +2338,17 @@ showView('main');
 
   if(ok){
     const saved=await odLoad();
-    if(saved){localStorage.setItem(DB_KEY,JSON.stringify(saved));DB=saved;applyCustomLocs();document.getElementById('targetIn').value=DB.targetCount||155;loadDefects();showView('main');}
+    if(saved){
+      // ⚠ 예전에는 여기서 localStorage를 무조건 덮어써서, OneDrive 파일이 낡으면
+      //   로컬의 최신 월이 통째로 지워졌다. 이제는 병합만 한다.
+      const r=_mergeDB(saved);
+      if(r.dropped.length)_dbWarn('OneDrive 백업에 없는 월이 있습니다: '+r.dropped.join(', ')+' — 로컬 데이터를 유지했습니다.','#b45309');
+      if(r.applied){
+        localStorage.setItem(DB_KEY,JSON.stringify(DB));
+        applyCustomLocs();document.getElementById('targetIn').value=DB.targetCount||155;loadDefects();showView('main');
+        if(r.added.length)_dbWarn('OneDrive에서 복원한 월: '+r.added.join(', '),'#15803d');
+      }
+    }
   }
 
   const _orig=saveDB;
@@ -2306,21 +2364,34 @@ showView('main');
     // 도구 서버(server.py)는 8767 포트로만 뜬다. 그 외에는 API가 없다.
     const _toolServer = ['localhost','127.0.0.1'].includes(location.hostname) && location.port === '8767';
     if(!_toolServer)return;
+    let _srvMons=null;   // 서버 백업이 갖고 있던 월 목록 (유실 감지 기준)
     const push=()=>{try{
       const raw=localStorage.getItem(DB_KEY);
       if(!raw||raw.length<200)return;
+      // 백업보다 월이 줄어든 상태를 밀어넣으면 정상본이 파괴된다. 확인 없이는 올리지 않는다.
+      if(_srvMons&&_srvMons.length){
+        const now=_monKeys(DB);
+        const lost=_srvMons.filter(m=>now.indexOf(m)<0);
+        if(lost.length){
+          _dbWarn('백업에 있던 월('+lost.join(', ')+')이 현재 데이터에 없어 서버 백업을 중단했습니다. 의도한 삭제라면 알려주십시오.');
+          return;
+        }
+      }
       fetch('/api/alka-backup',{method:'POST',headers:{'Content-Type':'application/json'},body:raw}).catch(()=>{});
-    }catch(e){}};
-    const raw=localStorage.getItem(DB_KEY);
-    if(raw&&raw.length>=200){
-      push();
-    }else{
-      const r=await fetch('/api/alka-backup').then(x=>x.json()).catch(()=>null);
-      if(r&&typeof r==='object'&&r.months){
-        localStorage.setItem(DB_KEY,JSON.stringify(r));DB=r;
+    }catch(e){_dbWarn('서버 백업 실패: '+(e.name||e));}};
+    // 서버 백업은 항상 읽어서 "로컬에 없는 월"만 채운다. 덮어쓰지 않는다.
+    const srv=await fetch('/api/alka-backup').then(x=>x.json()).catch(()=>null);
+    if(srv&&typeof srv==='object'&&srv.months){
+      _srvMons=_monKeys(srv);
+      const r=_mergeDB(srv);
+      if(r.dropped.length)_dbWarn('서버 백업에 없는 월이 있습니다: '+r.dropped.join(', ')+' — 로컬 데이터를 유지했습니다.','#b45309');
+      if(r.applied){
+        localStorage.setItem(DB_KEY,JSON.stringify(DB));
         applyCustomLocs();document.getElementById('targetIn').value=DB.targetCount||155;loadDefects();showView('main');
+        if(r.added.length)_dbWarn('서버 백업에서 복원한 월: '+r.added.join(', '),'#15803d');
       }
     }
+    push();
     const _o=saveDB;saveDB=function(){_o();push();};
   }catch(e){console.warn('server backup skip',e);}
 })();
