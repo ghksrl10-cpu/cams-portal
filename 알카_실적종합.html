@@ -2321,7 +2321,19 @@ showView('main');
       const w=await fh.createWritable();await w.write(raw);await w.close();
     }catch(e){_dbWarn('OneDrive 백업 실패: '+(e.name||e));}
   }
-  async function odLoad(){if(!dir)return null;try{const fh=await dir.getFileHandle(FILE);return JSON.parse(await(await fh.getFile()).text());}catch(e){return null;}}
+  async function odLoad(){
+    if(!dir)return null;
+    // FILE(alka_od.json)이 아직 없으면 예전 파일(alka_backup.json)을 읽기 전용으로 한 번 참조한다.
+    // 파일명 분리 이전에 만들어진 백업을 잃지 않기 위한 이행 경로. 쓰기는 절대 하지 않는다.
+    for(const name of [FILE,'alka_backup.json']){
+      try{
+        const fh=await dir.getFileHandle(name);
+        const j=JSON.parse(await(await fh.getFile()).text());
+        if(j&&j.months)return j;
+      }catch(e){}
+    }
+    return null;
+  }
 
   const btn=document.createElement('button');
   btn.style.cssText='position:fixed;bottom:12px;right:12px;z-index:9999;padding:6px 14px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;color:#fff;';
