@@ -1071,10 +1071,10 @@ function parseChat(text){
         const part=single?gPart(content):'';
         const locCols=Object.fromEntries(LOCS.map(l=>[l,'']));if(loc)locCols[loc]=1;
         const pairs=gPairs(content,sender);
-        // 차종 미상 + 번호 없음 + 직전 사진 여러 장 → 사진 장수만큼 행 생성(각각 확인 유도)
-        if(pcnt>1&&cntNums(content)===0){
-          for(const p of pairs)if(p[0]==='?')p[2]=pcnt;
-        }
+        // ⚠ 예전에는 직전 "사진 N장"의 N만큼 행을 복제했다(각각 확인 유도 목적).
+        //   하지만 실제로는 한 건을 여러 각도로 찍은 사진이라 1건이 N건으로 부풀었다.
+        //   26년 6월 실측: 파싱 214건 → 실제 206건(4개 메시지가 각 3배). 복제하지 않는다.
+        //   (2026-09-04 수정. pcnt는 아래 _photos 로 남겨 확인용으로만 쓴다.)
         // 차종/아이템 미상인 후속 메시지(…번도 요청)는 같은 날 같은 발신자 직전 건에서 상속
         for(const p of pairs){
           if(p[0]==='?'||p[1]==='?'){
@@ -1092,7 +1092,7 @@ function parseChat(text){
           for(let ci=0;ci<cnt;ci++){
             const def=rawDef?rawDef:(g==='캠스'?(altIdx++%2===0?'도장':'찍힘'):'');
             const bal=(DB.발생2||['NQ5']).includes(vm)?2:1;
-            recs.push({일자:day,발생:bal,차종:vm,아이템:item,귀책:g,...locCols,'단품만 요청':part,'불량 사유':def,_sender:sender,_time:mm[2]});
+            recs.push({일자:day,발생:bal,차종:vm,아이템:item,귀책:g,...locCols,'단품만 요청':part,'불량 사유':def,_sender:sender,_time:mm[2],_photos:pcnt});
           }
         }
       }
@@ -1216,7 +1216,7 @@ function showPreview(src){
       +`<div>📅 ${r.일자}일 | 차종: <b>${r.차종}</b> | 아이템: <b>${r.아이템}</b> | 귀책: ${r.귀책}`
       +`<button class="warn-btn fix" onclick="openFix(${i})">수정</button>`
       +`<button class="warn-btn del" onclick="deleteParsed(${i})">삭제</button></div>`
-      +(r._sender?`<div class="warn-sub">👤 ${r._sender} · ${r._time}</div>`:'')
+      +(r._sender?`<div class="warn-sub">👤 ${r._sender} · ${r._time}${r._photos>1?` · 📷 사진 ${r._photos}장 <span style="color:#fbbf24">(여러 건이면 등록 후 추가하십시오)</span>`:''}</div>`:'')
       +`<div class="warn-fix" id="fx-${i}">차종:<select id="fxV-${i}">${mkVOpts(r.차종)}</select>`
       +`아이템:<select id="fxI-${i}">${mkIOpts(r.아이템)}</select>`
       +`귀책:<select id="fxG-${i}">${mkGOpts(r.귀책)}</select>`
