@@ -113,10 +113,19 @@
   td.part-c{color:#a78bfa;font-size:12px;font-weight:600}
   td.def-c{color:var(--ng);font-weight:600}
   td.amt-c{text-align:right;padding-right:8px}
-  .warn-box{background:#2d0a0a;border:1px solid #7f1d1d;border-radius:10px;padding:14px 16px;margin-bottom:12px}
-  .warn-box .warn-ttl{color:#f87171;font-weight:800;font-size:15px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-  .warn-box .warn-item{font-size:13px;color:#fca5a5;padding:4px 0 4px 22px;border-bottom:1px solid #3f1111;line-height:1.5}
+  .warn-box{background:#2d0a0a;border:1px solid #7f1d1d;border-radius:10px;padding:16px 18px;margin-bottom:12px}
+  .warn-box .warn-ttl{color:#f87171;font-weight:800;font-size:19px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .warn-box .warn-item{font-size:17px;color:#fca5a5;padding:9px 0 9px 22px;border-bottom:1px solid #3f1111;line-height:1.6}
   .warn-box .warn-item:last-child{border-bottom:none}
+  .warn-box .warn-item b{font-size:18px;color:#fecaca}
+  .warn-box .warn-sub{font-size:14px;color:#94a3b8}
+  .warn-box .warn-btn{margin-left:10px;padding:4px 12px;font-size:14px;font-weight:700;border-radius:5px;cursor:pointer}
+  .warn-box .warn-btn.fix{background:#1e3a1e;border:1px solid #16a34a;color:#86efac}
+  .warn-box .warn-btn.del{background:#3a1414;border:1px solid #dc2626;color:#fca5a5}
+  .warn-box .warn-btn.save{background:#1e3a5a;border:1px solid #2563eb;color:#93c5fd}
+  .warn-box .warn-btn:hover{filter:brightness(1.35)}
+  .warn-box .warn-fix{display:none;flex-wrap:wrap;gap:8px;align-items:center;font-size:15px;padding-top:4px}
+  .warn-box .warn-fix select{background:#0f1117;color:#f1f5f9;border:1px solid var(--bd);border-radius:5px;padding:5px 8px;font-size:15px}
   td.err-c{color:#f87171;font-weight:800;background:#2d0a0a !important}
   .yr-h td{background:#1e2a3a;font-weight:800;color:#93c5fd}
   .edit-in{width:100%;height:100%;border:0;text-align:right;font-size:13px;background:transparent;outline:none;padding-right:6px;color:var(--ink)}
@@ -1203,7 +1212,16 @@ function showPreview(src){
     const mkVOpts=(sel)=>VEHICLES.map(v=>`<option value="${v}"${v===sel?' selected':''}>${v}</option>`).join('')+`<option value="?"${'?'===sel?' selected':''}>?</option>`;
     const mkIOpts=(sel)=>['FRT','RR','?'].map(v=>`<option value="${v}"${v===sel?' selected':''}>${v}</option>`).join('');
     const mkGOpts=(sel)=>['기아','캠스','부영'].map(v=>`<option value="${v}"${v===sel?' selected':''}>${v}</option>`).join('');
-    const items=errs.map(({r,i})=>`<div class="warn-item" id="wi-${i}" style="display:flex;flex-direction:column;gap:4px"><div>📅 ${r.일자}일 | 차종: <b>${r.차종}</b> | 아이템: <b>${r.아이템}</b> | 귀책: ${r.귀책}<button onclick="openFix(${i})" style="margin-left:8px;padding:1px 7px;font-size:11px;background:#1e3a1e;border:1px solid #16a34a;border-radius:4px;color:#86efac;cursor:pointer">수정</button></div>${r._sender?`<div style="font-size:11px;color:#64748b">👤 ${r._sender} · ${r._time}</div>`:''}<div id="fx-${i}" style="display:none;flex-wrap:wrap;gap:5px;align-items:center;font-size:12px">차종:<select id="fxV-${i}" style="background:#0f1117;color:#f1f5f9;border:1px solid var(--bd);border-radius:4px;padding:2px 4px">${mkVOpts(r.차종)}</select>아이템:<select id="fxI-${i}" style="background:#0f1117;color:#f1f5f9;border:1px solid var(--bd);border-radius:4px;padding:2px 4px">${mkIOpts(r.아이템)}</select>귀책:<select id="fxG-${i}" style="background:#0f1117;color:#f1f5f9;border:1px solid var(--bd);border-radius:4px;padding:2px 4px">${mkGOpts(r.귀책)}</select><button onclick="applyFix(${i})" style="padding:1px 7px;font-size:11px;background:#1e3a5a;border:1px solid #2563eb;border-radius:4px;color:#93c5fd;cursor:pointer">저장</button></div></div>`).join('');
+    const items=errs.map(({r,i})=>`<div class="warn-item" id="wi-${i}" style="display:flex;flex-direction:column;gap:5px">`
+      +`<div>📅 ${r.일자}일 | 차종: <b>${r.차종}</b> | 아이템: <b>${r.아이템}</b> | 귀책: ${r.귀책}`
+      +`<button class="warn-btn fix" onclick="openFix(${i})">수정</button>`
+      +`<button class="warn-btn del" onclick="deleteParsed(${i})">삭제</button></div>`
+      +(r._sender?`<div class="warn-sub">👤 ${r._sender} · ${r._time}</div>`:'')
+      +`<div class="warn-fix" id="fx-${i}">차종:<select id="fxV-${i}">${mkVOpts(r.차종)}</select>`
+      +`아이템:<select id="fxI-${i}">${mkIOpts(r.아이템)}</select>`
+      +`귀책:<select id="fxG-${i}">${mkGOpts(r.귀책)}</select>`
+      +`<button class="warn-btn save" onclick="applyFix(${i})">저장</button></div>`
+      +`</div>`).join('');
     document.getElementById('parseWarnList').innerHTML=items;
     warnBox.style.display='block';
   } else {
@@ -1259,7 +1277,16 @@ function cellEdit(ev,ri,col){
   td.innerHTML='';td.appendChild(el);
   if(!SEL[col])el.focus();else el.focus();
 }
-function openFix(i){const el=document.getElementById('fx-'+i);if(el)el.style.display=el.style.display==='none'?'flex':'none';}
+function openFix(i){const el=document.getElementById('fx-'+i);if(el)el.style.display=(el.style.display==='flex')?'none':'flex';}
+// 파싱 오류 항목 삭제 — 미리보기(_parsed)에서만 빼므로 등록 대상에서 제외된다.
+function deleteParsed(i){
+  const r=_parsed[i];
+  if(!r)return;
+  const who=r._sender?`\n보낸사람: ${r._sender} · ${r._time}`:'';
+  if(!confirm(`이 건을 삭제할까요?\n\n${r.일자}일 | 차종: ${r.차종} | 아이템: ${r.아이템} | 귀책: ${r.귀책}${who}\n\n등록 목록에서 빠집니다.`))return;
+  _parsed.splice(i,1);
+  showPreview();
+}
 function applyFix(i){
   const r=_parsed[i];
   const newV=document.getElementById('fxV-'+i).value;
