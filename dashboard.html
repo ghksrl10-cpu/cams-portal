@@ -444,7 +444,9 @@ function init(){
   try{
     const alka=JSON.parse(localStorage.getItem('alka_db_v1')||'null');
     if(alka&&alka.months){
-      const mr=alka.months[ym]||[];
+      // 알카 도구는 "26년9월" 형식으로 저장 -> 두 형식 모두 대응
+      const ymAlt = `${String(now.getFullYear()).slice(2)}년${now.getMonth()+1}월`;
+      const mr = alka.months[ym] || alka.months[ymAlt] || [];
       const all=Object.values(alka.months).flat();
       const target=alka.targetCount||155;
       const done=mr.length;

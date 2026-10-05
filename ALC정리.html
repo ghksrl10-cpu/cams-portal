@@ -351,6 +351,17 @@
 </div>
 
 <script>
+// ── 로컬 백엔드 주소 자동 판별 ──────────────────────────────
+// 로컬 서버(8767)에서 열면 상대경로, 포털(GitHub Pages)에서 열면 절대경로로 로컬 서버 호출
+const API = (location.port === '8767') ? '' : 'http://localhost:8767';
+// 서버 꺼짐 안내용 래퍼
+async function apiFetch(path, opt){
+  try { return await fetch(API + path, opt); }
+  catch(e){
+    toast('⚠ 로컬 서버가 꺼져 있습니다. server.py를 실행해주세요 (포트 8767)');
+    throw e;
+  }
+}
 // ===== 데이터 =====
 let models = [];
 let frtData = null, rrData = null, mergedRows = [];
@@ -368,7 +379,7 @@ async function saveAlcFolder(){
   const val = document.getElementById('alcFolderInput').value.trim();
   if(!val){ toast('경로를 입력하세요'); return; }
   _cfg.alcFolder = val;
-  await fetch('/api/alc-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_cfg)});
+  await apiFetch('/api/alc-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_cfg)});
   document.getElementById('alcFolderInfo').textContent = '현재 경로: '+val;
   toast('✅ ALC 폴더 경로 저장 완료');
 }
@@ -383,20 +394,20 @@ async function saveSaveFolder(){
   const val = document.getElementById('saveFolderInput').value.trim();
   if(!val){ toast('경로를 입력하세요'); return; }
   _cfg.saveFolder = val;
-  await fetch('/api/alc-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_cfg)});
+  await apiFetch('/api/alc-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_cfg)});
   document.getElementById('saveFolderInfo').textContent = '현재 경로: '+val;
   toast('✅ 저장 경로 설정 완료');
 }
 async function pickSaveFolder(){
   const current = document.getElementById('saveFolderInput').value.trim() || (_cfg.saveFolder||'');
-  const res = await fetch('/api/pick-folder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initial:current})});
+  const res = await apiFetch('/api/pick-folder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initial:current})});
   const j = await res.json();
   if(!j.ok) return;
   document.getElementById('saveFolderInput').value = j.path;
 }
 async function pickAlcFolder(){
   const current = document.getElementById('alcFolderInput').value.trim() || (_cfg.alcFolder||'');
-  const res = await fetch('/api/pick-folder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initial:current})});
+  const res = await apiFetch('/api/pick-folder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initial:current})});
   const j = await res.json();
   if(!j.ok) return;
   document.getElementById('alcFolderInput').value = j.path;
@@ -446,7 +457,7 @@ async function loadCfg(){
 async function saveModels(){
   _cfg.models = models;
   if(!HAS_SERVER){ try{ localStorage.setItem(LS_KEY, JSON.stringify(_cfg)); }catch(e){} return; }
-  try{ await fetch('/api/alc-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_cfg)}); }
+  try{ await apiFetch('/api/alc-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_cfg)}); }
   catch(e){}
 }
 
@@ -731,7 +742,7 @@ async function openFilePick(){
   document.getElementById('fileList').innerHTML = '<div style="color:var(--mut);padding:20px;text-align:center">불러오는 중...</div>';
   document.getElementById('fileModal').style.display = 'flex';
   try{
-    const r = await fetch('/api/alc-files');
+    const r = await apiFetch('/api/alc-files');
     const files = await r.json();
     if(!files.length){
       document.getElementById('fileList').innerHTML = '<div style="color:var(--mut);padding:20px;text-align:center">폴더에 xlsx 파일이 없습니다<br><small>설정에서 ALC 폴더 경로를 확인하세요</small></div>';
@@ -818,7 +829,7 @@ async function doConvert(){
     try{
       let res;
       if(HAS_SERVER){
-        const r = await fetch('/api/alc-parse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:f.path})});
+        const r = await apiFetch('/api/alc-parse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:f.path})});
         res = await r.json();
       }else{
         res = await parseFileInBrowser(f.file);
@@ -877,7 +888,7 @@ async function doDownload(){
 
   if(HAS_SERVER && _cfg.saveFolder){
     try{
-      const res = await fetch('/api/alc-save',{method:'POST',headers:{'Content-Type':'application/json'},
+      const res = await apiFetch('/api/alc-save',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({folder:_cfg.saveFolder, filename:fname, content})});
       const j = await res.json();
       if(j.ok){
@@ -903,7 +914,7 @@ let _lastSavedPath = '';
 async function openSaved(app){
   if(!_lastSavedPath){ toast('저장된 파일 경로가 없습니다'); return; }
   try{
-    const res = await fetch('/api/open-file',{method:'POST',headers:{'Content-Type':'application/json'},
+    const res = await apiFetch('/api/open-file',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({path:_lastSavedPath, app})});
     const j = await res.json();
     if(!j.ok) toast('❌ 열기 실패: '+(j.error||''));
