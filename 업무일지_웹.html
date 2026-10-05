@@ -200,6 +200,8 @@ body:not(.dark) #overlay{background:rgba(245,246,248,.97);color:#111827}
 </main>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script>
 /* ════════════════════════════════════════════════════
    분류 데이터 (jisa_category.py / jisa_tags.py 포팅)
@@ -1121,6 +1123,78 @@ window.addEventListener('message', e => {
   if (hu) hu.textContent = '생산팀 조립 · ' + (name || '김환기');
 });
 window.parent.postMessage({ type: 'cams_request_theme' }, '*');
+</script>
+
+<script>
+/* ===== 업무일지 클라우드 동기화 (병합 전용 · 덮어쓰기 없음) ===== */
+(function(){
+  const FB_CFG={apiKey:"AIzaSyDZZSI3ib_rmGz4gSMe0DgZs650IuTCvKs",authDomain:"cams-torque.firebaseapp.com",
+    projectId:"cams-torque",storageBucket:"cams-torque.firebasestorage.app",
+    messagingSenderId:"404254094434",appId:"1:404254094434:web:b4193a15de4153b9aa0d3b"};
+  const KEY='jisa_history_v1', COL='jisa_sync', DOC='history';
+  let db=null,_pushing=false,_ready=false;
+
+  const rid = r => (r.date||'')+'|'+(r.src||'');
+  function readLocal(){ try{return JSON.parse(localStorage.getItem(KEY)||'[]');}catch(e){return[];} }
+
+  // 병합: 양쪽 레코드를 합치되, 같은 키는 items 가 더 많은 쪽을 남긴다 (삭제 전파 안 함)
+  function merge(a,b){
+    const m=new Map();
+    [...(a||[]),...(b||[])].forEach(r=>{
+      if(!r||!r.date) return;
+      const k=rid(r), prev=m.get(k);
+      const cnt = r.items?r.items.length:0;
+      if(!prev || cnt > (prev.items?prev.items.length:0)) m.set(k,r);
+    });
+    return [...m.values()].sort((x,y)=>(x.date||'').localeCompare(y.date||''));
+  }
+
+  async function pull(){
+    if(!db) return;
+    try{
+      const snap=await db.collection(COL).doc(DOC).get();
+      if(!snap.exists){ _ready=true; return; }
+      const cloud=JSON.parse(snap.data().json||'[]');
+      const local=readLocal();
+      const merged=merge(local,cloud);
+      if(JSON.stringify(merged)!==JSON.stringify(local)){
+        _pushing=true; localStorage.setItem(KEY,JSON.stringify(merged)); _pushing=false;
+        if(typeof updSideInfo==='function')updSideInfo();
+        if(typeof renderHist==='function'){try{renderHist();}catch(e){}}
+      }
+      _ready=true;
+      if(merged.length>cloud.length) push();   // 로컬에만 있던 것 올림
+    }catch(e){ console.warn('[jisa sync] pull 실패',e); _ready=true; }
+  }
+
+  let _t=null;
+  function push(){
+    if(!db||!_ready) return;
+    clearTimeout(_t);
+    _t=setTimeout(async()=>{
+      const local=readLocal();
+      if(!local.length) return;              // 빈 데이터로 클라우드 덮어쓰기 금지
+      try{
+        const snap=await db.collection(COL).doc(DOC).get();
+        const cloud=snap.exists?JSON.parse(snap.data().json||'[]'):[];
+        const merged=merge(local,cloud);     // 클라우드 것도 보존
+        await db.collection(COL).doc(DOC).set({json:JSON.stringify(merged),at:Date.now()});
+      }catch(e){ console.warn('[jisa sync] push 실패',e); }
+    },1200);
+  }
+
+  const _set=localStorage.setItem.bind(localStorage);
+  localStorage.setItem=function(k,v){ _set(k,v); if(k===KEY&&!_pushing) push(); };
+
+  window.addEventListener('load',()=>{
+    if(typeof firebase==='undefined') return;
+    try{
+      if(!firebase.apps.length)firebase.initializeApp(FB_CFG);
+      db=firebase.firestore();
+      pull();
+    }catch(e){ console.warn('[jisa sync] init 실패',e); }
+  });
+})();
 </script>
 </body>
 </html>

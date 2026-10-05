@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>알카 실적 종합 관리</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <style>
@@ -2448,6 +2450,85 @@ window.addEventListener('message', e => {
   if (ud) ud.textContent = dept || '캠스 담당자';
 });
 window.parent.postMessage({ type: 'cams_request_theme' }, '*');
+</script>
+
+<script>
+/* ===== 알카 클라우드 동기화 (월 단위 병합 · 삭제 전파 없음) ===== */
+(function(){
+  const FB_CFG={apiKey:"AIzaSyDZZSI3ib_rmGz4gSMe0DgZs650IuTCvKs",authDomain:"cams-torque.firebaseapp.com",
+    projectId:"cams-torque",storageBucket:"cams-torque.firebasestorage.app",
+    messagingSenderId:"404254094434",appId:"1:404254094434:web:b4193a15de4153b9aa0d3b"};
+  const KEY='alka_db_v1', COL='alka_sync', DOC='db';
+  let db=null,_pushing=false,_ready=false;
+
+  function readLocal(){ try{return JSON.parse(localStorage.getItem(KEY))||null;}catch(e){return null;} }
+
+  // 월 단위 병합: 양쪽 월을 모두 보존, 같은 달은 건수가 많은 쪽 채택
+  function merge(local,cloud){
+    if(!cloud) return local;
+    if(!local) return cloud;
+    const out=JSON.parse(JSON.stringify(local));
+    out.months=out.months||{};
+    Object.entries(cloud.months||{}).forEach(([m,recs])=>{
+      const cur=out.months[m];
+      if(!cur || (recs||[]).length > cur.length) out.months[m]=recs;
+    });
+    // 금액 이력도 병합 (로컬 우선, 없는 항목만 보충)
+    ['캠스','기아','부영'].forEach(g=>{
+      out.histAmounts=out.histAmounts||{};
+      out.histAmounts[g]=Object.assign({},(cloud.histAmounts||{})[g]||{},(local.histAmounts||{})[g]||{});
+    });
+    return out;
+  }
+  const monCount=d=>Object.values((d&&d.months)||{}).reduce((s,a)=>s+(a?a.length:0),0);
+
+  async function pull(){
+    if(!db) return;
+    try{
+      const snap=await db.collection(COL).doc(DOC).get();
+      if(!snap.exists){ _ready=true; return; }
+      const cloud=JSON.parse(snap.data().json||'null');
+      const local=readLocal();
+      const merged=merge(local,cloud);
+      if(JSON.stringify(merged)!==JSON.stringify(local)){
+        _pushing=true; localStorage.setItem(KEY,JSON.stringify(merged)); _pushing=false;
+        if(typeof DB!=='undefined'){ try{ DB=merged; }catch(e){} }
+        if(typeof refreshMonSel==='function'){try{refreshMonSel('mainMonSel');}catch(e){}}
+        if(typeof renderMain==='function'){try{renderMain();}catch(e){}}
+      }
+      _ready=true;
+      if(monCount(merged)>monCount(cloud)) push();
+    }catch(e){ console.warn('[alka sync] pull 실패',e); _ready=true; }
+  }
+
+  let _t=null;
+  function push(){
+    if(!db||!_ready) return;
+    clearTimeout(_t);
+    _t=setTimeout(async()=>{
+      const local=readLocal();
+      if(!local || !monCount(local)) return;    // 빈 데이터로 덮어쓰기 금지
+      try{
+        const snap=await db.collection(COL).doc(DOC).get();
+        const cloud=snap.exists?JSON.parse(snap.data().json||'null'):null;
+        const merged=merge(local,cloud);
+        await db.collection(COL).doc(DOC).set({json:JSON.stringify(merged),at:Date.now()});
+      }catch(e){ console.warn('[alka sync] push 실패',e); }
+    },1500);
+  }
+
+  const _set=localStorage.setItem.bind(localStorage);
+  localStorage.setItem=function(k,v){ _set(k,v); if(k===KEY&&!_pushing) push(); };
+
+  window.addEventListener('load',()=>{
+    if(typeof firebase==='undefined') return;
+    try{
+      if(!firebase.apps.length)firebase.initializeApp(FB_CFG);
+      db=firebase.firestore();
+      pull();
+    }catch(e){ console.warn('[alka sync] init 실패',e); }
+  });
+})();
 </script>
 </body>
 </html>
