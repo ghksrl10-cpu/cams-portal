@@ -82,6 +82,8 @@ body:not(.dark) .nav-item:hover{background:rgba(255,255,255,.15);color:#fff}
 body:not(.dark) .nav-item.active{background:rgba(59,130,246,.25);color:#93c5fd}
 body:not(.dark) .sidebar-bottom{border-top-color:rgba(255,255,255,.12)}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 
@@ -114,6 +116,11 @@ body:not(.dark) .sidebar-bottom{border-top-color:rgba(255,255,255,.12)}
       <line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>
     </svg>
     엑셀 캡처
+  </div>
+  <div class="nav-section">웹 모드</div>
+  <div class="nav-item" id="nav-web" onclick="switchTab('web')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20a15 15 0 0 1 0-20"/></svg>
+    PDF 캡처
   </div>
 
   <div class="sidebar-bottom">
@@ -234,13 +241,166 @@ function checkServer(){
 }
 function setOnline(v){
   document.getElementById('dot').className='dot'+(v?' on':'');
-  document.getElementById('srv-txt').textContent=v?'서버 연결됨':'서버 꺼짐';
+  document.getElementById('srv-txt').textContent=v?'서버 연결됨':'서버 꺼짐 · PDF 캡처 사용 가능';
 }
+/* ===== 웹 모드: PDF/이미지 -> JPG (서버 불필요) ===== */
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+let _wOut = [];
+
+function wPrev(){
+  const b = (document.getElementById('w-name').value || 'slide').trim() || 'slide';
+  document.getElementById('w-preview').textContent = b + '_001.jpg';
+}
+
+// 흰 여백 자동 제거 (서버판 auto_crop 과 동일 동작)
+function wCrop(cv, pad){
+  const ctx = cv.getContext('2d');
+  const { width:W, height:H } = cv;
+  const d = ctx.getImageData(0,0,W,H).data;
+  const WHITE = 245;
+  let top=H, left=W, right=-1, bottom=-1;
+  for (let y=0; y<H; y++){
+    for (let x=0; x<W; x++){
+      const i = (y*W + x) * 4;
+      if (d[i] < WHITE || d[i+1] < WHITE || d[i+2] < WHITE){
+        if (y < top) top = y;
+        if (y > bottom) bottom = y;
+        if (x < left) left = x;
+        if (x > right) right = x;
+      }
+    }
+  }
+  if (right < 0) return cv;                      // 전부 흰색이면 원본 유지
+  left   = Math.max(0, left - pad);
+  top    = Math.max(0, top - pad);
+  right  = Math.min(W-1, right + pad);
+  bottom = Math.min(H-1, bottom + pad);
+  const o = document.createElement('canvas');
+  o.width  = right - left + 1;
+  o.height = bottom - top + 1;
+  o.getContext('2d').drawImage(cv, left, top, o.width, o.height, 0, 0, o.width, o.height);
+  return o;
+}
+
+async function wConvert(){
+  const files = document.getElementById('w-file').files;
+  const btn   = document.getElementById('w-btn');
+  hideErr('w');
+  if (!files || !files.length){ showErr('w','파일을 선택해주세요.'); return; }
+
+  const base  = (document.getElementById('w-name').value || 'slide').trim() || 'slide';
+  const scale = parseFloat(document.getElementById('w-scale').value) || 3;
+  const doCrop= document.getElementById('w-crop').checked;
+  const pad   = parseInt(document.getElementById('w-pad').value) || 8;
+
+  btn.disabled = true;
+  _wOut = [];
+  document.getElementById('w-result').style.display = 'none';
+  document.getElementById('w-gallery').innerHTML = '';
+  showProg('w','변환 준비 중...', 3);
+
+  try {
+    // 전체 페이지 수 먼저 계산 (진행률용)
+    const docs = [];
+    for (const f of files){
+      if (f.type === 'application/pdf' || /\.pdf$/i.test(f.name)){
+        const buf = await f.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+        docs.push({ kind:'pdf', pdf, pages: pdf.numPages });
+      } else if (f.type.startsWith('image/')){
+        docs.push({ kind:'img', file: f, pages: 1 });
+      }
+    }
+    if (!docs.length) throw new Error('PDF 또는 이미지 파일만 변환할 수 있습니다.');
+
+    const total = docs.reduce((n,d)=>n+d.pages, 0);
+    let done = 0;
+
+    for (const doc of docs){
+      if (doc.kind === 'pdf'){
+        for (let n = 1; n <= doc.pages; n++){
+          const page = await doc.pdf.getPage(n);
+          const vp   = page.getViewport({ scale });
+          let cv = document.createElement('canvas');
+          cv.width = vp.width; cv.height = vp.height;
+          const ctx = cv.getContext('2d');
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, cv.width, cv.height);
+          await page.render({ canvasContext: ctx, viewport: vp }).promise;
+          if (doCrop) cv = wCrop(cv, pad);
+          _wOut.push({
+            name: base + '_' + String(_wOut.length+1).padStart(3,'0') + '.jpg',
+            url : cv.toDataURL('image/jpeg', 0.93)
+          });
+          done++;
+          setProg('w', Math.round(done/total*96)+0);
+          document.getElementById('w-prog-text').textContent = `변환 중... ${done}/${total}`;
+          await new Promise(r=>setTimeout(r,0));   // UI 양보
+        }
+      } else {
+        const url = await new Promise(res=>{
+          const fr = new FileReader(); fr.onload = e=>res(e.target.result); fr.readAsDataURL(doc.file);
+        });
+        const img = await new Promise((res,rej)=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=rej; im.src=url; });
+        let cv = document.createElement('canvas');
+        cv.width = img.width; cv.height = img.height;
+        const ctx = cv.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0,0,cv.width,cv.height);
+        ctx.drawImage(img,0,0);
+        if (doCrop) cv = wCrop(cv, pad);
+        _wOut.push({
+          name: base + '_' + String(_wOut.length+1).padStart(3,'0') + '.jpg',
+          url : cv.toDataURL('image/jpeg', 0.93)
+        });
+        done++; setProg('w', Math.round(done/total*96));
+      }
+    }
+
+    setProg('w',100);
+    document.getElementById('w-prog-text').textContent = '완료!';
+    wShow();
+  } catch(e){
+    console.error(e);
+    showErr('w', '변환 실패: ' + (e.message || e));
+  } finally {
+    btn.disabled = false;
+    setTimeout(()=>hideProg('w'), 1500);
+  }
+}
+
+function wShow(){
+  const g = document.getElementById('w-gallery');
+  g.innerHTML = _wOut.map(o =>
+    `<div class="thumb"><a href="${o.url}" download="${o.name}"><img src="${o.url}" alt="${o.name}"></a>`
+    + `<div class="thumb-label">${o.name}</div></div>`
+  ).join('');
+  document.getElementById('w-count').textContent = _wOut.length + '장 변환됨 · 썸네일 클릭 시 개별 저장';
+  document.getElementById('w-result').style.display = 'block';
+}
+
+async function wZip(){
+  if (!_wOut.length) return;
+  if (typeof JSZip === 'undefined'){ showErr('w','ZIP 라이브러리를 불러오지 못했습니다.'); return; }
+  const zip = new JSZip();
+  for (const o of _wOut){
+    zip.file(o.name, o.url.split(',')[1], { base64: true });
+  }
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (document.getElementById('w-name').value || 'slide') + '_jpg.zip';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+}
+
 setInterval(checkServer,4000); checkServer();
 
 // 탭 전환
 function switchTab(tab){
-  ['pptx','xlsx'].forEach(t=>{
+  ['pptx','xlsx','web'].forEach(t=>{
     document.getElementById('panel-'+t).classList.toggle('active', t===tab);
     document.getElementById('nav-'+t).classList.toggle('active', t===tab);
   });
@@ -327,7 +487,67 @@ function showResults(pfx, slides, folder){
   slides.forEach(s=>{
     const d=document.createElement('div'); d.className='thumb';
     const sub=s.sheet?s.sheet:s.name;
-    d.innerHTML=`<img src="${s.thumb}"><div class="thumb-label">${sub}</div>`;
+    d.innerHTML=`<img src="${s.thumb}"><div class="thumb-label">${sub}</div>
+  <div class="panel" id="panel-web">
+    <h2>PDF → JPG 변환 <span style="font-size:12px;font-weight:500;color:var(--sub)">· 서버 없이 브라우저에서 처리</span></h2>
+
+    <div class="section" style="border-color:#2563eb">
+      <div class="section-title">사용 방법</div>
+      <div style="font-size:13px;line-height:1.9;color:var(--sub)">
+        1. 파워포인트/엑셀에서 <b style="color:var(--text)">다른 이름으로 저장 → PDF</b><br>
+        2. 아래에 그 PDF 를 올리면 페이지마다 JPG 로 변환됩니다<br>
+        <span style="color:#60a5fa">설치 불필요 · 어느 PC·폰에서든 동작 · 원본 그대로 출력</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">파일</div>
+      <div class="row">
+        <input type="file" id="w-file" accept="application/pdf,image/*" multiple
+               style="flex:1;font-size:13px;color:var(--text)">
+      </div>
+      <div class="row">
+        <label class="lbl">파일명 앞자리</label>
+        <input type="text" id="w-name" value="slide" oninput="wPrev()" style="max-width:220px">
+        <span style="font-size:12px;color:var(--sub)">저장 예시: <b id="w-preview">slide_001.jpg</b></span>
+      </div>
+      <div class="row">
+        <label class="lbl">해상도</label>
+        <select id="w-scale" style="max-width:160px;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px">
+          <option value="2">표준 (2x)</option>
+          <option value="3" selected>고화질 (3x)</option>
+          <option value="4">최고화질 (4x)</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sub);cursor:pointer">
+          <input type="checkbox" id="w-crop" checked> 흰 여백 자동 제거
+        </label>
+        <label class="lbl" style="min-width:auto">여유</label>
+        <input type="text" id="w-pad" value="8" style="max-width:60px">
+        <span style="font-size:12px;color:var(--sub)">px</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-big" id="w-btn" onclick="wConvert()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      변환 시작
+    </button>
+
+    <div class="progress-box" id="w-prog">
+      <div class="prog-text" id="w-prog-text">준비 중...</div>
+      <div class="prog-bar-wrap"><div class="prog-bar" id="w-prog-bar"></div></div>
+    </div>
+    <div class="err" id="w-err"></div>
+
+    <div class="section" id="w-result" style="display:none">
+      <div class="section-title">결과</div>
+      <div class="row">
+        <button class="btn btn-primary" onclick="wZip()">ZIP 으로 모두 저장</button>
+        <span style="font-size:12px;color:var(--sub)" id="w-count"></span>
+      </div>
+      <div class="gallery" id="w-gallery"></div>
+    </div>
+  </div>
+`;
     g.appendChild(d);
   });
   document.getElementById(pfx+'-result').style.display='block';
