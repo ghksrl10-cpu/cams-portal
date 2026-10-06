@@ -1202,7 +1202,13 @@ window.parent.postMessage({ type: 'cams_request_theme' }, '*');
       try{
         const snap=await db.collection(COL).doc(DOC).get();
         const cloud=snap.exists?JSON.parse(snap.data().json||'[]'):[];
-        const merged=merge(local,cloud);     // 클라우드 것도 보존
+        const merged=merge(local,cloud);
+        // 덮어쓰기 직전 기존본을 backup 문서로 대피 (내용이 있을 때만)
+        if(snap.exists && (cloud||[]).length){
+          try{ await db.collection(COL).doc('backup').set({
+            json:snap.data().json, at:snap.data().at||null,
+            _backedUpAt:new Date().toISOString() }); }catch(e){ console.warn('[jisa sync] 백업 실패',e); }
+        }
         await db.collection(COL).doc(DOC).set({json:JSON.stringify(merged),at:Date.now()});
         stat('☁ 저장됨','#16a34a',true);
       }catch(e){ console.warn('[jisa sync] push 실패',e); stat('⚠ 저장 실패','#dc2626'); }
