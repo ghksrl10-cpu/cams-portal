@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ASSY ALC 정리 → ERP 등록</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
   :root{
@@ -456,9 +458,12 @@ async function loadCfg(){
 }
 async function saveModels(){
   _cfg.models = models;
-  if(!HAS_SERVER){ try{ localStorage.setItem(LS_KEY, JSON.stringify(_cfg)); }catch(e){} return; }
-  try{ await apiFetch('/api/alc-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_cfg)}); }
-  catch(e){}
+  if(!HAS_SERVER){ try{ localStorage.setItem(LS_KEY, JSON.stringify(_cfg)); }catch(e){} }
+  else{
+    try{ await apiFetch('/api/alc-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_cfg)}); }
+    catch(e){}
+  }
+  if(window._alcPush) window._alcPush();   // 차종 진행이력 클라우드 동기화
 }
 
 // ===== 저장 경로 =====
@@ -1004,5 +1009,85 @@ window.parent.postMessage({ type: 'cams_request_theme' }, '*');
     <div style="overflow-y:auto;padding:12px;flex:1;min-height:0" id="fileList"></div>
   </div>
 </div>
+
+<script>
+/* ===== ALC 차종 진행이력 동기화 (경로는 PC별이라 제외, models 만) ===== */
+(function(){
+  const FB_CFG={apiKey:"AIzaSyDZZSI3ib_rmGz4gSMe0DgZs650IuTCvKs",authDomain:"cams-torque.firebaseapp.com",
+    projectId:"cams-torque",storageBucket:"cams-torque.firebasestorage.app",
+    messagingSenderId:"404254094434",appId:"1:404254094434:web:b4193a15de4153b9aa0d3b"};
+  const COL='alc_sync', DOC='models';
+  let db=null,_ready=false,_badge=null;
+
+  function stat(t,c,fade){
+    if(!_badge){ _badge=document.createElement('div');
+      _badge.style.cssText='position:fixed;bottom:16px;right:16px;z-index:99999;padding:6px 13px;border-radius:20px;'+
+        'font-size:12px;font-weight:700;font-family:"맑은 고딕",sans-serif;color:#fff;'+
+        'box-shadow:0 2px 8px rgba(0,0,0,.25);pointer-events:none;transition:background .2s,opacity .4s';
+      document.body.appendChild(_badge); }
+    _badge.textContent=t; _badge.style.background=c; _badge.style.opacity='1';
+    if(fade) setTimeout(()=>{ _badge.style.opacity='0.35'; },2500);
+  }
+
+  const score=m=>(+m.frtCount||0)+(+m.rrCount||0)+(m.lastFrt?1:0)+(m.lastRr?1:0);
+  // 차종 단위 병합: 양쪽 차종 모두 보존, 같은 차종은 진행도가 큰 쪽 채택
+  function merge(a,b){
+    const m=new Map();
+    [...(a||[]),...(b||[])].forEach(x=>{
+      if(!x||!x.name) return;
+      const prev=m.get(x.name);
+      if(!prev || score(x)>score(prev)) m.set(x.name,x);
+    });
+    return [...m.values()];
+  }
+
+  async function pull(){
+    if(!db) return;
+    try{
+      const snap=await db.collection(COL).doc(DOC).get();
+      const local=(typeof models!=='undefined')?models:[];
+      if(!snap.exists){ _ready=true; stat('☁ 최초 업로드 중…','#2563eb'); push(); return; }
+      const cloud=JSON.parse(snap.data().json||'[]');
+      const merged=merge(local,cloud);
+      if(typeof models!=='undefined' && JSON.stringify(merged)!==JSON.stringify(local)){
+        models.length=0; merged.forEach(x=>models.push(x));
+        if(typeof _cfg!=='undefined') _cfg.models=models;
+        try{ localStorage.setItem('alc_cfg_v1',JSON.stringify(_cfg)); }catch(e){}
+        if(typeof renderMain==='function'){try{renderMain();}catch(e){}}
+        if(typeof renderModels==='function'){try{renderModels();}catch(e){}}
+      }
+      _ready=true;
+      stat('☁ 동기화됨','#16a34a',true);
+    }catch(e){ console.warn('[alc sync] pull 실패',e); stat('⚠ 동기화 오류','#dc2626'); _ready=true; }
+  }
+
+  let _t=null;
+  function push(){
+    if(!db||!_ready) return;
+    clearTimeout(_t);
+    _t=setTimeout(async()=>{
+      const local=(typeof models!=='undefined')?models:[];
+      if(!local.length){ stat('☁ 동기화 준비됨','#6b7280',true); return; }
+      try{
+        const snap=await db.collection(COL).doc(DOC).get();
+        const cloud=snap.exists?JSON.parse(snap.data().json||'[]'):[];
+        const merged=merge(local,cloud);
+        await db.collection(COL).doc(DOC).set({json:JSON.stringify(merged),at:Date.now()});
+        stat('☁ 저장됨','#16a34a',true);
+      }catch(e){ console.warn('[alc sync] push 실패',e); stat('⚠ 저장 실패','#dc2626'); }
+    },1200);
+  }
+  window._alcPush=push;
+
+  window.addEventListener('load',()=>{
+    if(typeof firebase==='undefined') return;
+    try{
+      if(!firebase.apps.length)firebase.initializeApp(FB_CFG);
+      db=firebase.firestore();
+      setTimeout(pull,600);   // loadCfg 완료 후
+    }catch(e){ console.warn('[alc sync] init 실패',e); stat('⚠ 클라우드 연결 안됨','#dc2626'); }
+  });
+})();
+</script>
 </body>
 </html>
