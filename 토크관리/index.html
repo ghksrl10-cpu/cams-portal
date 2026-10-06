@@ -446,6 +446,32 @@ async function loadAll(){
   if(SETTINGS.template) TEMPLATE=JSON.parse(JSON.stringify(SETTINGS.template));
 }
 async function saveSettings(){ if(!db) return; await db.collection('settings').doc('dashboard').set(SETTINGS); odSchedule(); }
+
+/* ===== 실시간 구독: 다른 기기의 변경을 새로고침 없이 반영 ===== */
+let _twUnsub=null, _twReady=false;
+function torqueWatch(){
+  if(!db||_twUnsub) return;
+  _twUnsub = db.collection('records').onSnapshot(snap=>{
+    if(!_twReady){ _twReady=true; return; }          // 최초 스냅샷은 loadAll 결과와 동일하므로 skip
+    let touched=0;
+    snap.docChanges().forEach(ch=>{
+      if(ch.doc.metadata.hasPendingWrites) return;    // 내가 방금 쓴 것의 반향 무시
+      const v=ch.doc.data(); if(!v||!v.line||!DB[v.line]) return;
+      if(ch.type==='removed'){ delete DB[v.line].records[v.ym]; touched++; return; }
+      const b=v.base||{}, m=v.meas||{};
+      DB[v.line].records[v.ym]={date:v.date||{y:'',m:'',d:''},
+        base:{FRT:b.FRT||{},RR:b.RR||{}}, meas:{FRT:m.FRT||{},RR:m.RR||{}}, photos:v.photos||[]};
+      touched++;
+    });
+    if(!touched) return;
+    try{ if(typeof renderDash==='function') renderDash(); }catch(e){}
+    try{ if(typeof render==='function') render(); }catch(e){}
+    try{ if(typeof renderYearView==='function') renderYearView(); }catch(e){}
+    const el=document.getElementById('odStat');
+    if(el){ el.textContent='☁ 다른 기기 변경 반영됨'; el.style.color='var(--ok)'; }
+  }, err=>console.warn('[torque] 구독 오류',err));
+}
+
 async function saveRecord(line,id){
   const rec=DB[line].records[id]; if(!rec||!db) return;
   await db.collection('records').doc(line+'_'+id).set({
@@ -1373,68 +1399,74 @@ async function initMonthlyRecords(){
     console.log('V12 마이그레이션 완료: 2026-07/08 생성');
   }
 
-  // ── 3LINE 누락 월 보정 ──
-  months.forEach(ym=>{
-    const [y,mo]=ym.split('-');
-    if(!DB['3LINE'].records[ym]){
-      const rec=blankRecord('3LINE');
+  // ── V13: 아래 보정 블록을 1회만 실행 (매 로드 재저장 시 타 기기 입력 덮어쓰기 방지) ──
+  if(!SETTINGS.dataVersion||SETTINGS.dataVersion<13){
+    // ── 3LINE 누락 월 보정 ──
+    months.forEach(ym=>{
+      const [y,mo]=ym.split('-');
+      if(!DB['3LINE'].records[ym]){
+        const rec=blankRecord('3LINE');
+        rec.date={y,m:mo,d:MEASURE_DATES[ym]||''};
+        DB['3LINE'].records[ym]=rec;
+        toSave.push({line:'3LINE',ym});
+        return;
+      }
+      const rec=DB['3LINE'].records[ym];
       rec.date={y,m:mo,d:MEASURE_DATES[ym]||''};
-      DB['3LINE'].records[ym]=rec;
+      if(!rec.base.FRT) rec.base.FRT={}; if(!rec.base.RR) rec.base.RR={};
+      if(!rec.meas.FRT) rec.meas.FRT={}; if(!rec.meas.RR) rec.meas.RR={};
       toSave.push({line:'3LINE',ym});
-      return;
-    }
-    const rec=DB['3LINE'].records[ym];
-    rec.date={y,m:mo,d:MEASURE_DATES[ym]||''};
-    if(!rec.base.FRT) rec.base.FRT={}; if(!rec.base.RR) rec.base.RR={};
-    if(!rec.meas.FRT) rec.meas.FRT={}; if(!rec.meas.RR) rec.meas.RR={};
-    toSave.push({line:'3LINE',ym});
-  });
+    });
 
-  ['1LINE','2LINE'].forEach(line=>{
-    months.forEach((ym,mi)=>{
-      const isNew=!DB[line].records[ym];
-      if(isNew){
-        const rec=blankRecord(line);
+    ['1LINE','2LINE'].forEach(line=>{
+      months.forEach((ym,mi)=>{
+        const isNew=!DB[line].records[ym];
+        if(isNew){
+          const rec=blankRecord(line);
+          const [y,mo]=ym.split('-');
+          rec.date={y,m:mo,d:MEASURE_DATES[ym]||''};
+          DB[line].records[ym]=rec;
+        }
+        const rec=DB[line].records[ym];
+        // 날짜 항상 최신화
         const [y,mo]=ym.split('-');
         rec.date={y,m:mo,d:MEASURE_DATES[ym]||''};
-        DB[line].records[ym]=rec;
-      }
-      const rec=DB[line].records[ym];
-      // 날짜 항상 최신화
-      const [y,mo]=ym.split('-');
-      rec.date={y,m:mo,d:MEASURE_DATES[ym]||''};
-      // 마이그레이션: 기존 SUB 섹션 → FRT 첫 컬럼(서브1)으로 통합
-      if(!rec.base.FRT) rec.base.FRT={};
-      if(!rec.meas.FRT) rec.meas.FRT={};
-      if(rec.base.SUB){
-        const sv=rec.base.SUB['서브1'];
-        if(sv!==undefined&&rec.base.FRT['서브1']===undefined) rec.base.FRT['서브1']=sv;
-        if(rec.meas.SUB&&rec.meas.SUB['서브1']!==undefined&&rec.meas.FRT['서브1']===undefined) rec.meas.FRT['서브1']=rec.meas.SUB['서브1'];
-        delete rec.base.SUB; delete rec.meas.SUB;
-      }
-      // 서브1 기본값 없으면 세팅
-      if(rec.base.FRT['서브1']===undefined) rec.base.FRT['서브1']=line==='1LINE'?'20~25':'13~20';
-      // 1LINE 공란 위치 강제 적용
-      if(line==='1LINE'){
-        ['101','102','161','171','181'].forEach(c=>{rec.base.FRT[c]='';delete rec.meas.FRT[c];});
-        ['101','103','151','161','171','181'].forEach(c=>{rec.base.RR[c]='';delete rec.meas.RR[c];});
-      }
-      // RR 191 라인별 처리
-      if(line==='1LINE'){
-        rec.base.RR['191']='20~30';
-        // 실측값이 구 기준(13~20 범위)이면 삭제 → 20~30으로 재생성
-        const mv191=parseFloat(rec.meas.RR['191']);
-        if(isNaN(mv191)||mv191<20) delete rec.meas.RR['191'];
-      }
-      if(line==='2LINE'){
-        if(rec.base.RR['191']==='20~30'){
-          rec.base.RR['191']='13~20';
-          delete rec.meas.RR['191']; // 실측값 재생성
+        // 마이그레이션: 기존 SUB 섹션 → FRT 첫 컬럼(서브1)으로 통합
+        if(!rec.base.FRT) rec.base.FRT={};
+        if(!rec.meas.FRT) rec.meas.FRT={};
+        if(rec.base.SUB){
+          const sv=rec.base.SUB['서브1'];
+          if(sv!==undefined&&rec.base.FRT['서브1']===undefined) rec.base.FRT['서브1']=sv;
+          if(rec.meas.SUB&&rec.meas.SUB['서브1']!==undefined&&rec.meas.FRT['서브1']===undefined) rec.meas.FRT['서브1']=rec.meas.SUB['서브1'];
+          delete rec.base.SUB; delete rec.meas.SUB;
         }
-      }
-      toSave.push({line,ym});
+        // 서브1 기본값 없으면 세팅
+        if(rec.base.FRT['서브1']===undefined) rec.base.FRT['서브1']=line==='1LINE'?'20~25':'13~20';
+        // 1LINE 공란 위치 강제 적용
+        if(line==='1LINE'){
+          ['101','102','161','171','181'].forEach(c=>{rec.base.FRT[c]='';delete rec.meas.FRT[c];});
+          ['101','103','151','161','171','181'].forEach(c=>{rec.base.RR[c]='';delete rec.meas.RR[c];});
+        }
+        // RR 191 라인별 처리
+        if(line==='1LINE'){
+          rec.base.RR['191']='20~30';
+          // 실측값이 구 기준(13~20 범위)이면 삭제 → 20~30으로 재생성
+          const mv191=parseFloat(rec.meas.RR['191']);
+          if(isNaN(mv191)||mv191<20) delete rec.meas.RR['191'];
+        }
+        if(line==='2LINE'){
+          if(rec.base.RR['191']==='20~30'){
+            rec.base.RR['191']='13~20';
+            delete rec.meas.RR['191']; // 실측값 재생성
+          }
+        }
+        toSave.push({line,ym});
+      });
     });
-  });
+    SETTINGS.dataVersion=13;
+    await saveSettings();
+    console.log('V13 마이그레이션 완료: 라인 보정 1회 적용');
+  }
   for(const {line,ym} of toSave) await saveRecord(line,ym);
   if(toSave.length) console.log('월별 내역 저장:', toSave.length+'건');
 }
@@ -1445,6 +1477,7 @@ async function initMonthlyRecords(){
   try{ await loadAll(); }catch(e){ showOverlay('데이터 불러오기 실패:<br>'+e.message); return; }
   try{ await odCheckPerm(false); }catch(e){}   // OneDrive 폴더 권한이 남아 있으면 자동 백업 활성화
   await initMonthlyRecords();
+  torqueWatch();
   curLine='1LINE';
   const ids=Object.keys(DB['1LINE'].records).sort();
   if(ids.length) loadRecord(ids[ids.length-1]); else newRecord(true);

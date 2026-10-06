@@ -265,7 +265,7 @@ body.dark .alert-desc{color:#92400e;}
       <div class="quick-name">컨베어</div>
       <div class="quick-desc">시뮬레이션</div>
     </div>
-    <div class="quick-btn" onclick="goTool(6)">
+    <div class="quick-btn" onclick="goTool(9)">
       <div class="quick-icon">📝</div>
       <div class="quick-name">업무일지</div>
       <div class="quick-desc">ERP 로그인</div>
@@ -320,7 +320,7 @@ body.dark .alert-desc{color:#92400e;}
   <div class="table-card">
     <div class="table-head">
       <div class="table-head-title">이번달 불량 목록</div>
-      <div class="table-link" onclick="goTool(4)">전체 보기 →</div>
+      <div class="table-link" onclick="goTool(3)">전체 보기 →</div>
     </div>
     <div id="alkaTable">
       <div class="empty">알카 KPI 탭 방문 후 데이터가 표시됩니다</div>
@@ -335,7 +335,7 @@ body.dark .alert-desc{color:#92400e;}
   <div class="table-card">
     <div class="table-head">
       <div class="table-head-title">최근 업무 이력</div>
-      <div class="table-link" onclick="goTool(7)">전체 보기 →</div>
+      <div class="table-link" onclick="goTool(9)">전체 보기 →</div>
     </div>
     <div id="jisaTable">
       <div class="empty">업무일지 탭 방문 후 데이터가 표시됩니다</div>
@@ -362,6 +362,8 @@ body.dark .alert-desc{color:#92400e;}
 
 <div style="height:32px"></div>
 
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script>
 (function(){
   const saved = localStorage.getItem('cams_claude_key');
@@ -434,6 +436,40 @@ function tick(){
     `현재 시간 ${pad(now.getHours())}:${pad(now.getMinutes())}`;
 }
 
+// 값 이스케이프 (공용 클라우드 데이터를 innerHTML 에 넣으므로 필수)
+function esc(v){ return String(v==null?'':v)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+/* ===== 클라우드 직접 구독: 다른 기기 변경을 탭 방문 없이 반영 =====
+   주의) 대시보드는 읽기 전용이다. 절대 push 하지 않는다. */
+(function(){
+  const FB_CFG={apiKey:"AIzaSyDZZSI3ib_rmGz4gSMe0DgZs650IuTCvKs",authDomain:"cams-torque.firebaseapp.com",
+    projectId:"cams-torque",storageBucket:"cams-torque.firebasestorage.app",
+    messagingSenderId:"404254094434",appId:"1:404254094434:web:b4193a15de4153b9aa0d3b"};
+  function apply(key,json){
+    try{
+      if(json==null) return;
+      if(localStorage.getItem(key)===json) return;
+      localStorage.setItem(key,json);     // 대시보드가 읽는 소스를 최신화
+      init();                             // 즉시 재계산
+    }catch(e){ console.warn('[dash] 적용 실패',key,e); }
+  }
+  window.addEventListener('load',()=>{
+    if(typeof firebase==='undefined'){ console.warn('[dash] firebase 미로드'); return; }
+    try{
+      if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
+      const db=firebase.firestore();
+      db.collection('alka_sync').doc('db').onSnapshot(
+        s=>{ if(s.exists) apply('alka_db_v1', s.data().json); },
+        e=>console.warn('[dash] alka 구독 오류',e));
+      db.collection('jisa_sync').doc('history').onSnapshot(
+        s=>{ if(s.exists) apply('jisa_history_v1', s.data().json); },
+        e=>console.warn('[dash] jisa 구독 오류',e));
+    }catch(e){ console.warn('[dash] 구독 초기화 실패',e); }
+  });
+})();
+
 function init(){
   tick();
   const now=new Date();
@@ -464,14 +500,14 @@ function init(){
       // 알카 테이블
       if(mr.length>0){
         const rows=mr.slice(-8).reverse().map(r=>{
-          const loc=r['발생위치']||r['위치']||'-';
-          const part=r['부품명']||r['단품']||'-';
+          const loc=esc(r['발생']||r['발생위치']||r['위치']||'-');
+          const part=esc(r['아이템']||r['부품명']||r['단품']||'-');
           const blame=r['귀책']||'-';
           const bclass=blame==='캠스'?'red':blame==='기아'?'blue':'gray';
-          return`<tr><td>${loc}</td><td>${part}</td><td><span class="badge ${bclass}">${blame}</span></td></tr>`;
+          return`<tr><td>${loc}</td><td>${part}</td><td><span class="badge ${bclass}">${esc(blame)}</span></td></tr>`;
         }).join('');
         document.getElementById('alkaTable').innerHTML=
-          `<table><thead><tr><th>발생위치</th><th>부품명</th><th>귀책</th></tr></thead><tbody>${rows}</tbody></table>`;
+          `<div style="overflow-x:auto"><table><thead><tr><th>발생</th><th>아이템</th><th>귀책</th></tr></thead><tbody>${rows}</tbody></table></div>`;
       } else {
         document.getElementById('alkaTable').innerHTML='<div class="empty">이번달 불량 없음 ✓</div>';
       }

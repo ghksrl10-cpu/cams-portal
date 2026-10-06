@@ -1055,8 +1055,8 @@ window.parent.postMessage({ type: 'cams_request_theme' }, '*');
           models.length=0; merged.forEach(x=>models.push(x));
           if(typeof _cfg!=='undefined') _cfg.models=models;
           try{ localStorage.setItem('alc_cfg_v1',JSON.stringify(_cfg)); }catch(e){}
-          if(typeof renderMain==='function'){try{renderMain();}catch(e){}}
-          if(typeof renderModels==='function'){try{renderModels();}catch(e){}}
+          if(typeof renderDash==='function'){try{renderDash();}catch(e){}}
+          if(typeof renderModelList==='function'){try{renderModelList();}catch(e){}}
           stat('☁ 새 데이터 반영됨','#2563eb',true);
         } else {
           stat('☁ 동기화됨','#16a34a',true);

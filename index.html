@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>캠스 생산팀 조립 자동화</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -460,7 +460,7 @@ window.addEventListener('message', e => {
     return;
   }
   if (!e.data) return;
-  if (e.data.type === 'cams_goto') doActivate(e.data.idx + 1);
+  if (e.data.type === 'cams_goto') activate(e.data.idx + 1);   // 로그인/관리자 게이트 경유
   if (e.data.type === 'cams_torque_stat') {
     const frames = content.querySelectorAll('iframe');
     frames[0].contentWindow && frames[0].contentWindow.postMessage(e.data, '*');

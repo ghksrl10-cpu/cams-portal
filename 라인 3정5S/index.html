@@ -489,6 +489,43 @@ async function loadAll(){
   }catch(e){IMPROVEMENTS={};}
 }
 
+/* ===== 실시간 구독: 다른 기기의 변경을 새로고침 없이 반영 ===== */
+let _fwUnsub=null, _fwReady=false, _iwUnsub=null, _iwReady=false;
+function fiveesWatch(){
+  if(!db) return;
+  if(!_fwUnsub) _fwUnsub = db.collection(COL).onSnapshot(snap=>{
+    if(!_fwReady){ _fwReady=true; return; }
+    let touched=0;
+    snap.docChanges().forEach(ch=>{
+      if(ch.doc.metadata.hasPendingWrites) return;
+      const v=ch.doc.data();
+      if(!d_ok(ch.doc.id)||!v||!v.ym) return;
+      if(ch.type==='removed'){ delete DB[v.ym]; touched++; return; }
+      DB[v.ym]={date:v.date||{y:'',m:'',d:''},checker:v.checker||'',
+        checklist:v.checklist||{},zonePhotos:v.zonePhotos||initZP()};
+      touched++;
+    });
+    if(touched) rerenderAll();
+  }, err=>console.warn('[5S] 구독 오류',err));
+
+  if(!_iwUnsub) _iwUnsub = db.collection(IMP_COL).onSnapshot(snap=>{
+    if(!_iwReady){ _iwReady=true; return; }
+    let touched=0;
+    snap.docChanges().forEach(ch=>{
+      if(ch.doc.metadata.hasPendingWrites) return;
+      if(ch.type==='removed'){ delete IMPROVEMENTS[ch.doc.id]; touched++; return; }
+      IMPROVEMENTS[ch.doc.id]=ch.doc.data(); touched++;
+    });
+    if(touched) rerenderAll();
+  }, err=>console.warn('[5S] 개선 구독 오류',err));
+}
+function d_ok(id){ return id.startsWith('rec__'); }
+function rerenderAll(){
+  ['renderDash','render','renderImprovList','renderZoneGallery'].forEach(fn=>{
+    try{ if(typeof window[fn]==='function') window[fn](); }catch(e){}
+  });
+}
+
 async function saveSettings(){
   if(!db)return;
   const {layout:_,...rest}=SETTINGS;
@@ -1155,6 +1192,7 @@ async function deleteImprov(id){
 (async function init(){
   if(!fbInit())return;
   try{await loadAll();}catch(e){showOverlay('데이터 불러오기 실패:<br>'+e.message);return;}
+  try{ fiveesWatch(); }catch(e){ console.warn('[5S] 구독 시작 실패',e); }
   const ids=Object.keys(DB).sort();
   if(ids.length)curRecId=ids[ids.length-1];
   refreshRecSelect();showView('dash');hideOverlay();
