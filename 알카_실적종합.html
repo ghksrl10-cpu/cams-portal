@@ -2461,6 +2461,24 @@ window.parent.postMessage({ type: 'cams_request_theme' }, '*');
   const KEY='alka_db_v1', COL='alka_sync', DOC='db';
   let db=null,_pushing=false,_ready=false;
 
+
+  // ── 동기화 상태 배지 ──
+  let _badge=null;
+  function mkBadge(){
+    if(_badge) return _badge;
+    _badge=document.createElement('div');
+    _badge.style.cssText='position:fixed;bottom:16px;right:16px;z-index:99999;padding:6px 13px;'+
+      'border-radius:20px;font-size:12px;font-weight:700;font-family:"맑은 고딕",sans-serif;'+
+      'color:#fff;background:#6b7280;box-shadow:0 2px 8px rgba(0,0,0,.25);pointer-events:none;'+
+      'transition:background .2s,opacity .4s';
+    document.body.appendChild(_badge);
+    return _badge;
+  }
+  function stat(txt,color,fade){
+    const b=mkBadge();
+    b.textContent=txt; b.style.background=color; b.style.opacity='1';
+    if(fade) setTimeout(()=>{ b.style.opacity='0.35'; },2500);
+  }
   function readLocal(){ try{return JSON.parse(localStorage.getItem(KEY))||null;}catch(e){return null;} }
 
   // 월 단위 병합: 양쪽 월을 모두 보존, 같은 달은 건수가 많은 쪽 채택
@@ -2486,7 +2504,7 @@ window.parent.postMessage({ type: 'cams_request_theme' }, '*');
     if(!db) return;
     try{
       const snap=await db.collection(COL).doc(DOC).get();
-      if(!snap.exists){ _ready=true; return; }
+      if(!snap.exists){ _ready=true; stat('☁ 최초 업로드 중…','#2563eb'); push(); return; }   // 최초 1회: 로컬 데이터를 클라우드에 올림
       const cloud=JSON.parse(snap.data().json||'null');
       const local=readLocal();
       const merged=merge(local,cloud);
@@ -2497,8 +2515,9 @@ window.parent.postMessage({ type: 'cams_request_theme' }, '*');
         if(typeof renderMain==='function'){try{renderMain();}catch(e){}}
       }
       _ready=true;
+      stat('☁ 동기화됨','#16a34a',true);
       if(monCount(merged)>monCount(cloud)) push();
-    }catch(e){ console.warn('[alka sync] pull 실패',e); _ready=true; }
+    }catch(e){ console.warn('[alka sync] pull 실패',e); stat('⚠ 동기화 오류','#dc2626'); _ready=true; }
   }
 
   let _t=null;
@@ -2513,7 +2532,8 @@ window.parent.postMessage({ type: 'cams_request_theme' }, '*');
         const cloud=snap.exists?JSON.parse(snap.data().json||'null'):null;
         const merged=merge(local,cloud);
         await db.collection(COL).doc(DOC).set({json:JSON.stringify(merged),at:Date.now()});
-      }catch(e){ console.warn('[alka sync] push 실패',e); }
+        stat('☁ 저장됨','#16a34a',true);
+      }catch(e){ console.warn('[alka sync] push 실패',e); stat('⚠ 저장 실패','#dc2626'); }
     },1500);
   }
 
@@ -2526,7 +2546,7 @@ window.parent.postMessage({ type: 'cams_request_theme' }, '*');
       if(!firebase.apps.length)firebase.initializeApp(FB_CFG);
       db=firebase.firestore();
       pull();
-    }catch(e){ console.warn('[alka sync] init 실패',e); }
+    }catch(e){ console.warn('[alka sync] init 실패',e); stat('⚠ 클라우드 연결 안됨','#dc2626'); }
   });
 })();
 </script>
