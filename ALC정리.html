@@ -1041,24 +1041,29 @@ window.parent.postMessage({ type: 'cams_request_theme' }, '*');
     return [...m.values()];
   }
 
-  async function pull(){
+  // 실시간 구독: 다른 기기의 변경이 새로고침 없이 즉시 반영된다
+  function watch(){
     if(!db) return;
-    try{
-      const snap=await db.collection(COL).doc(DOC).get();
-      const local=(typeof models!=='undefined')?models:[];
-      if(!snap.exists){ _ready=true; stat('☁ 최초 업로드 중…','#2563eb'); push(); return; }
-      const cloud=JSON.parse(snap.data().json||'[]');
-      const merged=merge(local,cloud);
-      if(typeof models!=='undefined' && JSON.stringify(merged)!==JSON.stringify(local)){
-        models.length=0; merged.forEach(x=>models.push(x));
-        if(typeof _cfg!=='undefined') _cfg.models=models;
-        try{ localStorage.setItem('alc_cfg_v1',JSON.stringify(_cfg)); }catch(e){}
-        if(typeof renderMain==='function'){try{renderMain();}catch(e){}}
-        if(typeof renderModels==='function'){try{renderModels();}catch(e){}}
-      }
-      _ready=true;
-      stat('☁ 동기화됨','#16a34a',true);
-    }catch(e){ console.warn('[alc sync] pull 실패',e); stat('⚠ 동기화 오류','#dc2626'); _ready=true; }
+    db.collection(COL).doc(DOC).onSnapshot({includeMetadataChanges:false}, snap=>{
+      try{
+        if(snap.metadata.hasPendingWrites) return;          // 내가 방금 쓴 것의 반향은 무시
+        const local=(typeof models!=='undefined')?models:[];
+        if(!snap.exists){ _ready=true; stat('☁ 최초 업로드 중…','#2563eb'); push(); return; }
+        const cloud=JSON.parse(snap.data().json||'[]');
+        const merged=merge(local,cloud);
+        if(typeof models!=='undefined' && JSON.stringify(merged)!==JSON.stringify(local)){
+          models.length=0; merged.forEach(x=>models.push(x));
+          if(typeof _cfg!=='undefined') _cfg.models=models;
+          try{ localStorage.setItem('alc_cfg_v1',JSON.stringify(_cfg)); }catch(e){}
+          if(typeof renderMain==='function'){try{renderMain();}catch(e){}}
+          if(typeof renderModels==='function'){try{renderModels();}catch(e){}}
+          stat('☁ 새 데이터 반영됨','#2563eb',true);
+        } else {
+          stat('☁ 동기화됨','#16a34a',true);
+        }
+        _ready=true;
+      }catch(e){ console.warn('[alc sync] 수신 실패',e); stat('⚠ 동기화 오류','#dc2626'); _ready=true; }
+    }, err=>{ console.warn('[alc sync] 구독 오류',err); stat('⚠ 동기화 오류','#dc2626'); _ready=true; });
   }
 
   let _t=null;
@@ -1084,7 +1089,7 @@ window.parent.postMessage({ type: 'cams_request_theme' }, '*');
     try{
       if(!firebase.apps.length)firebase.initializeApp(FB_CFG);
       db=firebase.firestore();
-      setTimeout(pull,600);   // loadCfg 완료 후
+      setTimeout(watch,600);   // loadCfg 완료 후
     }catch(e){ console.warn('[alc sync] init 실패',e); stat('⚠ 클라우드 연결 안됨','#dc2626'); }
   });
 })();
