@@ -2526,7 +2526,7 @@ window.parent.postMessage({ type: 'cams_request_theme' }, '*');
     clearTimeout(_t);
     _t=setTimeout(async()=>{
       const local=readLocal();
-      if(!local || !monCount(local)) return;    // 빈 데이터로 덮어쓰기 금지
+      if(!local || !monCount(local)){ stat('☁ 동기화 준비됨','#6b7280',true); return; }   // 빈 데이터로 덮어쓰기 금지
       try{
         const snap=await db.collection(COL).doc(DOC).get();
         const cloud=snap.exists?JSON.parse(snap.data().json||'null'):null;
