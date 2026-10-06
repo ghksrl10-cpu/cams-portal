@@ -230,6 +230,65 @@ body:not(.dark) .sidebar-bottom{border-top-color:rgba(255,255,255,.12)}
     </div>
   </div>
 
+  <div class="panel" id="panel-web">
+    <h2>PDF → JPG 변환 <span style="font-size:12px;font-weight:500;color:var(--sub)">· 서버 없이 브라우저에서 처리</span></h2>
+
+    <div class="section" style="border-color:#2563eb">
+      <div class="section-title">사용 방법</div>
+      <div style="font-size:13px;line-height:1.9;color:var(--sub)">
+        1. 파워포인트/엑셀에서 <b style="color:var(--text)">다른 이름으로 저장 → PDF</b><br>
+        2. 아래에 그 PDF 를 올리면 페이지마다 JPG 로 변환됩니다<br>
+        <span style="color:#60a5fa">설치 불필요 · 어느 PC·폰에서든 동작 · 원본 그대로 출력</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">파일</div>
+      <div class="row">
+        <input type="file" id="w-file" accept="application/pdf,image/*" multiple
+               style="flex:1;font-size:13px;color:var(--text)">
+      </div>
+      <div class="row">
+        <label class="lbl">파일명 앞자리</label>
+        <input type="text" id="w-name" value="slide" oninput="wPrev()" style="max-width:220px">
+        <span style="font-size:12px;color:var(--sub)">저장 예시: <b id="w-preview">slide_001.jpg</b></span>
+      </div>
+      <div class="row">
+        <label class="lbl">해상도</label>
+        <select id="w-scale" style="max-width:160px;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px">
+          <option value="2">표준 (2x)</option>
+          <option value="3" selected>고화질 (3x)</option>
+          <option value="4">최고화질 (4x)</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sub);cursor:pointer">
+          <input type="checkbox" id="w-crop" checked> 흰 여백 자동 제거
+        </label>
+        <label class="lbl" style="min-width:auto">여유</label>
+        <input type="text" id="w-pad" value="8" style="max-width:60px">
+        <span style="font-size:12px;color:var(--sub)">px</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-big" id="w-btn" onclick="wConvert()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      변환 시작
+    </button>
+
+    <div class="progress-box" id="w-prog">
+      <div class="prog-text" id="w-prog-text">준비 중...</div>
+      <div class="prog-bar-wrap"><div class="prog-bar" id="w-prog-bar"></div></div>
+    </div>
+    <div class="err" id="w-err"></div>
+
+    <div class="section" id="w-result" style="display:none">
+      <div class="section-title">결과</div>
+      <div class="row">
+        <button class="btn btn-primary" onclick="wZip()">ZIP 으로 모두 저장</button>
+        <span style="font-size:12px;color:var(--sub)" id="w-count"></span>
+      </div>
+      <div class="gallery" id="w-gallery"></div>
+    </div>
+  </div>
 </main>
 
 <script>
@@ -487,67 +546,7 @@ function showResults(pfx, slides, folder){
   slides.forEach(s=>{
     const d=document.createElement('div'); d.className='thumb';
     const sub=s.sheet?s.sheet:s.name;
-    d.innerHTML=`<img src="${s.thumb}"><div class="thumb-label">${sub}</div>
-  <div class="panel" id="panel-web">
-    <h2>PDF → JPG 변환 <span style="font-size:12px;font-weight:500;color:var(--sub)">· 서버 없이 브라우저에서 처리</span></h2>
-
-    <div class="section" style="border-color:#2563eb">
-      <div class="section-title">사용 방법</div>
-      <div style="font-size:13px;line-height:1.9;color:var(--sub)">
-        1. 파워포인트/엑셀에서 <b style="color:var(--text)">다른 이름으로 저장 → PDF</b><br>
-        2. 아래에 그 PDF 를 올리면 페이지마다 JPG 로 변환됩니다<br>
-        <span style="color:#60a5fa">설치 불필요 · 어느 PC·폰에서든 동작 · 원본 그대로 출력</span>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">파일</div>
-      <div class="row">
-        <input type="file" id="w-file" accept="application/pdf,image/*" multiple
-               style="flex:1;font-size:13px;color:var(--text)">
-      </div>
-      <div class="row">
-        <label class="lbl">파일명 앞자리</label>
-        <input type="text" id="w-name" value="slide" oninput="wPrev()" style="max-width:220px">
-        <span style="font-size:12px;color:var(--sub)">저장 예시: <b id="w-preview">slide_001.jpg</b></span>
-      </div>
-      <div class="row">
-        <label class="lbl">해상도</label>
-        <select id="w-scale" style="max-width:160px;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px">
-          <option value="2">표준 (2x)</option>
-          <option value="3" selected>고화질 (3x)</option>
-          <option value="4">최고화질 (4x)</option>
-        </select>
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sub);cursor:pointer">
-          <input type="checkbox" id="w-crop" checked> 흰 여백 자동 제거
-        </label>
-        <label class="lbl" style="min-width:auto">여유</label>
-        <input type="text" id="w-pad" value="8" style="max-width:60px">
-        <span style="font-size:12px;color:var(--sub)">px</span>
-      </div>
-    </div>
-
-    <button class="btn btn-primary btn-big" id="w-btn" onclick="wConvert()">
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      변환 시작
-    </button>
-
-    <div class="progress-box" id="w-prog">
-      <div class="prog-text" id="w-prog-text">준비 중...</div>
-      <div class="prog-bar-wrap"><div class="prog-bar" id="w-prog-bar"></div></div>
-    </div>
-    <div class="err" id="w-err"></div>
-
-    <div class="section" id="w-result" style="display:none">
-      <div class="section-title">결과</div>
-      <div class="row">
-        <button class="btn btn-primary" onclick="wZip()">ZIP 으로 모두 저장</button>
-        <span style="font-size:12px;color:var(--sub)" id="w-count"></span>
-      </div>
-      <div class="gallery" id="w-gallery"></div>
-    </div>
-  </div>
-`;
+    d.innerHTML=`<img src="${s.thumb}"><div class="thumb-label">${sub}</div>`;
     g.appendChild(d);
   });
   document.getElementById(pfx+'-result').style.display='block';
