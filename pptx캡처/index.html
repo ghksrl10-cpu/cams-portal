@@ -303,9 +303,26 @@ function setOnline(v){
   document.getElementById('srv-txt').textContent=v?'서버 연결됨':'서버 꺼짐 · PDF 캡처 사용 가능';
 }
 /* ===== 웹 모드: PDF/이미지 -> JPG (서버 불필요) ===== */
-if (window.pdfjsLib) {
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const PDF_WORKER_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+let _workerReady = null;
+// 일부 환경(사내망/보안정책)에서 외부 URL 워커 생성이 차단된다.
+// 워커 스크립트를 받아 blob 으로 띄우면 같은 출처로 취급되어 통과한다.
+function ensureWorker(){
+  if (_workerReady) return _workerReady;
+  _workerReady = (async () => {
+    if (!window.pdfjsLib) throw new Error('pdf.js 를 불러오지 못했습니다.');
+    try {
+      const r = await fetch(PDF_WORKER_URL);
+      if (!r.ok) throw new Error('worker fetch ' + r.status);
+      const src = await r.text();
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        URL.createObjectURL(new Blob([src], { type: 'application/javascript' }));
+    } catch (e) {
+      console.warn('[pdf] blob worker 실패, 직접 URL 사용', e);
+      pdfjsLib.GlobalWorkerOptions.workerSrc = PDF_WORKER_URL;
+    }
+  })();
+  return _workerReady;
 }
 let _wOut = [];
 
@@ -362,6 +379,7 @@ async function wConvert(){
   showProg('w','변환 준비 중...', 3);
 
   try {
+    await ensureWorker();
     // 전체 페이지 수 먼저 계산 (진행률용)
     const docs = [];
     for (const f of files){
