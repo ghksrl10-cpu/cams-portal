@@ -1002,7 +1002,7 @@ function gPairs(content,sender){
     if(p!==undefined&&_VEH_RE.test(p)&&cntNums(p)===0&&!_VEH_RE.test(l)&&cntNums(l)>0)lines[lines.length-1]=p+' '+l;
     else lines.push(l);
   }
-  const pairCounts=new Map(),pairNums=new Map();
+  const pairCounts=new Map(),pairNums=new Map(),pairSure=new Map();
   for(const line of lines){
     const frt=[...line.matchAll(/프런트|프런트범퍼|FRT|frt|Frt|프론트|프렌트/g)].map(m=>m.index);
     const rr=[...line.matchAll(/리어|리어범퍼|RR(?![A-Za-z0-9_])/gi)].map(m=>m.index);
@@ -1032,6 +1032,7 @@ function gPairs(content,sender){
       const key=vn+'|'+item;
       pairCounts.set(key,(pairCounts.get(key)||0)+cnt);
       pairNums.set(key,[...(pairNums.get(key)||[]),...numsOf(seg)]);
+      if(!(nf.length||nr.length))pairSure.set(key,false); // FRT/RR이 차종 옆에 없어 추정
     }
   }
   if(!pairCounts.size){
@@ -1042,7 +1043,7 @@ function gPairs(content,sender){
     if(/리어|RR(?![A-Za-z0-9_])|몰딩/i.test(content)){pairCounts.set(v+'|RR',cnt);pairNums.set(v+'|RR',ns);}
     if(!pairCounts.size){pairCounts.set(v+'|?',cnt);pairNums.set(v+'|?',ns);}
   }
-  return[...pairCounts.entries()].map(([k,cnt])=>[...k.split('|'),cnt,pairNums.get(k)||[]]);
+  return[...pairCounts.entries()].map(([k,cnt])=>[...k.split('|'),cnt,pairNums.get(k)||[],pairSure.get(k)!==false]);
 }
 function isAlka(c,s){
   if(s.startsWith('디에프_'))return false;
@@ -1060,10 +1061,76 @@ function isAlka(c,s){
   if(c.includes('센서 보내주세요')&&!c.includes('알카'))return false;
   return ['알카 신청','알카신청','알카 요청','알카요청','R/C신청','RC신청','요청합니다','보내주세요','알카 입니다','알카입니다','신청합니다','요청드립니다'].some(t=>c.includes(t));
 }
+// ── 정상 형식 검사 ────────────────────────────────────────
+//  "문제 유형에 걸리면 띄운다"가 아니라 "정상 형식에서 하나라도 벗어나면 띄운다" (261109 형님 지시)
+//  정상: 차종 적힘 · 그 줄에 FRT/RR · 번호 있음(출하장 ASSY는 예외) · 귀책 적힘(단품은 생략 가능)
+//        · 단품/ASSY 표현이 한쪽으로 분명 · 출하장 언급 시 매칭 · 번호 중복 없음
+let _skipped=[],_altIdx=0;
+const _G_EXPLICIT=/기아\s*알카|기아~\s*RC|기아RC|귀책.{0,6}기아|기아알카|캠스\s*알카|캠스~\s*RC|캠스RC|귀책.{0,6}캠스|캠스알카|부영\s*알카|귀책.{0,6}부영|부영알카|기아 알카 요청/;
+function _gExplicit(c){
+  if(_G_EXPLICIT.test(c))return true;
+  const dp=DEFECTS.flatMap(([,ks])=>ks).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
+  return new RegExp('(캠스|기아|부영)\\s*('+dp+')').test(c);
+}
+const _oneLine=s=>s.replace(/\s*\n\s*/g,' / ').trim().slice(0,140);
+function _buildRecs(content,sender,day,time,pcnt,recs){
+  const g=gG(content),loc=gL(content),rawDef=g==='기아'?'찍힘':g==='부영'?'낙하':gD(content);
+  const single=(g==='부영'&&DB.buyAssyOverride!==false)?false:isSingle(content);
+  const part=single?gPart(content):'';
+  const locCols=Object.fromEntries(LOCS.map(l=>[l,'']));if(loc)locCols[loc]=1;
+  const pairs=gPairs(content,sender);
+  // 차종/아이템 미상인 후속 메시지(…번도 요청)는 같은 날 같은 발신자 직전 건에서 상속
+  // 단, 공장(1공장/2공장)이 적힌 메시지는 새 신청이므로 차종을 상속하지 않고 '?'로 남긴다
+  const noPlant=defVeh(content,sender)==='?';
+  for(const p of pairs){
+    if(p[0]==='?'||p[1]==='?'){
+      for(let ri=recs.length-1;ri>=0;ri--){
+        const pv=recs[ri];
+        if(pv.일자===day&&pv._sender===sender&&pv.차종!=='?'){
+          if(p[0]==='?'&&noPlant){p[0]=pv.차종;p.inhV=true;}
+          if(p[1]==='?'&&pv.아이템!=='?'){p[1]=pv.아이템;p.inhI=true;}
+          break;
+        }
+      }
+    }
+  }
+  const built=[],txt=_oneLine(content);
+  for(const p of pairs){
+    const [vm,item,cnt,nums,sure]=p;
+    for(let ci=0;ci<cnt;ci++){
+      const def=rawDef?rawDef:(g==='캠스'?(_altIdx++%2===0?'도장':'찍힘'):'');
+      const bal=(DB.발생2||['NQ5']).includes(vm)?2:1;
+      const r={일자:day,발생:bal,차종:vm,아이템:item,귀책:g,...locCols,'단품만 요청':part,'불량 사유':def,_sender:sender,_time:time,_photos:pcnt,_num:(nums||[])[ci]||'',_txt:txt,_flags:[]};
+      if(p.inhV)r._flags.push(`차종이 안 적혀 있어 앞 건 차종(${vm})을 이어받음`);
+      if(p.inhI)r._flags.push(`FRT/RR이 안 적혀 있어 앞 건(${item})을 이어받음`);
+      else if(!sure&&vm!=='?'&&item!=='?')r._flags.push(`FRT/RR이 차종 옆에 없어 ${item}로 추정`);
+      built.push(r);
+    }
+  }
+  const flag=msg=>built.forEach(r=>r._flags.push(msg));
+  const assyMark=/앗세이|ASSY|BPR|전장\s*[제재]외|아세이/i.test(content);
+  if(cntNums(content)===0&&!(loc&&assyMark))
+    flag(recs.some(r=>r.일자===day&&r._sender===sender)?'번호 없음 — 앞 건 부연(배송·장착 지시)인지 확인':'번호 없음');
+  if(/낙하|추락/.test(content)&&g==='부영')
+    flag(/캠스\s*알카|기아\s*알카/.test(content)?`카톡엔 ${(content.match(/캠스|기아/)||[''])[0]}알카 — 낙하·추락이라 부영으로 넣음`:'낙하·추락이라 부영으로 넣음');
+  else if(!_gExplicit(content)){
+    if(/기아/.test(content)&&g!=='기아')flag(`카톡에 '기아' 문구가 있는데 귀책 ${g}로 넣음`);
+    else if(!single)flag(`귀책 표기 없음 — ${g}로 넣음`);
+  }
+  if(part&&/알카\s*(신청|요청)|R\/?C\s*신청|~\s*RC/i.test(content))flag(`'${part}' 단품으로 넣었는데 알카/RC 신청 문구 — 단품인지 ASSY인지 확인`);
+  const only=content.match(/([가-힣A-Za-z]+)\s*만\s*(?:하나만?\s*)?보내/);
+  if(only&&!/몰딩|스키드|가니쉬|그릴/.test(only[1]))flag(`'${only[1]}' 단품 — 등록 대상인지 확인`);
+  const nw=content.match(/(\d+|한|두|세|네|다섯)\s*대(?!차)/);
+  if(nw){const n={'한':1,'두':2,'세':3,'네':4,'다섯':5}[nw[1]]||+nw[1];if(n&&n!==built.length)flag(`"${nw[0]}"인데 ${built.length}건`);}
+  if(!loc&&/출하장|출고센터|서비스/.test(content))flag('출하장 언급 있는데 출하장 칸 비어 있음');
+  return built;
+}
 function parseChat(text){
   const recs=[],lines=text.trim().split('\n');
-  let day=null,i=0,altIdx=0;
+  let day=null,i=0;
+  _altIdx=0;_skipped=[];
   const photos={}; // 발신자별 직전 연속 사진 장수
+  const skip=(o)=>_skipped.push(Object.assign({done:false},o));
   while(i<lines.length){
     const line=lines[i].trim();
     const dm=line.match(/(\d{4})년 (\d{1,2})월 (\d{1,2})일/);
@@ -1080,63 +1147,28 @@ function parseChat(text){
       // 취소 / 알카 보류: 번호가 적혀 있으면 그 번호 건을, 없으면 같은 사람 당일 마지막 건을 뺀다
       //  (예전엔 번호가 있어도 마지막 건을 빼서 "7407 취소"에 엉뚱한 건이 빠짐 — 261006)
       const isDF=sender.startsWith('디에프_');
+      const base={day,time:mm[2],sender,txt:_oneLine(content),content,pcnt};
       if(day&&(content.includes('취소')||/알카\s*보류/.test(content))&&(!isDF||numsOf(content).length)){
-        let removed=0;
+        const kind=/알카\s*보류/.test(content)?'보류':'취소',removed=[];
         for(const n of numsOf(content)){
-          for(let ri=recs.length-1;ri>=0;ri--){if(recs[ri].일자===day&&recs[ri]._num===n){recs.splice(ri,1);removed++;break;}}
+          for(let ri=recs.length-1;ri>=0;ri--){if(recs[ri].일자===day&&recs[ri]._num===n){removed.push(recs.splice(ri,1)[0]);break;}}
         }
-        if(!removed&&!isDF){
-          for(let ri=recs.length-1;ri>=0;ri--){if(recs[ri].일자===day&&recs[ri]._sender===sender){recs.splice(ri,1);break;}}
+        if(!removed.length&&!isDF){
+          for(let ri=recs.length-1;ri>=0;ri--){if(recs[ri].일자===day&&recs[ri]._sender===sender){removed.push(recs.splice(ri,1)[0]);break;}}
         }
+        skip({...base,removed,reason:removed.length?`${kind} 메시지 → ${removed.map(r=>`${r.차종} ${r.아이템} ${r._num||''}`).join(', ')} 건을 뺌`:`${kind} 문구 있음 — 뺄 건 못 찾음`});
+        continue;
+      }
+      // 알카가 될 만한 메시지(번호·차종·알카 문구)인데 등록 안 되는 경우 → 이유와 함께 띄운다
+      const looksAlka=!isDF&&(cntNums(content)>0||_VEH_RE.test(content)||/알카|R\/?C\s*신청/i.test(content));
+      if(day&&looksAlka&&!isAlka(content,sender)){
+        const blk=content.match(/코너\s*레이[더다]?|FOG\s*커버|포그커버|FOG\s*카바|FOG\s*COVER|PDW|UWB|빽빔|백빔|넘버\s*플레이트|번호판|PDC\s*센서|센서/i);
+        skip({...base,reason:blk?`비승인 품목(${blk[0]})이라 등록 안 함`:'요청 문구가 없어 문의·확인 메시지로 보고 등록 안 함'});
         continue;
       }
       if(day&&isAlka(content,sender)){
-        const g=gG(content),loc=gL(content),rawDef=g==='기아'?'찍힘':g==='부영'?'낙하':gD(content);
-        const single=(g==='부영'&&DB.buyAssyOverride!==false)?false:isSingle(content);
-        const part=single?gPart(content):'';
-        const locCols=Object.fromEntries(LOCS.map(l=>[l,'']));if(loc)locCols[loc]=1;
-        const pairs=gPairs(content,sender);
-        // ⚠ 예전에는 직전 "사진 N장"의 N만큼 행을 복제했다(각각 확인 유도 목적).
-        //   하지만 실제로는 한 건을 여러 각도로 찍은 사진이라 1건이 N건으로 부풀었다.
-        //   26년 6월 실측: 파싱 214건 → 실제 206건(4개 메시지가 각 3배). 복제하지 않는다.
-        //   (2026-09-04 수정. pcnt는 아래 _photos 로 남겨 확인용으로만 쓴다.)
-        // 차종/아이템 미상인 후속 메시지(…번도 요청)는 같은 날 같은 발신자 직전 건에서 상속
-        // 단, 공장(1공장/2공장)이 적힌 메시지는 새 신청이므로 차종을 상속하지 않고 '?'로 남긴다
-        const noPlant=defVeh(content,sender)==='?';
-        for(const p of pairs){
-          if(p[0]==='?'||p[1]==='?'){
-            for(let ri=recs.length-1;ri>=0;ri--){
-              const pv=recs[ri];
-              if(pv.일자===day&&pv._sender===sender&&pv.차종!=='?'){
-                if(p[0]==='?'&&noPlant)p[0]=pv.차종;
-                if(p[1]==='?'&&pv.아이템!=='?')p[1]=pv.아이템;
-                break;
-              }
-            }
-          }
-        }
-        const built=[];
-        for(const[vm,item,cnt,nums] of pairs){
-          for(let ci=0;ci<cnt;ci++){
-            const def=rawDef?rawDef:(g==='캠스'?(altIdx++%2===0?'도장':'찍힘'):'');
-            const bal=(DB.발생2||['NQ5']).includes(vm)?2:1;
-            built.push({일자:day,발생:bal,차종:vm,아이템:item,귀책:g,...locCols,'단품만 요청':part,'불량 사유':def,_sender:sender,_time:mm[2],_photos:pcnt,_num:(nums||[])[ci]||'',
-              _txt:content.replace(/\s*\n\s*/g,' / ').trim().slice(0,140)});
-          }
-        }
-        // ── 확인이 필요한 건: 자동으로 바꾸지 않고 사유만 달아 파싱 오류 칸에 띄운다 (261109)
-        const flag=msg=>built.forEach(r=>(r._flags=r._flags||[]).push(msg));
-        if(cntNums(content)===0&&!/앗세이|ASSY|BPR|전장\s*[제재]외|아세이/i.test(content)&&!/몰딩|스키드|가니쉬|그릴/.test(content)
-           &&recs.some(r=>r.일자===day&&r._sender===sender))
-          flag('번호 없음 — 앞 건 부연(배송·장착 지시)인지 확인');
-        const only=content.match(/([가-힣A-Za-z]+)\s*만\s*(?:하나만?\s*)?보내/);
-        if(only&&!/몰딩|스키드|가니쉬|그릴/.test(only[1]))flag(`'${only[1]}' 단품 — 등록 대상인지 확인`);
-        if(part&&/스키드|가니쉬/.test(part)&&/알카\s*(신청|요청)/.test(content))flag(`'${part}' 단품인지 ASSY인지 확인`);
-        if(g==='부영'&&/캠스\s*알카|기아\s*알카/.test(content))flag(`카톡엔 ${(content.match(/캠스|기아/)||[''])[0]}알카 — 낙하·추락이라 부영으로 넣음`);
-        const nw=content.match(/(\d+|한|두|세|네|다섯)\s*대(?!차)/);
-        if(nw){const n={'한':1,'두':2,'세':3,'네':4,'다섯':5}[nw[1]]||+nw[1];if(n&&n!==built.length)flag(`"${nw[0]}"인데 ${built.length}건`);}
-        if(!loc&&/출하장|출고센터|서비스/.test(content))flag('출하장 언급 있는데 출하장 칸 비어 있음');
-        recs.push(...built);
+        // 사진 N장은 한 건을 여러 각도로 찍은 것 — 건수 복제 안 함 (2026-09-04)
+        recs.push(..._buildRecs(content,sender,day,mm[2],pcnt,recs));
       }
       continue;
     }
@@ -1169,7 +1201,7 @@ function saveRecords(){
 }
 function clearReg(){
   document.getElementById('chatInput').value='';
-  _parsed=[];
+  _parsed=[];_skipped=[];
   document.getElementById('regPreview').style.display='none';
 }
 function loadXls(input){
@@ -1183,7 +1215,7 @@ function loadXls(input){
     const hdrs=rows[0].map(h=>String(h).trim());
     const ci={};
     REC_COLS.forEach(c=>{const i=hdrs.indexOf(c);ci[c]=i>=0?i:-1;});
-    _parsed=[];let lastDay=null;
+    _parsed=[];_skipped=[];let lastDay=null;
     for(let i=1;i<rows.length;i++){
       const row=rows[i];if(!row||!row.length)continue;
       const dv=row[ci['일자']];
@@ -1226,7 +1258,7 @@ function parsePaste(){
   const hdrs=rows[0].map(h=>h.replace(/\r/g,''));
   const ci={};
   REC_COLS.forEach(c=>{const i=hdrs.indexOf(c);ci[c]=i>=0?i:-1;});
-  _parsed=[];let lastDay=null;
+  _parsed=[];_skipped=[];let lastDay=null;
   for(let i=1;i<rows.length;i++){
     const row=rows[i];if(!row||row.every(c=>!c))continue;
     const dv=ci['일자']>=0?row[ci['일자']]:'';
@@ -1285,12 +1317,24 @@ function showPreview(src){
       +`<button class="warn-btn save" onclick="applyFix(${i})">저장</button></div>`
       +`</div>`).join('');
     document.getElementById('parseWarnList').innerHTML=items;
-    warnBox.style.display='block';
-  } else {
-    warnBox.style.display='none';
   }
+  // 등록 안 한 메시지 (취소·보류로 뺀 것, 비승인 품목, 요청 문구 없는 것) — [등록]/[되살리기]로 살릴 수 있다
+  const sk=_skipped.map((s,k)=>({s,k})).filter(({s})=>!s.done);
+  if(sk.length){
+    const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    document.getElementById('parseWarnList').innerHTML=(errs.length?document.getElementById('parseWarnList').innerHTML:'')
+      +`<div class="warn-ttl" style="font-size:16px;margin:14px 0 4px">📭 등록 안 한 메시지 ${sk.length}건 — 맞으면 그대로, 등록해야 하면 버튼</div>`
+      +sk.map(({s,k})=>`<div class="warn-item" style="display:flex;flex-direction:column;gap:5px">`
+        +`<div>📅 ${s.day}일 | 등록 안 함`
+        +(s.removed&&s.removed.length?`<button class="warn-btn fix" onclick="skipRestore(${k})">되살리기</button>`:`<button class="warn-btn fix" onclick="skipAdd(${k})">등록</button>`)
+        +`</div>`
+        +`<div class="warn-sub">👤 ${esc(s.sender)} · ${esc(s.time)}</div>`
+        +`<div class="warn-sub" style="color:#fbbf24">⚠ ${esc(s.reason)}</div>`
+        +`<div class="warn-sub">💬 ${esc(s.txt)}</div></div>`).join('');
+  }
+  warnBox.style.display=(errs.length||sk.length)?'block':'none';
   const errIdx=new Set(errs.map(({i})=>i));
-  document.getElementById('regStat').textContent='총 '+_parsed.length+'건'+(src?' ('+src+')':'')+(errs.length?` ⚠ 오류 ${errs.length}건`:'');
+  document.getElementById('regStat').textContent='총 '+_parsed.length+'건'+(src?' ('+src+')':'')+(errs.length?` ⚠ 확인 ${errs.length}건`:'')+(sk.length?` · 등록 안 함 ${sk.length}건`:'');
   const EDIT_COLS=new Set(['차종','아이템','귀책','발생','불량 사유','단품만 요청']);
   let prev=null,html='';
   for(let ri=0;ri<_parsed.length;ri++){
@@ -1340,6 +1384,19 @@ function cellEdit(ev,ri,col){
   if(!SEL[col])el.focus();else el.focus();
 }
 function openFix(i){const el=document.getElementById('fx-'+i);if(el)el.style.display=(el.style.display==='flex')?'none':'flex';}
+// 등록 안 한 메시지를 등록 — 같은 규칙으로 만들고 위 확인 목록에 올린다
+function skipAdd(k){
+  const s=_skipped[k];if(!s)return;
+  const built=_buildRecs(s.content,s.sender,s.day,s.time,s.pcnt||0,_parsed);
+  built.forEach(r=>r._flags.unshift('등록 안 한 메시지를 직접 등록함'));
+  _parsed.push(...built);_parsed.sort((a,b)=>(a.일자||0)-(b.일자||0));
+  s.done=true;showPreview();
+}
+function skipRestore(k){
+  const s=_skipped[k];if(!s||!s.removed)return;
+  _parsed.push(...s.removed);_parsed.sort((a,b)=>(a.일자||0)-(b.일자||0));
+  s.done=true;showPreview();
+}
 // 파싱 오류 항목 삭제 — 미리보기(_parsed)에서만 빼므로 등록 대상에서 제외된다.
 function deleteParsed(i){
   const r=_parsed[i];
