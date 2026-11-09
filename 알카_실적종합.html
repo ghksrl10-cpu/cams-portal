@@ -955,6 +955,8 @@ function gG(c){
   if(/기아\s*알카|기아~\s*RC|기아RC|귀책.{0,6}기아|기아알카/.test(c))return '기아';
   if(/캠스\s*알카|캠스~\s*RC|캠스RC|귀책.{0,6}캠스|캠스알카/.test(c))return '캠스';
   if(/부영\s*알카|귀책.{0,6}부영|부영알카/.test(c))return '부영';
+  // "기아 불량입니다" / "캠스 불량" / "부영 불량" 도 귀책 명시로 본다 (261109)
+  const bad=c.match(/(기아|캠스|부영)\s*불량/);if(bad)return bad[1];
   if(/낙하|추락/.test(c))return '부영';
   const dp=DEFECTS.flatMap(([,ks])=>ks).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
   if(new RegExp('캠스\\s*('+dp+')').test(c))return '캠스';
@@ -1074,7 +1076,7 @@ function isAlka(c,s){
 //  정상: 차종 적힘 · 그 줄에 FRT/RR · 번호 있음(출하장 ASSY는 예외) · 귀책 적힘(단품은 생략 가능)
 //        · 단품/ASSY 표현이 한쪽으로 분명 · 출하장 언급 시 매칭 · 번호 중복 없음
 let _skipped=[],_altIdx=0;
-const _G_EXPLICIT=/기아\s*알카|기아~\s*RC|기아RC|귀책.{0,6}기아|기아알카|캠스\s*알카|캠스~\s*RC|캠스RC|귀책.{0,6}캠스|캠스알카|부영\s*알카|귀책.{0,6}부영|부영알카|기아 알카 요청/;
+const _G_EXPLICIT=/기아\s*알카|기아~\s*RC|기아RC|귀책.{0,6}기아|기아알카|캠스\s*알카|캠스~\s*RC|캠스RC|귀책.{0,6}캠스|캠스알카|부영\s*알카|귀책.{0,6}부영|부영알카|기아 알카 요청|(?:기아|캠스|부영)\s*불량/;
 function _gExplicit(c){
   if(_G_EXPLICIT.test(c))return true;
   const dp=DEFECTS.flatMap(([,ks])=>ks).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
