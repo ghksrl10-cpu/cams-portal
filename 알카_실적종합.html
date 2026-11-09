@@ -501,11 +501,12 @@
               <div style="color:#86efac;font-weight:700;margin-bottom:4px">O (단품):</div>
               <div>스키드만 / 스키드 하나</div>
               <div>몰딩 하나 / LH(RH)몰딩 하나 / 몰딩(색상코드) 하나</div>
-              <div>R/D그릴만 / 라디에이터그릴 / 그릴 하나</div>
-              <div>어퍼가니쉬 하나 / 사이드가니쉬</div>
+              <div>R/D그릴만 / 그릴 하나 <span style="color:#64748b">(그릴을 달라고 할 때만)</span></div>
+              <div>어퍼가니쉬 하나 / 가니쉬 만 <span style="color:#64748b">(가니쉬를 달라고 할 때만)</span></div>
               <div style="color:#f87171;font-weight:700;margin-top:8px;margin-bottom:4px">X (ASSY):</div>
               <div>앗세이 / BPR / 번호만 나열</div>
               <div>전장제외 + 풀범퍼 (완성품 기준)</div>
+              <div>그릴·가니쉬가 불량 위치로만 나오면 ASSY <span style="color:#64748b">(예: 그릴 긁힘, R그릴 찍힘, 라디에이터그릴 찍힘 알카 요청, 가니쉬 크랙)</span></div>
               <div style="color:#f59e0b;font-weight:700;margin-top:8px;margin-bottom:4px">❌ 미등록 (목록 외 품목 전수 차단):</div>
               <div><b style="color:#fcd34d">스키드·몰딩·가니쉬·그릴 외 단품은 전부 미등록</b></div>
               <div>예: FOG커버 / 코너레이더(레이다) / 센서 / PDW / UWB / 빽빔 → 신청 와도 입력 안 함</div>
@@ -969,12 +970,16 @@ function gD(c){for(const[n,ks] of DEFECTS)for(const k of ks)if(c.includes(k))ret
 function isSingle(c){
   // BPR/전장제외/앗세이 맥락이면 단품 언급(불량위치 설명)이 있어도 ASSY
   if(/앗세이|ASSY|BPR|전장\s*제외|풀\s*아세이/i.test(c))return false;
-  return c.includes('몰딩')||c.includes('스키드')||c.includes('어퍼가니쉬')||c.includes('가니쉬')||c.includes('라디에이터그릴')||c.includes('그릴');
+  return !!gPart(c);
 }
 function gPart(c){
-  if(c.includes('어퍼가니쉬')||c.includes('가니쉬'))return '어퍼가니쉬';
+  // 그릴·가니쉬는 그 부품을 달라고 할 때만 단품 ("그릴만", "그릴 하나", "가니쉬 만", "어퍼가니쉬 하나")
+  //  불량 위치로만 나오면 ASSY ("그릴 긁힘", "R그릴 찍힘", "라디에이터그릴 찍힘 … 알카 요청", "가니쉬 크랙") — 261109 형님 확정
+  //  스키드는 9040("로워 및 스키드 찍힘 … 알카 요청")이 단품이었으므로 기존대로 언급만 있어도 단품
+  const asked=w=>new RegExp('(?:'+w+')\\s*(?:만|하나|한\\s*개|\\d\\s*개)').test(c);
+  if(/가니쉬/.test(c)&&asked('가니쉬'))return '어퍼가니쉬';
   if(c.includes('스키드'))return '스키드';
-  if(c.includes('라디에이터그릴')||c.includes('그릴'))return '그릴';
+  if(/그릴/.test(c)&&asked('그릴'))return '그릴';
   if(c.includes('몰딩'))return '리어몰딩';
   return '';
 }
