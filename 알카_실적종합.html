@@ -398,7 +398,6 @@
         <select id="mgmtMonSel" onchange="renderMgmt()" style="padding:8px;border:1px solid var(--bd);border-radius:8px;font-size:14px;background:#0f1117;color:#f1f5f9">
           <option value="all">전체</option>
         </select>
-        <button class="btn" id="mgmtChkBtn" onclick="_mgmtChkOnly=!_mgmtChkOnly;renderMgmt()">🔎 확인 필요만</button>
         <button class="btn grn" onclick="dlExcel()">⬇ 엑셀 다운</button>
         <button class="btn warn" onclick="delMonth()">🗑 이 달 삭제</button>
         <div class="sub">전체 알카 상세 기록 조회</div>
@@ -407,7 +406,11 @@
         <div class="sec-h">상세 내역 <span class="stat" id="mgmtStat"></span></div>
         <div class="scroll">
           <table>
-            <thead id="mgmtHead"></thead>
+            <thead><tr>
+              <th>일자</th><th>발생</th><th>차종</th><th>아이템</th><th>귀책</th>
+              <th>평동</th><th>경산</th><th>목포항</th><th>충주</th><th>신태인</th><th>오토큐</th><th>덕평</th>
+              <th>단품만 요청</th><th>불량 사유</th><th>삭제</th>
+            </tr></thead>
             <tbody id="mgmtBody"></tbody>
           </table>
         </div>
@@ -1154,7 +1157,7 @@ function parseChat(text){
           for(let ci=0;ci<cnt;ci++){
             const def=rawDef?rawDef:(g==='캠스'?(altIdx++%2===0?'도장':'찍힘'):'');
             const bal=(DB.발생2||['NQ5']).includes(vm)?2:1;
-            built.push({일자:day,발생:bal,차종:vm,아이템:item,귀책:g,...locCols,'단품만 요청':part,'불량 사유':def,_sender:sender,_time:mm[2],_photos:pcnt,_num:(nums||[])[ci]||'',_txt:base.text});
+            built.push({일자:day,발생:bal,차종:vm,아이템:item,귀책:g,...locCols,'단품만 요청':part,'불량 사유':def,_sender:sender,_time:mm[2],_photos:pcnt,_num:(nums||[])[ci]||''});
           }
         }
         // ── 번호 없는 부연 메시지 (배송 지시·장착 요청 등): 같은 사람이 당일 이미 신청했으면 등록하지 않는다
@@ -1213,18 +1216,6 @@ function saveRecords(){
   const m=document.getElementById('regM').value||'5';
   const key=y+'년'+m+'월';
   if(DB.months[key]&&!confirm(`${key} 데이터가 이미 있습니다. 덮어씌울까요?`))return;
-  // [확인 필요]로 걸린 건에만 경고 내용(_chk)과 카톡 원문(_raw)을 남긴다 → 종합 관리에서 다시 걸러볼 수 있음
-  //  (전 건에 원문을 붙이면 클라우드 문서 1MB 한도에 금방 닿아서 걸린 건만. 261109)
-  _parsed.forEach(r=>{delete r._chk;delete r._raw;});
-  for(const n of _notes){
-    if(n.ok)continue;
-    for(const r of (n.rec?[n.rec]:(n.recs||[]))){
-      if(!_parsed.includes(r))continue;
-      r._chk=(r._chk?r._chk+' / ':'')+n.type+': '+n.msg;
-      if(!r._raw)r._raw=n.text||r._txt||'';
-    }
-  }
-  _parsed.forEach(r=>{delete r._txt;});
   DB.months[key]=_parsed;
   saveDB();
   refreshMonSel('mainMonSel');
@@ -1446,24 +1437,16 @@ function applyFix(i){
 }
 
 // ─── 종합 관리 ───────────────────────────────────────────
-let _mgmtChkOnly=false;
 function renderMgmt(){
   const mon=document.getElementById('mgmtMonSel').value;
   let rows=[];
   if(mon==='all'){for(const m of monthList())(DB.months[m]||[]).forEach((r,i)=>rows.push({r,m,i}));}
   else (DB.months[mon]||[]).forEach((r,i)=>rows.push({r,m:mon,i}));
-  const chkN=rows.filter(({r})=>r._chk).length;
-  if(_mgmtChkOnly)rows=rows.filter(({r})=>r._chk);
-  const btn=document.getElementById('mgmtChkBtn');
-  if(btn){btn.textContent=(_mgmtChkOnly?'✓ 확인 필요만 보는 중':'🔎 확인 필요만')+` (${chkN})`;btn.style.background=_mgmtChkOnly?'#713f12':'';btn.style.color=_mgmtChkOnly?'#fde68a':'';}
-  document.getElementById('mgmtStat').textContent=(_mgmtChkOnly?'확인 필요 ':'총 ')+rows.length+'건'+(!_mgmtChkOnly&&chkN?` · 🔎 확인 필요 ${chkN}건`:'');
-  const head=document.getElementById('mgmtHead');
-  if(head)head.innerHTML='<tr>'+REC_COLS.map(c=>`<th>${c}</th>`).join('')+(_mgmtChkOnly?'<th>확인 내용 (카톡)</th>':'')+'<th>삭제</th></tr>';
-  const EDIT=new Set(['차종','아이템','귀책','발생','불량 사유','단품만 요청',...LOCS]);
+  document.getElementById('mgmtStat').textContent='총 '+rows.length+'건';
   let prev=null,html='';
   for(const {r,m,i} of rows){
-    const sd=(r.일자!==prev||_mgmtChkOnly)?(_mgmtChkOnly&&mon==='all'?m.replace(/^\d+년/,'')+' ':'')+r.일자:'';prev=r.일자;
-    html+=`<tr${r._chk?' style="background:rgba(234,179,8,.16)"':''}>`;
+    const sd=r.일자!==prev?r.일자:'';prev=r.일자;
+    html+='<tr>';
     for(const c of REC_COLS){
       let v=c==='일자'?sd:(r[c]??''),cls='';
       if(c==='일자'&&v)cls='day-c';
@@ -1471,47 +1454,12 @@ function renderMgmt(){
       else if(LOCS.includes(c)&&v===1)cls='loc1';
       else if(c==='단품만 요청'&&v)cls='part-c';
       else if(c==='불량 사유'&&v)cls='def-c';
-      if(EDIT.has(c))html+=`<td class="${cls}" onclick="mgmtEdit(event,'${m}',${i},'${c}')" style="cursor:pointer" title="클릭해서 수정">${v===''||v===null?'':v}</td>`;
-      else html+=`<td class="${cls}">${v===''||v===null?'':v}</td>`;
+      html+=`<td class="${cls}">${v===''||v===null?'':v}</td>`;
     }
-    if(_mgmtChkOnly)html+=`<td style="text-align:left;min-width:320px;max-width:460px;white-space:normal;font-size:12px;line-height:1.45;background:#2a2108;color:#fde68a">${_esc(r._chk)}<div style="color:#cbd5e1">${_esc(r._sender||'')} ${_esc(r._time||'')} — ${_esc(r._raw||'')}</div>`
-      +`<button onclick="mgmtChkDone('${m}',${i})" style="margin-top:3px;background:#1f2937;border:1px solid #475569;color:#e2e8f0;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:12px">확인 완료</button></td>`;
     html+=`<td><button onclick="deleteRec('${m}',${i})" style="background:#7f1d1d;border:none;color:#fca5a5;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:12px">삭제</button></td>`;
     html+='</tr>';
   }
   document.getElementById('mgmtBody').innerHTML=html;
-}
-// 종합 관리 표에서 칸을 눌러 바로 수정 (저장된 데이터에 반영)
-function mgmtEdit(ev,m,i,col){
-  const td=ev.currentTarget;
-  if(td.querySelector('select,input'))return;
-  const r=(DB.months[m]||[])[i];if(!r)return;
-  const cur=r[col]??'';
-  const SEL={'차종':['NQ5','OV1','SP3','?'],'아이템':['FRT','RR','?'],'귀책':['기아','캠스','부영'],'발생':['1','2',''],'단품만 요청':['','리어몰딩','스키드','어퍼가니쉬','그릴']};
-  LOCS.forEach(l=>SEL[l]=['',1]);
-  const st='background:#0f1117;color:#f1f5f9;border:1px solid #2563eb;border-radius:3px;padding:1px 4px;font-size:12px;max-width:90px';
-  let el;
-  if(SEL[col]){
-    el=document.createElement('select');el.style.cssText=st;
-    SEL[col].forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v===''?'(공란)':v;if(String(v)===String(cur))o.selected=true;el.appendChild(o);});
-  }else{el=document.createElement('input');el.type='text';el.value=cur;el.style.cssText=st+';width:90px';}
-  let done=false;
-  const save=()=>{
-    if(done)return;done=true;
-    let val=el.value;
-    if(col==='발생'||LOCS.includes(col))val=val===''?'':+val;
-    if(String(val)===String(cur)){renderMgmt();return;}
-    r[col]=val;
-    if(col==='차종'&&(r.발생===1||r.발생===2))r.발생=(DB.발생2||['NQ5']).includes(val)?2:1;
-    saveDB();renderMgmt();
-  };
-  el.addEventListener(SEL[col]?'change':'blur',save);
-  el.addEventListener('keydown',e=>{if(e.key==='Enter')save();if(e.key==='Escape'){done=true;renderMgmt();}});
-  td.innerHTML='';td.appendChild(el);el.focus();
-}
-function mgmtChkDone(m,i){
-  const r=(DB.months[m]||[])[i];if(!r)return;
-  delete r._chk;saveDB();renderMgmt();
 }
 function deleteRec(mon,idx){
   const recs=DB.months[mon]||[];
