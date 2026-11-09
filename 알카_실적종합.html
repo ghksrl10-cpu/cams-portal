@@ -1020,7 +1020,8 @@ function gPairs(content,sender){
     }
   }
   if(!pairCounts.size){
-    const v=defVeh(content,sender);
+    // 카톡에 차종이 안 적힘(누락·오타·SP2 등) → 공장으로 추측하지 않고 '?' → 파싱 오류 칸에서 직접 고르게 (261109)
+    const v='?';
     const cnt=Math.max(1,cntNums(content));
     if(/프런트|프런트범퍼|FRT|frt|프론트|프렌트/i.test(content))pairCounts.set(v+'|FRT',cnt);
     if(/리어|RR(?![A-Za-z0-9_])|몰딩/i.test(content))pairCounts.set(v+'|RR',cnt);
@@ -1078,12 +1079,14 @@ function parseChat(text){
         //   26년 6월 실측: 파싱 214건 → 실제 206건(4개 메시지가 각 3배). 복제하지 않는다.
         //   (2026-09-04 수정. pcnt는 아래 _photos 로 남겨 확인용으로만 쓴다.)
         // 차종/아이템 미상인 후속 메시지(…번도 요청)는 같은 날 같은 발신자 직전 건에서 상속
+        // 단, 공장(1공장/2공장)이 적힌 메시지는 새 신청이므로 차종을 상속하지 않고 '?'로 남긴다
+        const noPlant=defVeh(content,sender)==='?';
         for(const p of pairs){
           if(p[0]==='?'||p[1]==='?'){
             for(let ri=recs.length-1;ri>=0;ri--){
               const pv=recs[ri];
               if(pv.일자===day&&pv._sender===sender&&pv.차종!=='?'){
-                if(p[0]==='?')p[0]=pv.차종;
+                if(p[0]==='?'&&noPlant)p[0]=pv.차종;
                 if(p[1]==='?'&&pv.아이템!=='?')p[1]=pv.아이템;
                 break;
               }
