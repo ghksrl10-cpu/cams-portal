@@ -129,6 +129,17 @@
   .warn-box .warn-fix{display:none;flex-wrap:wrap;gap:8px;align-items:center;font-size:15px;padding-top:4px}
   .warn-box .warn-fix select{background:#0f1117;color:#f1f5f9;border:1px solid var(--bd);border-radius:5px;padding:5px 8px;font-size:15px}
   td.err-c{color:#f87171;font-weight:800;background:#2d0a0a !important}
+  .chk-box{background:#2a2108;border:1px solid #a16207;border-radius:10px;padding:16px 18px;margin-bottom:12px}
+  .chk-box .chk-ttl{color:#fbbf24;font-weight:800;font-size:19px;margin-bottom:4px}
+  .chk-box .chk-desc{color:#a8a29e;font-size:13px;margin-bottom:8px}
+  .chk-box .chk-item{font-size:16px;color:#fde68a;padding:8px 0 8px 6px;border-bottom:1px solid #3f3410;line-height:1.55}
+  .chk-box .chk-item:last-child{border-bottom:none}
+  .chk-box .chk-tag{display:inline-block;background:#713f12;color:#fde68a;border-radius:4px;padding:1px 8px;font-size:13px;font-weight:700;margin-right:6px}
+  .chk-box .chk-raw{font-size:13px;color:#94a3b8;word-break:break-all}
+  .chk-box .chk-btn{margin-left:8px;padding:3px 10px;font-size:13px;font-weight:700;border-radius:5px;cursor:pointer;background:#1f2937;border:1px solid #475569;color:#e2e8f0}
+  .chk-box .chk-btn.del{border-color:#dc2626;color:#fca5a5}
+  .chk-box .chk-btn.res{border-color:#16a34a;color:#86efac}
+  .chk-box .chk-btn:hover{filter:brightness(1.35)}
   .yr-h td{background:#1e2a3a;font-weight:800;color:#93c5fd}
   .edit-in{width:100%;height:100%;border:0;text-align:right;font-size:13px;background:transparent;outline:none;padding-right:6px;color:var(--ink)}
   .edit-in:focus{background:#1e2a3a}
@@ -356,6 +367,11 @@
         <div id="parseWarn" style="display:none" class="warn-box">
           <div class="warn-ttl">⚠ 파싱 오류 — 확인이 필요합니다</div>
           <div id="parseWarnList"></div>
+        </div>
+        <div id="parseCheck" style="display:none" class="chk-box">
+          <div class="chk-ttl">🔎 확인 필요</div>
+          <div class="chk-desc">자동으로 처리했지만 카톡 문맥상 틀릴 수 있는 건입니다. 맞으면 [확인], 아니면 [삭제]·[되살리기]로 바로잡으세요.</div>
+          <div id="parseCheckList"></div>
         </div>
         <div class="sec">
           <div class="sec-h">분석 결과 미리보기 <span class="stat" id="regStat"></span></div>
@@ -688,7 +704,7 @@ const DEFAULT_LOCATION_MAP=[
   ['목포항',['수출항','목포항','JWW']],
   ['충주',['충주출하장','충주 출하장']],
   ['신태인',['신태인']],
-  ['오토큐',['광주서비스센터','오토큐','서비스센터','바디넘버']],
+  ['오토큐',['광주서비스센터','오토큐','서비스센터','바디넘버','서비스']],
   ['덕평',['덕평출하장','덕평 출하장','덕평']],
   ['송악',['송악출하장','송악 출하장','송악출고센터','송악 출고센터']],
 ];
@@ -949,16 +965,17 @@ function onHistChange(el){
 
 // ─── 파싱 ────────────────────────────────────────────────
 function gG(c){
-  if(/낙하|추락/.test(c))return '부영';
+  // 카톡에 귀책이 명시돼 있으면 그게 우선 ("캠스알카 … 제품추락" → 캠스, 261109 형님 확정)
   if(/기아\s*알카|기아~\s*RC|기아RC|귀책.{0,6}기아|기아알카/.test(c))return '기아';
   if(/캠스\s*알카|캠스~\s*RC|캠스RC|귀책.{0,6}캠스|캠스알카/.test(c))return '캠스';
   if(/부영\s*알카|귀책.{0,6}부영|부영알카/.test(c))return '부영';
+  if(/낙하|추락/.test(c))return '부영';
   const dp=DEFECTS.flatMap(([,ks])=>ks).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
   if(new RegExp('캠스\\s*('+dp+')').test(c))return '캠스';
   if(new RegExp('기아\\s*('+dp+')').test(c))return '기아';
   if(new RegExp('부영\\s*('+dp+')').test(c))return '부영';
   if(c.includes('기아 알카 요청'))return '기아';
-  if(/서비스\s*센터|오토큐/.test(c))return '기아'; // 서비스센터 알카 귀책 미표기 → 기아
+  if(/서비스|오토큐/.test(c))return '기아'; // 서비스(센터) 알카 귀책 미표기 → 기아
   return '캠스';
 }
 function gL(c){for(const[n,ks] of LOCATION_MAP)for(const k of ks)if(c.includes(k))return n;return null;}
@@ -984,11 +1001,25 @@ function cntNums(s){
   const n3=(clean.match(/\b\d{3}\b(?=\s*[,번])/g)||[]).length;
   return n4+n3;
 }
+function numsOf(s){
+  // cntNums와 같은 기준으로 번호 자체를 뽑는다 (취소·중복 확인용)
+  const clean=s.replace(/\d+\/\d+일자?/g,'');
+  return [...(clean.match(/\b\d{4}\b/g)||[]),...(clean.match(/\b\d{3}\b(?=\s*[,번])/g)||[])];
+}
 function countChassis(line){
   return Math.max(1,cntNums(line));
 }
+const _VEH_RE=/NQ\s*PE|NQ5|NQ(?![A-Z0-9])|OV1|OV(?![A-Z0-9])|SP3|셀토스/i;
 function gPairs(content,sender){
-  const lines=content.split('\n'),pairCounts=new Map();
+  // 차종만 있고 번호가 없는 줄 + 다음 줄에 번호만 있으면 한 줄로 본다
+  // 예) "2공장 NQ5 PE \n(리어) 범퍼 0941, 0937 두대" → 2건 (261026 1건으로 집계되던 문제)
+  const lines=[];
+  for(const l of content.split('\n')){
+    const p=lines[lines.length-1];
+    if(p!==undefined&&_VEH_RE.test(p)&&cntNums(p)===0&&!_VEH_RE.test(l)&&cntNums(l)>0)lines[lines.length-1]=p+' '+l;
+    else lines.push(l);
+  }
+  const pairCounts=new Map(),pairNums=new Map();
   for(const line of lines){
     const frt=[...line.matchAll(/프런트|프런트범퍼|FRT|frt|Frt|프론트|프렌트/g)].map(m=>m.index);
     const rr=[...line.matchAll(/리어|리어범퍼|RR(?![A-Za-z0-9_])/gi)].map(m=>m.index);
@@ -1017,23 +1048,27 @@ function gPairs(content,sender){
       const cnt=Math.max(1,cntNums(seg));
       const key=vn+'|'+item;
       pairCounts.set(key,(pairCounts.get(key)||0)+cnt);
+      pairNums.set(key,[...(pairNums.get(key)||[]),...numsOf(seg)]);
     }
   }
   if(!pairCounts.size){
     const v=defVeh(content,sender);
     const cnt=Math.max(1,cntNums(content));
-    if(/프런트|프런트범퍼|FRT|frt|프론트|프렌트/i.test(content))pairCounts.set(v+'|FRT',cnt);
-    if(/리어|RR(?![A-Za-z0-9_])|몰딩/i.test(content))pairCounts.set(v+'|RR',cnt);
-    if(!pairCounts.size)pairCounts.set(v+'|?',cnt);
+    const ns=numsOf(content);
+    if(/프런트|프런트범퍼|FRT|frt|프론트|프렌트/i.test(content)){pairCounts.set(v+'|FRT',cnt);pairNums.set(v+'|FRT',ns);}
+    if(/리어|RR(?![A-Za-z0-9_])|몰딩/i.test(content)){pairCounts.set(v+'|RR',cnt);pairNums.set(v+'|RR',ns);}
+    if(!pairCounts.size){pairCounts.set(v+'|?',cnt);pairNums.set(v+'|?',ns);}
   }
-  return[...pairCounts.entries()].map(([k,cnt])=>[...k.split('|'),cnt]);
+  return[...pairCounts.entries()].map(([k,cnt])=>[...k.split('|'),cnt,pairNums.get(k)||[]]);
 }
+const _BLOCK_RE=/코너\s*레이[더다]?|FOG\s*커버|포그커버|FOG\s*카바|FOG\s*COVER|PDW|UWB|빽빔|백빔|넘버\s*플레이트|번호판/i;
+const _REQ_KW=['알카 신청','알카신청','알카 요청','알카요청','R/C신청','RC신청','요청합니다','보내주세요','알카 입니다','알카입니다','신청합니다','요청드립니다'];
 function isAlka(c,s){
   if(s.startsWith('디에프_'))return false;
   const skip=['출하됐습니다','출하됬습니다','알카진행하겠습니다','취소해주세요','총검 측정','알겠습니다','입고 안됌','업체직원부재','폼 말씀','측정용 범퍼','검사구 측정','알카 취소','수정했습니다','나갔습니다','사양같은지','AMEW','AMAW','그릴이 다르','센서3호차','보내주시면'];
   if(skip.some(p=>c.includes(p)))return false;
   // 비승인 품목이 '요청 대상'일 때만 차단 (센서부=불량위치는 통과)
-  if(/코너\s*레이더?|코너레이다|FOG\s*커버|포그커버|FOG\s*카바|FOG\s*COVER|PDW|UWB|빽빔|백빔/i.test(c))return false;
+  if(_BLOCK_RE.test(c))return false;
   if(/PDC\s*센서|센서\s*(하나|한\s*개|\d+\s*개)|센서\s*보내/.test(c))return false;
   const _ap=/몰딩|스키드|어퍼가니쉬|가니쉬|라디에이터그릴|그릴/.test(c);
   const _as=/앗세이|assy|전장제외|전장 제외|BPR/i.test(c);
@@ -1042,12 +1077,17 @@ function isAlka(c,s){
   const _sq=/(하나|한\s*개|1\s*개)/.test(c);
   if(!_ap&&!_as&&!_vn&&!(_bc&&!_sq))return false;
   if(c.includes('센서 보내주세요')&&!c.includes('알카'))return false;
-  return ['알카 신청','알카신청','알카 요청','알카요청','R/C신청','RC신청','요청합니다','보내주세요','알카 입니다','알카입니다','신청합니다','요청드립니다'].some(t=>c.includes(t));
+  return _REQ_KW.some(t=>c.includes(t));
 }
+// 파싱 중 "자동 처리했지만 틀릴 수 있는 건" — 미리보기 노란 [확인 필요] 칸에 띄운다
+let _notes=[];
+const _brief=s=>s.replace(/\s*\n\s*/g,' / ').trim().slice(0,110);
 function parseChat(text){
   const recs=[],lines=text.trim().split('\n');
   let day=null,i=0,altIdx=0;
   const photos={}; // 발신자별 직전 연속 사진 장수
+  _notes=[];
+  const note=(o)=>_notes.push(Object.assign({ok:false},o));
   while(i<lines.length){
     const line=lines[i].trim();
     const dm=line.match(/(\d{4})년 (\d{1,2})월 (\d{1,2})일/);
@@ -1061,10 +1101,32 @@ function parseChat(text){
       const pm=content.trim().match(/^사진(?:\s*(\d+)\s*장)?$/);
       if(pm){photos[sender]=(photos[sender]||0)+(pm[1]?+pm[1]:1);continue;}
       const pcnt=photos[sender]||0;photos[sender]=0;
-      if(day&&!sender.startsWith('디에프_')&&content.includes('취소')){
-        for(let ri=recs.length-1;ri>=0;ri--){
-          if(recs[ri].일자===day&&recs[ri]._sender===sender){recs.splice(ri,1);break;}
+      const base={day,time:mm[2],sender,text:_brief(content)};
+      const isDF=sender.startsWith('디에프_');
+      // ── 취소 / 알카 보류: 번호가 있으면 그 번호 건을, 없으면 같은 사람 당일 마지막 건을 뺀다
+      const isCancel=content.includes('취소'),isHold=/알카\s*보류/.test(content);
+      if(day&&(isCancel||isHold)&&(!isDF||numsOf(content).length)){
+        const kind=isHold?'보류':'취소';
+        const nums=numsOf(content),removed=[];
+        for(const n of nums){
+          for(let ri=recs.length-1;ri>=0;ri--){if(recs[ri].일자===day&&recs[ri]._num===n){removed.push(recs.splice(ri,1)[0]);break;}}
         }
+        if(!removed.length&&!isDF){
+          for(let ri=recs.length-1;ri>=0;ri--){if(recs[ri].일자===day&&recs[ri]._sender===sender){removed.push(recs.splice(ri,1)[0]);break;}}
+        }
+        if(removed.length)note({...base,type:kind,removed,msg:`${kind} 메시지로 ${removed.map(r=>`${r.차종} ${r.아이템} ${r._num||''}`).join(', ')} 건을 뺐습니다`});
+        else if(!isDF)note({...base,type:kind,msg:`${kind} 메시지가 있는데 뺄 건을 못 찾았습니다 (조건부 취소면 무시)`});
+        continue;
+      }
+      // ── 총 N대 확인 메시지: 같은 사람 당일 건수와 비교
+      const tot=content.match(/총\s*(\d+)\s*대/);
+      if(day&&!isDF&&tot){
+        const have=recs.filter(r=>r.일자===day&&r._sender===sender).length;
+        if(have!==+tot[1])note({...base,type:'대수',msg:`"총 ${tot[1]}대"인데 이 사람 당일 등록은 ${have}건입니다`});
+      }
+      // ── 비승인 품목 요청은 미등록 (어떤 메시지를 뺐는지 보여준다)
+      if(day&&!isDF&&_BLOCK_RE.test(content)&&_REQ_KW.some(t=>content.includes(t))){
+        note({...base,type:'미등록',msg:`비승인 품목(${(content.match(_BLOCK_RE)||[''])[0]}) 요청이라 등록하지 않았습니다`});
         continue;
       }
       if(day&&isAlka(content,sender)){
@@ -1090,18 +1152,52 @@ function parseChat(text){
             }
           }
         }
-        for(const[vm,item,cnt] of pairs){
+        const built=[];
+        for(const[vm,item,cnt,nums] of pairs){
           for(let ci=0;ci<cnt;ci++){
             const def=rawDef?rawDef:(g==='캠스'?(altIdx++%2===0?'도장':'찍힘'):'');
             const bal=(DB.발생2||['NQ5']).includes(vm)?2:1;
-            recs.push({일자:day,발생:bal,차종:vm,아이템:item,귀책:g,...locCols,'단품만 요청':part,'불량 사유':def,_sender:sender,_time:mm[2],_photos:pcnt});
+            built.push({일자:day,발생:bal,차종:vm,아이템:item,귀책:g,...locCols,'단품만 요청':part,'불량 사유':def,_sender:sender,_time:mm[2],_photos:pcnt,_num:(nums||[])[ci]||''});
           }
         }
+        // ── 번호 없는 부연 메시지 (배송 지시·장착 요청 등): 같은 사람이 당일 이미 신청했으면 등록하지 않는다
+        //    예) "가지대차에 한번에 보내주세요", "리어범퍼 OV1 후진등까지만 장착해서 보내주세요"
+        const assyMark=/앗세이|ASSY|BPR|전장\s*[제재]외|아세이/i.test(content);
+        const partMark=/몰딩|스키드|가니쉬|그릴/.test(content);
+        if(cntNums(content)===0&&!assyMark&&!partMark&&recs.some(r=>r.일자===day&&r._sender===sender)){
+          note({...base,type:'부연',removed:built,msg:'번호 없는 부연 메시지로 보고 등록하지 않았습니다 (새 건이면 되살리기)'});
+          continue;
+        }
+        recs.push(...built);
+        // ── 확인 경고
+        if(/낙하|추락/.test(content)&&g!=='부영')
+          note({...base,type:'귀책',rec:built[0],msg:`낙하/추락 문구가 있지만 카톡에 적힌 귀책(${g})으로 넣었습니다`});
+        if(part&&/스키드|가니쉬/.test(part)&&/알카\s*(신청|요청)|R\/?C\s*신청/.test(content))
+          note({...base,type:'단품?',rec:built[0],msg:`'${part}' 단품으로 넣었는데 "알카 신청/요청" 문구가 있습니다 — ASSY면 단품 칸을 비우세요`});
+        const nw=content.match(/(\d+|한|두|세|네|다섯)\s*대(?!차)/);
+        if(nw){
+          const n={'한':1,'두':2,'세':3,'네':4,'다섯':5}[nw[1]]||+nw[1];
+          if(n&&n!==built.length)note({...base,type:'대수',rec:built[0],msg:`"${nw[0]}"인데 ${built.length}건으로 잡혔습니다`});
+        }
+        if(/SP\s*2/i.test(content))
+          note({...base,type:'차종',rec:built[0],msg:`카톡 표기는 SP2 — ${built.map(r=>r.차종).join(',')}로 넣었습니다`});
+        if(!loc&&/출하장|출고센터|서비스/.test(content))
+          note({...base,type:'출하장',rec:built[0],msg:'출하장·센터 언급이 있는데 출하장 칸이 비어 있습니다'});
       }
       continue;
     }
     i++;
   }
+  // ── 같은 차종·아이템·번호가 한 달 안에 두 번 이상 → 재신청인지 중복인지 확인
+  const seen={};
+  for(const r of recs){if(!r._num)continue;const k=r.차종+'|'+r.아이템+'|'+r._num;(seen[k]=seen[k]||[]).push(r);}
+  for(const[k,rs] of Object.entries(seen)){
+    if(rs.length<2)continue;
+    const [v,it,n]=k.split('|');
+    note({day:rs[0].일자,time:rs.map(r=>r.일자+'일 '+r._time).join(', '),sender:rs[0]._sender,text:'',type:'중복',recs:rs,
+      msg:`${v} ${it} ${n}번이 ${rs.length}번 등록됐습니다 — 재신청이면 [확인], 같은 건이면 [하나 삭제]`});
+  }
+  _notes.sort((a,b)=>(a.day||0)-(b.day||0));
   return recs;
 }
 
@@ -1127,7 +1223,7 @@ function saveRecords(){
 }
 function clearReg(){
   document.getElementById('chatInput').value='';
-  _parsed=[];
+  _parsed=[];_notes=[];
   document.getElementById('regPreview').style.display='none';
 }
 function loadXls(input){
@@ -1141,7 +1237,7 @@ function loadXls(input){
     const hdrs=rows[0].map(h=>String(h).trim());
     const ci={};
     REC_COLS.forEach(c=>{const i=hdrs.indexOf(c);ci[c]=i>=0?i:-1;});
-    _parsed=[];let lastDay=null;
+    _parsed=[];_notes=[];let lastDay=null;
     for(let i=1;i<rows.length;i++){
       const row=rows[i];if(!row||!row.length)continue;
       const dv=row[ci['일자']];
@@ -1184,7 +1280,7 @@ function parsePaste(){
   const hdrs=rows[0].map(h=>h.replace(/\r/g,''));
   const ci={};
   REC_COLS.forEach(c=>{const i=hdrs.indexOf(c);ci[c]=i>=0?i:-1;});
-  _parsed=[];let lastDay=null;
+  _parsed=[];_notes=[];let lastDay=null;
   for(let i=1;i<rows.length;i++){
     const row=rows[i];if(!row||row.every(c=>!c))continue;
     const dv=ci['일자']>=0?row[ci['일자']]:'';
@@ -1230,7 +1326,8 @@ function showPreview(src){
     warnBox.style.display='none';
   }
   const errIdx=new Set(errs.map(({i})=>i));
-  document.getElementById('regStat').textContent='총 '+_parsed.length+'건'+(src?' ('+src+')':'')+(errs.length?` ⚠ 오류 ${errs.length}건`:'');
+  const chkN=renderChecks();
+  document.getElementById('regStat').textContent='총 '+_parsed.length+'건'+(src?' ('+src+')':'')+(errs.length?` ⚠ 오류 ${errs.length}건`:'')+(chkN?` 🔎 확인 필요 ${chkN}건`:'');
   const EDIT_COLS=new Set(['차종','아이템','귀책','발생','불량 사유','단품만 요청']);
   let prev=null,html='';
   for(let ri=0;ri<_parsed.length;ri++){
@@ -1278,6 +1375,46 @@ function cellEdit(ev,ri,col){
   el.addEventListener('keydown',e=>{if(e.key==='Enter')save();if(e.key==='Escape'){r[col]=cur;showPreview();}});
   td.innerHTML='';td.appendChild(el);
   if(!SEL[col])el.focus();else el.focus();
+}
+// ── [확인 필요] 칸: parseChat이 남긴 _notes 표시 ──
+function _esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function renderChecks(){
+  const box=document.getElementById('parseCheck');
+  if(!box)return 0;
+  const live=_notes.map((n,k)=>({n,k})).filter(({n})=>!n.ok);
+  if(!live.length){box.style.display='none';return 0;}
+  document.getElementById('parseCheckList').innerHTML=live.map(({n,k})=>{
+    let btns='';
+    const rec=n.rec&&_parsed.includes(n.rec)?n.rec:null;
+    if(n.removed&&n.removed.length)btns+=`<button class="chk-btn res" onclick="chkRestore(${k})">되살리기</button>`;
+    if(rec&&n.type==='단품?'&&rec['단품만 요청'])btns+=`<button class="chk-btn res" onclick="chkSet(${k},'단품만 요청','')">ASSY로 변경</button>`;
+    if(rec&&n.type==='귀책'&&rec.귀책!=='부영')btns+=`<button class="chk-btn res" onclick="chkSet(${k},'귀책','부영')">부영으로 변경</button>`;
+    if(n.recs&&n.recs.filter(r=>_parsed.includes(r)).length>1)btns+=`<button class="chk-btn del" onclick="chkDel(${k})">하나 삭제</button>`;
+    btns+=`<button class="chk-btn" onclick="chkOk(${k})">확인</button>`;
+    return `<div class="chk-item"><div><span class="chk-tag">${_esc(n.type)}</span>${n.day?_esc(n.day)+'일 ':''}${_esc(n.msg)}${btns}</div>`
+      +`<div class="chk-raw">👤 ${_esc(n.sender)} · ${_esc(n.time)}${n.text?' — '+_esc(n.text):''}</div></div>`;
+  }).join('');
+  box.style.display='block';
+  return live.length;
+}
+function chkOk(k){if(_notes[k])_notes[k].ok=true;showPreview();}
+function chkSet(k,col,val){
+  const n=_notes[k];if(!n||!n.rec||!_parsed.includes(n.rec))return;
+  n.rec[col]=val;n.ok=true;showPreview();
+}
+function chkDel(k){
+  const n=_notes[k];if(!n)return;
+  const r=n.rec&&_parsed.includes(n.rec)?n.rec:(n.recs||[]).filter(x=>_parsed.includes(x)).pop();
+  if(!r)return;
+  if(!confirm(`이 건을 삭제할까요?\n\n${r.일자}일 | ${r.차종} ${r.아이템} ${r._num||''} | ${r.귀책}\n${r._sender||''} · ${r._time||''}`))return;
+  _parsed.splice(_parsed.indexOf(r),1);
+  n.ok=true;showPreview();
+}
+function chkRestore(k){
+  const n=_notes[k];if(!n||!n.removed)return;
+  _parsed.push(...n.removed);
+  _parsed.sort((a,b)=>(a.일자||0)-(b.일자||0));
+  n.ok=true;showPreview();
 }
 function openFix(i){const el=document.getElementById('fx-'+i);if(el)el.style.display=(el.style.display==='flex')?'none':'flex';}
 // 파싱 오류 항목 삭제 — 미리보기(_parsed)에서만 빼므로 등록 대상에서 제외된다.
