@@ -478,7 +478,7 @@
               <div><b style="color:#e2e8f0">신태인출하장 / 신태인출고센터 / 신태인</b> → 신태인=1</div>
               <div><b style="color:#e2e8f0">기아오토큐 / 오토큐(원주/금천 등)</b> → 오토큐=1</div>
               <div><b style="color:#e2e8f0">목포항 / 수출항 / JWW번호</b> → 목포항=1</div>
-              <div><b style="color:#e2e8f0">서비스센터 (각 지역)</b> → 오토큐=1</div>
+              <div><b style="color:#e2e8f0">서비스센터 / ○○서비스 (각 지역, "센터" 없어도)</b> → 오토큐=1</div>
             </div>
           </div>
 
@@ -488,7 +488,8 @@
               <div><b style="color:#e2e8f0">"기아알카" / "귀책 기아" / "기아~RC" / "귀책: 기아"</b> → 기아</div>
               <div><b style="color:#e2e8f0">"캠스알카" / "귀책 캠스" / "캠스~RC" / "캠스 알카"</b> → 캠스</div>
               <div><b style="color:#e2e8f0">"부영알카" / "귀책 부영"</b> → 부영</div>
-              <div style="margin-top:6px"><b style="color:#e2e8f0">"귀책 불분명" / "귀책 NTF"</b> → 기아 (추정)</div>
+              <div style="margin-top:6px"><b style="color:#e2e8f0">"귀책 불분명"</b> → 기아 (추정)</div>
+              <div><b style="color:#e2e8f0">"귀책 NTF"</b> → 기아 (추정) — 등록 시 파싱 오류 칸에 확인 표시</div>
               <div><b style="color:#e2e8f0">"수출항 사고차 캠스알카식으로"</b> → 캠스</div>
               <div><b style="color:#e2e8f0">서비스센터 알카 (귀책 미표기)</b> → 기아</div>
             </div>
@@ -686,7 +687,7 @@ const DEFAULT_LOCATION_MAP=[
   ['평동',['평동출하장','평동 출하장']],
   ['경산',['경산출하장','경산 출하장','경산']],
   ['목포항',['수출항','목포항','JWW']],
-  ['충주',['충주출하장','충주 출하장']],
+  ['충주',['충주출하장','충주 출하장','충주출고센터','충주 출고센터']],
   ['신태인',['신태인']],
   ['오토큐',['광주서비스센터','오토큐','서비스센터','바디넘버','서비스']],
   ['덕평',['덕평출하장','덕평 출하장','덕평']],
@@ -949,16 +950,18 @@ function onHistChange(el){
 
 // ─── 파싱 ────────────────────────────────────────────────
 function gG(c){
-  if(/낙하|추락/.test(c))return '부영';
+  // 카톡에 귀책이 명시돼 있으면 그게 우선 ("캠스알카 … 제품추락" → 캠스, 261109 형님 확정)
   if(/기아\s*알카|기아~\s*RC|기아RC|귀책.{0,6}기아|기아알카/.test(c))return '기아';
   if(/캠스\s*알카|캠스~\s*RC|캠스RC|귀책.{0,6}캠스|캠스알카/.test(c))return '캠스';
   if(/부영\s*알카|귀책.{0,6}부영|부영알카/.test(c))return '부영';
+  if(/낙하|추락/.test(c))return '부영';
   const dp=DEFECTS.flatMap(([,ks])=>ks).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
   if(new RegExp('캠스\\s*('+dp+')').test(c))return '캠스';
   if(new RegExp('기아\\s*('+dp+')').test(c))return '기아';
   if(new RegExp('부영\\s*('+dp+')').test(c))return '부영';
   if(c.includes('기아 알카 요청'))return '기아';
-  if(/서비스\s*센터|오토큐/.test(c))return '기아'; // 서비스센터 알카 귀책 미표기 → 기아
+  if(/NTF/i.test(c))return '기아'; // 귀책 NTF → 기아(추정) — 파싱 오류 칸에 확인 표시 (261109)
+  if(/서비스|오토큐/.test(c))return '기아'; // 서비스(센터) 알카 귀책 미표기 → 기아
   return '캠스';
 }
 function gL(c){for(const[n,ks] of LOCATION_MAP)for(const k of ks)if(c.includes(k))return n;return null;}
@@ -1074,6 +1077,10 @@ function _gExplicit(c){
 }
 const _oneLine=s=>s.replace(/\s*\n\s*/g,' / ').trim().slice(0,140);
 function _buildRecs(content,sender,day,time,pcnt,recs){
+  const orig=content;
+  // 교육: 번호 정정 (xxxx→yyyy) → yyyy로 교체 — xxxx는 세지 않는다
+  const corr=[...content.matchAll(/(\d{4})\s*(?:→|->|=>|>|인데\s*잘못\S*|아니고|말고|대신)\s*(\d{4})/g)];
+  for(const m of corr)content=content.replace(m[0],m[2]);
   const g=gG(content),loc=gL(content),rawDef=g==='기아'?'찍힘':g==='부영'?'낙하':gD(content);
   const single=(g==='부영'&&DB.buyAssyOverride!==false)?false:isSingle(content);
   const part=single?gPart(content):'';
@@ -1094,7 +1101,7 @@ function _buildRecs(content,sender,day,time,pcnt,recs){
       }
     }
   }
-  const built=[],txt=_oneLine(content);
+  const built=[],txt=_oneLine(orig);
   for(const p of pairs){
     const [vm,item,cnt,nums,sure]=p;
     for(let ci=0;ci<cnt;ci++){
@@ -1111,8 +1118,10 @@ function _buildRecs(content,sender,day,time,pcnt,recs){
   const assyMark=/앗세이|ASSY|BPR|전장\s*[제재]외|아세이/i.test(content);
   if(cntNums(content)===0&&!(loc&&assyMark))
     flag(recs.some(r=>r.일자===day&&r._sender===sender)?'번호 없음 — 앞 건 부연(배송·장착 지시)인지 확인':'번호 없음');
-  if(/낙하|추락/.test(content)&&g==='부영')
-    flag(/캠스\s*알카|기아\s*알카/.test(content)?`카톡엔 ${(content.match(/캠스|기아/)||[''])[0]}알카 — 낙하·추락이라 부영으로 넣음`:'낙하·추락이라 부영으로 넣음');
+  for(const m of corr)built.filter(r=>r._num===m[2]).forEach(r=>r._flags.push(`번호 정정(${m[1]}→${m[2]}) — ${m[2]}로 1건 처리${recs.some(x=>x._num===m[1])?`, 앞서 등록된 ${m[1]} 건 있음`:''}`));
+  if(/NTF/i.test(content))flag('귀책 NTF — 기아(추정)로 넣음, 확인 필요');
+  else if(/낙하|추락/.test(content))
+    flag(g==='부영'?'낙하·추락이라 부영으로 넣음':`낙하·추락 문구 있음 — 카톡에 적힌 귀책(${g}) 그대로 넣음`);
   else if(!_gExplicit(content)){
     if(/기아/.test(content)&&g!=='기아')flag(`카톡에 '기아' 문구가 있는데 귀책 ${g}로 넣음`);
     else if(!single)flag(`귀책 표기 없음 — ${g}로 넣음`);
@@ -1156,14 +1165,15 @@ function parseChat(text){
         if(!removed.length&&!isDF){
           for(let ri=recs.length-1;ri>=0;ri--){if(recs[ri].일자===day&&recs[ri]._sender===sender){removed.push(recs.splice(ri,1)[0]);break;}}
         }
-        skip({...base,removed,reason:removed.length?`${kind} 메시지 → ${removed.map(r=>`${r.차종} ${r.아이템} ${r._num||''}`).join(', ')} 건을 뺌`:`${kind} 문구 있음 — 뺄 건 못 찾음`});
+        const rule=kind==='보류'?'예외 처리: "알카 보류" → 미입력':'예외 처리: "취소" 포함 메시지 → 삭제';
+        skip({...base,removed,reason:removed.length?`${rule} — ${removed.map(r=>`${r.일자}일 ${r.차종} ${r.아이템} ${r._num||''} (${r._time})`).join(', ')} 삭제됨`:`${rule} — 삭제할 건을 못 찾음 (조건부 취소면 무시)`});
         continue;
       }
       // 알카가 될 만한 메시지(번호·차종·알카 문구)인데 등록 안 되는 경우 → 이유와 함께 띄운다
       const looksAlka=!isDF&&(cntNums(content)>0||_VEH_RE.test(content)||/알카|R\/?C\s*신청/i.test(content));
       if(day&&looksAlka&&!isAlka(content,sender)){
         const blk=content.match(/코너\s*레이[더다]?|FOG\s*커버|포그커버|FOG\s*카바|FOG\s*COVER|PDW|UWB|빽빔|백빔|넘버\s*플레이트|번호판|PDC\s*센서|센서/i);
-        skip({...base,reason:blk?`비승인 품목(${blk[0]})이라 등록 안 함`:'요청 문구가 없어 문의·확인 메시지로 보고 등록 안 함'});
+        skip({...base,reason:blk?`미등록(목록 외 품목): ${blk[0]} → 등록 안 함`:'알카 신청·요청 문구 없음 → 문의·확인 메시지로 보고 등록 안 함'});
         continue;
       }
       if(day&&isAlka(content,sender)){
@@ -1318,23 +1328,21 @@ function showPreview(src){
       +`</div>`).join('');
     document.getElementById('parseWarnList').innerHTML=items;
   }
-  // 등록 안 한 메시지 (취소·보류로 뺀 것, 비승인 품목, 요청 문구 없는 것) — [등록]/[되살리기]로 살릴 수 있다
-  const sk=_skipped.map((s,k)=>({s,k})).filter(({s})=>!s.done);
+  // 교육 규칙으로 삭제·미등록된 메시지 — 버튼 없이 어떤 규칙인지 + 카톡 내용만 보여준다 (누락을 알 수 있게)
+  const sk=_skipped.map((s,k)=>({s,k}));
   if(sk.length){
     const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     document.getElementById('parseWarnList').innerHTML=(errs.length?document.getElementById('parseWarnList').innerHTML:'')
-      +`<div class="warn-ttl" style="font-size:16px;margin:14px 0 4px">📭 등록 안 한 메시지 ${sk.length}건 — 맞으면 그대로, 등록해야 하면 버튼</div>`
-      +sk.map(({s,k})=>`<div class="warn-item" style="display:flex;flex-direction:column;gap:5px">`
-        +`<div>📅 ${s.day}일 | 등록 안 함`
-        +(s.removed&&s.removed.length?`<button class="warn-btn fix" onclick="skipRestore(${k})">되살리기</button>`:`<button class="warn-btn fix" onclick="skipAdd(${k})">등록</button>`)
-        +`</div>`
+      +`<div class="warn-ttl" style="font-size:16px;margin:14px 0 4px">📭 교육 규칙으로 삭제·미등록된 메시지 ${sk.length}건</div>`
+      +sk.map(({s})=>`<div class="warn-item" style="display:flex;flex-direction:column;gap:5px">`
+        +`<div>📅 ${s.day}일 | ${s.removed&&s.removed.length?'삭제됨':'등록 안 함'}</div>`
         +`<div class="warn-sub">👤 ${esc(s.sender)} · ${esc(s.time)}</div>`
         +`<div class="warn-sub" style="color:#fbbf24">⚠ ${esc(s.reason)}</div>`
         +`<div class="warn-sub">💬 ${esc(s.txt)}</div></div>`).join('');
   }
   warnBox.style.display=(errs.length||sk.length)?'block':'none';
   const errIdx=new Set(errs.map(({i})=>i));
-  document.getElementById('regStat').textContent='총 '+_parsed.length+'건'+(src?' ('+src+')':'')+(errs.length?` ⚠ 확인 ${errs.length}건`:'')+(sk.length?` · 등록 안 함 ${sk.length}건`:'');
+  document.getElementById('regStat').textContent='총 '+_parsed.length+'건'+(src?' ('+src+')':'')+(errs.length?` ⚠ 확인 ${errs.length}건`:'')+(sk.length?` · 삭제·미등록 ${sk.length}건`:'');
   const EDIT_COLS=new Set(['차종','아이템','귀책','발생','불량 사유','단품만 요청']);
   let prev=null,html='';
   for(let ri=0;ri<_parsed.length;ri++){
@@ -1384,19 +1392,6 @@ function cellEdit(ev,ri,col){
   if(!SEL[col])el.focus();else el.focus();
 }
 function openFix(i){const el=document.getElementById('fx-'+i);if(el)el.style.display=(el.style.display==='flex')?'none':'flex';}
-// 등록 안 한 메시지를 등록 — 같은 규칙으로 만들고 위 확인 목록에 올린다
-function skipAdd(k){
-  const s=_skipped[k];if(!s)return;
-  const built=_buildRecs(s.content,s.sender,s.day,s.time,s.pcnt||0,_parsed);
-  built.forEach(r=>r._flags.unshift('등록 안 한 메시지를 직접 등록함'));
-  _parsed.push(...built);_parsed.sort((a,b)=>(a.일자||0)-(b.일자||0));
-  s.done=true;showPreview();
-}
-function skipRestore(k){
-  const s=_skipped[k];if(!s||!s.removed)return;
-  _parsed.push(...s.removed);_parsed.sort((a,b)=>(a.일자||0)-(b.일자||0));
-  s.done=true;showPreview();
-}
 // 파싱 오류 항목 삭제 — 미리보기(_parsed)에서만 빼므로 등록 대상에서 제외된다.
 function deleteParsed(i){
   const r=_parsed[i];
